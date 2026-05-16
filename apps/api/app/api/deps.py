@@ -8,13 +8,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.security import decode_access_token
 from app.db.session import get_db
 from app.models.user import User
+from app.repositories.ai_analysis_repository import AiAnalysisRepository
+from app.repositories.ai_key_repository import AiProviderKeyRepository
 from app.repositories.metric_snapshot_repository import MetricSnapshotRepository
 from app.repositories.report_repository import ReportRepository
 from app.repositories.user_repository import UserRepository
 from app.repositories.saas_project_repository import SaasProjectRepository
 from app.repositories.saas_score_repository import SaasScoreRepository
+from app.services.ai_analysis_service import AiAnalysisService
+from app.services.ai_context_service import AiContextService
+from app.services.ai_key_service import AiProviderKeyService
 from app.services.auth_service import AuthService
 from app.services.dashboard_service import DashboardService
+from app.services.llm_client_service import LlmClientService
 from app.services.metric_calculation_service import MetricCalculationService
 from app.services.metric_snapshot_service import MetricSnapshotService
 from app.services.report_service import ReportService
@@ -97,6 +103,70 @@ def get_report_service(db: AsyncSession = Depends(get_db)) -> ReportService:
         metric_snapshot_repository,
         saas_score_repository,
         dashboard_service,
+    )
+
+
+def get_ai_key_service(db: AsyncSession = Depends(get_db)) -> AiProviderKeyService:
+    return AiProviderKeyService(AiProviderKeyRepository(db))
+
+
+def get_llm_client_service() -> LlmClientService:
+    return LlmClientService()
+
+
+def get_ai_context_service(db: AsyncSession = Depends(get_db)) -> AiContextService:
+    saas_project_repository = SaasProjectRepository(db)
+    metric_snapshot_repository = MetricSnapshotRepository(db)
+    saas_score_repository = SaasScoreRepository(db)
+    metric_calculation_service = MetricCalculationService(
+        metric_snapshot_repository,
+        saas_project_repository,
+    )
+    dashboard_service = DashboardService(
+        saas_project_repository,
+        metric_snapshot_repository,
+        saas_score_repository,
+        metric_calculation_service,
+    )
+    return AiContextService(
+        saas_project_repository,
+        metric_snapshot_repository,
+        saas_score_repository,
+        dashboard_service,
+    )
+
+
+def get_ai_analysis_service(
+    db: AsyncSession = Depends(get_db),
+    llm_client_service: LlmClientService = Depends(get_llm_client_service),
+) -> AiAnalysisService:
+    saas_project_repository = SaasProjectRepository(db)
+    metric_snapshot_repository = MetricSnapshotRepository(db)
+    saas_score_repository = SaasScoreRepository(db)
+    metric_calculation_service = MetricCalculationService(
+        metric_snapshot_repository,
+        saas_project_repository,
+    )
+    dashboard_service = DashboardService(
+        saas_project_repository,
+        metric_snapshot_repository,
+        saas_score_repository,
+        metric_calculation_service,
+    )
+    ai_context_service = AiContextService(
+        saas_project_repository,
+        metric_snapshot_repository,
+        saas_score_repository,
+        dashboard_service,
+    )
+    return AiAnalysisService(
+        AiAnalysisRepository(db),
+        AiProviderKeyService(AiProviderKeyRepository(db)),
+        saas_project_repository,
+        metric_snapshot_repository,
+        saas_score_repository,
+        ai_context_service,
+        llm_client_service,
     )
 
 

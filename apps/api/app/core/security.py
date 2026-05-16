@@ -3,6 +3,7 @@ from typing import Any
 
 from jose import jwt
 from passlib.context import CryptContext
+from cryptography.fernet import Fernet, InvalidToken
 
 from app.core.config import settings
 
@@ -29,15 +30,21 @@ def decode_access_token(token: str) -> dict:
     return jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
 
 
-# --- BYOK encryption stubs ---
-# These will be completed when the AI key management service is implemented.
-# We use Fernet symmetric encryption with the ENCRYPTION_KEY from settings.
-
 def encrypt_api_key(plain_key: str) -> str:
-    """Encrypt a BYOK API key before storing it. Stub for future implementation."""
-    raise NotImplementedError("BYOK encryption not yet implemented")
+    """Encrypt a BYOK API key before storing it."""
+    return _fernet().encrypt(plain_key.encode("utf-8")).decode("utf-8")
 
 
 def decrypt_api_key(encrypted_key: str) -> str:
-    """Decrypt a stored BYOK API key. Stub for future implementation."""
-    raise NotImplementedError("BYOK decryption not yet implemented")
+    """Decrypt a stored BYOK API key only when calling a provider."""
+    try:
+        return _fernet().decrypt(encrypted_key.encode("utf-8")).decode("utf-8")
+    except InvalidToken as exc:
+        raise RuntimeError("Stored API key could not be decrypted") from exc
+
+
+def _fernet() -> Fernet:
+    try:
+        return Fernet(settings.ENCRYPTION_KEY.encode("utf-8"))
+    except Exception as exc:
+        raise RuntimeError("Invalid ENCRYPTION_KEY configuration for BYOK encryption") from exc

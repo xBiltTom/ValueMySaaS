@@ -1,4 +1,16 @@
 # Pydantic schemas will be defined here per domain module.
+from app.schemas.ai_analysis import (
+    AiAnalysisCreate,
+    AiAnalysisListItem,
+    AiAnalysisListResponse,
+    AiAnalysisRead,
+)
+from app.schemas.ai_key import (
+    AiProviderKeyCreate,
+    AiProviderKeyListResponse,
+    AiProviderKeyRead,
+    AiProviderKeyUpdate,
+)
 from app.schemas.auth import Token, UserRead, UserRegister
 from app.schemas.dashboard import (
     DashboardRecommendation,
@@ -39,6 +51,14 @@ from app.schemas.saas_score import (
 )
 
 __all__ = [
+    "AiAnalysisCreate",
+    "AiAnalysisListItem",
+    "AiAnalysisListResponse",
+    "AiAnalysisRead",
+    "AiProviderKeyCreate",
+    "AiProviderKeyListResponse",
+    "AiProviderKeyRead",
+    "AiProviderKeyUpdate",
     "DashboardRecommendation",
     "LatestScoreSummary",
     "LatestSnapshotSummary",
