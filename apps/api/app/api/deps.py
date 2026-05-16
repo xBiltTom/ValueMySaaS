@@ -8,9 +8,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.security import decode_access_token
 from app.db.session import get_db
 from app.models.user import User
+from app.repositories.metric_snapshot_repository import MetricSnapshotRepository
 from app.repositories.user_repository import UserRepository
 from app.repositories.saas_project_repository import SaasProjectRepository
 from app.services.auth_service import AuthService
+from app.services.metric_snapshot_service import MetricSnapshotService
 from app.services.saas_project_service import SaasProjectService
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
@@ -22,6 +24,13 @@ def get_auth_service(db: AsyncSession = Depends(get_db)) -> AuthService:
 
 def get_saas_project_service(db: AsyncSession = Depends(get_db)) -> SaasProjectService:
     return SaasProjectService(SaasProjectRepository(db))
+
+
+def get_metric_snapshot_service(db: AsyncSession = Depends(get_db)) -> MetricSnapshotService:
+    return MetricSnapshotService(
+        MetricSnapshotRepository(db),
+        SaasProjectRepository(db),
+    )
 
 
 async def get_current_user(
