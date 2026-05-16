@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from decimal import Decimal
 
 from sqlalchemy import DateTime, Enum, ForeignKey, Integer, Numeric, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -50,7 +51,9 @@ class AiAnalysis(Base):
     )
 
     # Versioning enables auditing prompt changes and reproducing old outputs
-    prompt_version: Mapped[str] = mapped_column(String(20), nullable=False, default="v1")
+    prompt_version: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="v1", server_default="v1"
+    )
 
     input_context: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     output_text: Mapped[str] = mapped_column(Text, nullable=False)
@@ -58,7 +61,7 @@ class AiAnalysis(Base):
 
     tokens_input: Mapped[int | None] = mapped_column(Integer, nullable=True)
     tokens_output: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    estimated_cost: Mapped[float | None] = mapped_column(Numeric(10, 6), nullable=True)
+    estimated_cost: Mapped[Decimal | None] = mapped_column(Numeric(10, 6), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

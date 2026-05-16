@@ -18,11 +18,13 @@ dist/
 
 # test/coverage
 .pytest_cache/
+pytest-cache-files-*/
 .coverage
 htmlcov/
 
 # environment
 .env*
+!.env.example
 
 # IDE
 .idea/

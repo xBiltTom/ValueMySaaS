@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from decimal import Decimal
 
 from sqlalchemy import DateTime, Enum, ForeignKey, Numeric, String, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -28,12 +29,12 @@ class SaasScore(Base):
         index=True,
     )
 
-    overall_score: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False)
-    financial_score: Mapped[float | None] = mapped_column(Numeric(5, 2), nullable=True)
-    growth_score: Mapped[float | None] = mapped_column(Numeric(5, 2), nullable=True)
-    retention_score: Mapped[float | None] = mapped_column(Numeric(5, 2), nullable=True)
-    product_score: Mapped[float | None] = mapped_column(Numeric(5, 2), nullable=True)
-    risk_score: Mapped[float | None] = mapped_column(Numeric(5, 2), nullable=True)
+    overall_score: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)
+    financial_score: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
+    growth_score: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
+    retention_score: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
+    product_score: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
+    risk_score: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
 
     sustainability_level: Mapped[SustainabilityLevel] = mapped_column(
         Enum(SustainabilityLevel, name="sustainabilitylevel", create_constraint=True),
@@ -52,7 +53,9 @@ class SaasScore(Base):
     recommendations: Mapped[list | None] = mapped_column(JSONB, nullable=True)
 
     # Version allows evolving the scoring formula without invalidating old scores
-    scoring_version: Mapped[str] = mapped_column(String(20), nullable=False, default="v1")
+    scoring_version: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="v1", server_default="v1"
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

@@ -14,9 +14,9 @@ import app.models  # noqa: F401 — ensures all models are registered on Base.me
 
 config = context.config
 
-# Override sqlalchemy.url with the sync URL derived from settings.
+# Override sqlalchemy.url with the async URL derived from settings.
 # This keeps .env as the single source of truth.
-config.set_main_option("sqlalchemy.url", settings.sync_database_url)
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

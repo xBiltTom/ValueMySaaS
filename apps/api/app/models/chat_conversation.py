@@ -33,7 +33,9 @@ class ChatConversation(Base):
         nullable=True,
     )
     model_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    system_prompt_version: Mapped[str] = mapped_column(String(20), nullable=False, default="v1")
+    system_prompt_version: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="v1", server_default="v1"
+    )
     status: Mapped[ConversationStatus] = mapped_column(
         Enum(ConversationStatus, name="conversationstatus", create_constraint=True),
         nullable=False,

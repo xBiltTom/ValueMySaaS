@@ -8,15 +8,17 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
+        extra="ignore",
     )
 
     # App
     APP_ENV: str = "development"
     BACKEND_URL: str = "http://localhost:8000"
     FRONTEND_URL: str = "http://localhost:3000"
+    LOG_LEVEL: str = "INFO"
 
     # Database
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/valuemy_saas"
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/valuemysaas"
 
     # JWT
     JWT_SECRET: str = "change_me"
@@ -44,10 +46,8 @@ class Settings(BaseSettings):
 
     @property
     def sync_database_url(self) -> str:
-        """Returns sync URL for Alembic migrations."""
-        return self.DATABASE_URL.replace(
-            "postgresql+asyncpg://", "postgresql+psycopg2://"
-        )
+        """Compatibility alias; Alembic uses the async DATABASE_URL."""
+        return self.DATABASE_URL
 
 
 settings = Settings()

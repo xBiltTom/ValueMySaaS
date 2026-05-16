@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from decimal import Decimal
 
 from sqlalchemy import (
     Boolean,
@@ -12,6 +13,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -58,9 +60,13 @@ class SaasProject(Base):
     main_problem: Mapped[str | None] = mapped_column(Text, nullable=True)
     value_proposition: Mapped[str | None] = mapped_column(Text, nullable=True)
     pricing_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
-    current_price: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)
-    currency: Mapped[str] = mapped_column(String(10), nullable=False, default="USD")
-    is_public_sample: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    current_price: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
+    currency: Mapped[str] = mapped_column(
+        String(10), nullable=False, default="USD", server_default="USD"
+    )
+    is_public_sample: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=text("false")
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

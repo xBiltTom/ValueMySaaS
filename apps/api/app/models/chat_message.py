@@ -26,9 +26,9 @@ class ChatMessage(Base):
         nullable=False,
     )
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    # metadata is a JSONB field for extra info (tool calls, citations, etc.)
+    # Stored in the database as "metadata"; the Python name avoids Base.metadata.
     # API keys must never be stored here.
-    metadata: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    message_metadata: Mapped[dict | None] = mapped_column("metadata", JSONB, nullable=True)
     token_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
