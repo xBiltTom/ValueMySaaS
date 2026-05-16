@@ -96,6 +96,24 @@ class MetricSnapshotRepository:
         )
         return result.scalar_one_or_none()
 
+    async def list_recent_by_project(
+        self,
+        *,
+        saas_project_id: UUID,
+        limit: int = 12,
+        ascending: bool = True,
+    ) -> list[SaasMetricSnapshot]:
+        result = await self.db.execute(
+            select(SaasMetricSnapshot)
+            .where(SaasMetricSnapshot.saas_project_id == saas_project_id)
+            .order_by(SaasMetricSnapshot.captured_at.desc())
+            .limit(limit)
+        )
+        snapshots = list(result.scalars().all())
+        if ascending:
+            snapshots.reverse()
+        return snapshots
+
     async def update(
         self,
         *,

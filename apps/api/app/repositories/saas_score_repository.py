@@ -61,3 +61,19 @@ class SaasScoreRepository:
             .limit(1)
         )
         return result.scalar_one_or_none()
+
+    async def list_recent_by_project(
+        self,
+        *,
+        saas_project_id: UUID,
+        limit: int = 12,
+        ascending: bool = True,
+    ) -> list[SaasScore]:
+        recent_scores = await self.list_by_project(
+            saas_project_id=saas_project_id,
+            limit=limit,
+            offset=0,
+        )
+        if ascending:
+            recent_scores.reverse()
+        return recent_scores

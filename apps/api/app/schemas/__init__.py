@@ -1,5 +1,19 @@
 # Pydantic schemas will be defined here per domain module.
 from app.schemas.auth import Token, UserRead, UserRegister
+from app.schemas.dashboard import (
+    DashboardRecommendation,
+    LatestScoreSummary,
+    LatestSnapshotSummary,
+    MetricCards,
+    PortfolioAlertProject,
+    PortfolioDashboardResponse,
+    PortfolioProjectSummary,
+    ProjectDashboardResponse,
+    ProjectSeries,
+    ProjectSummary,
+    RecentProjectSummary,
+    SeriesPoint,
+)
 from app.schemas.metric_snapshot import (
     MetricSnapshotCreate,
     MetricSnapshotListItem,
@@ -24,11 +38,22 @@ from app.schemas.saas_score import (
 )
 
 __all__ = [
+    "DashboardRecommendation",
+    "LatestScoreSummary",
+    "LatestSnapshotSummary",
+    "MetricCards",
     "MetricSnapshotCreate",
     "MetricSnapshotListItem",
     "MetricSnapshotListResponse",
     "MetricSnapshotRead",
     "MetricSnapshotUpdate",
+    "PortfolioAlertProject",
+    "PortfolioDashboardResponse",
+    "PortfolioProjectSummary",
+    "ProjectDashboardResponse",
+    "ProjectSeries",
+    "ProjectSummary",
+    "RecentProjectSummary",
     "SaasProjectCreate",
     "SaasProjectListItem",
     "SaasProjectListResponse",
@@ -40,6 +65,7 @@ __all__ = [
     "ScoreAlertItem",
     "ScoreDiagnosticItem",
     "ScoreRecommendationItem",
+    "SeriesPoint",
     "Token",
     "UserRead",
     "UserRegister",

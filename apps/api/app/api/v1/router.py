@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
     auth,
+    dashboards,
     metric_calculations,
     metric_snapshots,
     saas_projects,
@@ -14,3 +15,4 @@ api_router.include_router(saas_projects.router)
 api_router.include_router(metric_snapshots.router)
 api_router.include_router(metric_calculations.router)
 api_router.include_router(saas_scores.router)
+api_router.include_router(dashboards.router)

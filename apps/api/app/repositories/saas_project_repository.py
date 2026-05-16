@@ -62,6 +62,17 @@ class SaasProjectRepository:
         )
         return result.scalar_one_or_none()
 
+    async def list_all_for_owner(self, *, owner_id: UUID) -> list[SaasProject]:
+        result = await self.db.execute(
+            select(SaasProject)
+            .where(
+                SaasProject.owner_id == owner_id,
+                SaasProject.deleted_at.is_(None),
+            )
+            .order_by(SaasProject.created_at.desc())
+        )
+        return list(result.scalars().all())
+
     async def get_by_slug_for_owner(self, *, owner_id: UUID, slug: str) -> SaasProject | None:
         result = await self.db.execute(
             select(SaasProject).where(
