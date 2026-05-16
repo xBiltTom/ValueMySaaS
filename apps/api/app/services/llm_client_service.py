@@ -52,6 +52,40 @@ class LlmClientService:
             model_name=resolved_model,
         )
 
+    async def verify_connection(
+        self,
+        *,
+        provider: AiProvider,
+        api_key: str,
+        model_name: str | None,
+    ) -> LlmResponse:
+        resolved_model = self._resolve_litellm_model(provider=provider, model_name=model_name)
+        try:
+            response = await self._call_litellm(
+                api_key=api_key,
+                model_name=resolved_model,
+                system_prompt="Responde unicamente con la palabra OK.",
+                user_prompt="OK",
+                temperature=0,
+                max_tokens=5,
+            )
+        except HTTPException as exc:
+            if exc.status_code == status.HTTP_502_BAD_GATEWAY:
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail="AI provider verification failed",
+                ) from exc
+            raise
+        usage = self._extract_usage(response)
+        return LlmResponse(
+            output_text=self._extract_output_text(response),
+            output_json=None,
+            tokens_input=self._usage_value(usage, "prompt_tokens"),
+            tokens_output=self._usage_value(usage, "completion_tokens"),
+            estimated_cost=None,
+            model_name=resolved_model,
+        )
+
     def _resolve_litellm_model(self, *, provider: AiProvider, model_name: str | None) -> str:
         if provider == AiProvider.OPENAI:
             return model_name or "gpt-4o-mini"
@@ -95,20 +129,25 @@ class LlmClientService:
         model_name: str,
         system_prompt: str,
         user_prompt: str,
+        temperature: float = 0.2,
+        max_tokens: int | None = None,
     ):
         try:
             from litellm import acompletion
-
-            return await acompletion(
-                model=model_name,
-                messages=[
+            kwargs = {
+                "model": model_name,
+                "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
                 ],
-                api_key=api_key,
-                temperature=0.2,
-                drop_params=True,
-            )
+                "api_key": api_key,
+                "temperature": temperature,
+                "drop_params": True,
+            }
+            if max_tokens is not None:
+                kwargs["max_tokens"] = max_tokens
+
+            return await acompletion(**kwargs)
         except Exception as exc:
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,

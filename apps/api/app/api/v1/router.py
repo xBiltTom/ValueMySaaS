@@ -4,6 +4,7 @@ from app.api.v1.endpoints import (
     ai_analyses,
     ai_keys,
     auth,
+    conversations,
     dashboards,
     metric_calculations,
     metric_snapshots,
@@ -22,3 +23,4 @@ api_router.include_router(saas_scores.router)
 api_router.include_router(dashboards.router)
 api_router.include_router(reports.router)
 api_router.include_router(ai_analyses.router)
+api_router.include_router(conversations.router)

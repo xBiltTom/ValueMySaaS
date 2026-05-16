@@ -10,6 +10,8 @@ from app.schemas.ai_key import (
     AiProviderKeyListResponse,
     AiProviderKeyRead,
     AiProviderKeyUpdate,
+    AiProviderKeyVerifyRequest,
+    AiProviderKeyVerifyResponse,
 )
 from app.services.ai_key_service import AiProviderKeyService
 
@@ -50,6 +52,20 @@ async def get_ai_key(
     ai_key_service: AiProviderKeyService = Depends(get_ai_key_service),
 ):
     return await ai_key_service.get_key(key_id=key_id, user_id=current_user.id)
+
+
+@router.post("/{key_id}/verify", response_model=AiProviderKeyVerifyResponse)
+async def verify_ai_key(
+    key_id: UUID,
+    payload: AiProviderKeyVerifyRequest | None = None,
+    current_user: User = Depends(get_current_user),
+    ai_key_service: AiProviderKeyService = Depends(get_ai_key_service),
+):
+    return await ai_key_service.verify_key(
+        user_id=current_user.id,
+        key_id=key_id,
+        model_name=payload.model_name if payload else None,
+    )
 
 
 @router.patch("/{key_id}", response_model=AiProviderKeyRead)

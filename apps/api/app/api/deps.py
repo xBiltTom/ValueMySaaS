@@ -10,6 +10,8 @@ from app.db.session import get_db
 from app.models.user import User
 from app.repositories.ai_analysis_repository import AiAnalysisRepository
 from app.repositories.ai_key_repository import AiProviderKeyRepository
+from app.repositories.chat_message_repository import ChatMessageRepository
+from app.repositories.conversation_repository import ConversationRepository
 from app.repositories.metric_snapshot_repository import MetricSnapshotRepository
 from app.repositories.report_repository import ReportRepository
 from app.repositories.user_repository import UserRepository
@@ -19,6 +21,8 @@ from app.services.ai_analysis_service import AiAnalysisService
 from app.services.ai_context_service import AiContextService
 from app.services.ai_key_service import AiProviderKeyService
 from app.services.auth_service import AuthService
+from app.services.chat_service import ChatService
+from app.services.conversation_service import ConversationService
 from app.services.dashboard_service import DashboardService
 from app.services.llm_client_service import LlmClientService
 from app.services.metric_calculation_service import MetricCalculationService
@@ -107,7 +111,7 @@ def get_report_service(db: AsyncSession = Depends(get_db)) -> ReportService:
 
 
 def get_ai_key_service(db: AsyncSession = Depends(get_db)) -> AiProviderKeyService:
-    return AiProviderKeyService(AiProviderKeyRepository(db))
+    return AiProviderKeyService(AiProviderKeyRepository(db), LlmClientService())
 
 
 def get_llm_client_service() -> LlmClientService:
@@ -165,6 +169,46 @@ def get_ai_analysis_service(
         saas_project_repository,
         metric_snapshot_repository,
         saas_score_repository,
+        ai_context_service,
+        llm_client_service,
+    )
+
+
+def get_conversation_service(db: AsyncSession = Depends(get_db)) -> ConversationService:
+    return ConversationService(
+        SaasProjectRepository(db),
+        ConversationRepository(db),
+    )
+
+
+def get_chat_service(
+    db: AsyncSession = Depends(get_db),
+    llm_client_service: LlmClientService = Depends(get_llm_client_service),
+) -> ChatService:
+    saas_project_repository = SaasProjectRepository(db)
+    metric_snapshot_repository = MetricSnapshotRepository(db)
+    saas_score_repository = SaasScoreRepository(db)
+    metric_calculation_service = MetricCalculationService(
+        metric_snapshot_repository,
+        saas_project_repository,
+    )
+    dashboard_service = DashboardService(
+        saas_project_repository,
+        metric_snapshot_repository,
+        saas_score_repository,
+        metric_calculation_service,
+    )
+    ai_context_service = AiContextService(
+        saas_project_repository,
+        metric_snapshot_repository,
+        saas_score_repository,
+        dashboard_service,
+    )
+    return ChatService(
+        saas_project_repository,
+        ConversationRepository(db),
+        ChatMessageRepository(db),
+        AiProviderKeyService(AiProviderKeyRepository(db), llm_client_service),
         ai_context_service,
         llm_client_service,
     )

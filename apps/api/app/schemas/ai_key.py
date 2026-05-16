@@ -35,3 +35,14 @@ class AiProviderKeyListResponse(BaseModel):
     total: int
     limit: int
     offset: int
+
+
+class AiProviderKeyVerifyRequest(BaseModel):
+    model_name: str | None = Field(default=None, max_length=100)
+
+
+class AiProviderKeyVerifyResponse(BaseModel):
+    ok: bool
+    provider: AiProvider
+    model_name: str
+    message: str

@@ -7,11 +7,18 @@ from app.models.ai_provider_key import AiProviderKey
 from app.models.enums import AiProvider
 from app.repositories.ai_key_repository import AiProviderKeyRepository
 from app.schemas.ai_key import AiProviderKeyCreate, AiProviderKeyListResponse, AiProviderKeyUpdate
+from app.schemas.ai_key import AiProviderKeyVerifyResponse
+from app.services.llm_client_service import LlmClientService
 
 
 class AiProviderKeyService:
-    def __init__(self, ai_key_repository: AiProviderKeyRepository) -> None:
+    def __init__(
+        self,
+        ai_key_repository: AiProviderKeyRepository,
+        llm_client_service: LlmClientService | None = None,
+    ) -> None:
         self.ai_key_repository = ai_key_repository
+        self.llm_client_service = llm_client_service or LlmClientService()
 
     async def create_key(self, *, user_id: UUID, payload: AiProviderKeyCreate) -> AiProviderKey:
         await self._ensure_not_duplicate(user_id=user_id, provider=payload.provider, label=payload.label)
@@ -76,6 +83,26 @@ class AiProviderKeyService:
     async def delete_key(self, *, key_id: UUID, user_id: UUID) -> None:
         key = await self.get_key(key_id=key_id, user_id=user_id)
         await self.ai_key_repository.soft_delete(key=key)
+
+    async def verify_key(
+        self,
+        *,
+        user_id: UUID,
+        key_id: UUID,
+        model_name: str | None = None,
+    ) -> AiProviderKeyVerifyResponse:
+        key, api_key = await self.get_decrypted_key_for_user(key_id=key_id, user_id=user_id)
+        response = await self.llm_client_service.verify_connection(
+            provider=key.provider,
+            api_key=api_key,
+            model_name=model_name,
+        )
+        return AiProviderKeyVerifyResponse(
+            ok=True,
+            provider=key.provider,
+            model_name=response.model_name or model_name or "",
+            message="AI key verified successfully.",
+        )
 
     async def get_decrypted_key_for_user(self, *, key_id: UUID, user_id: UUID) -> tuple[AiProviderKey, str]:
         key = await self.ai_key_repository.get_active_by_id_for_user(key_id=key_id, user_id=user_id)

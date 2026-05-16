@@ -3,6 +3,8 @@ from app.services.ai_analysis_service import AiAnalysisService
 from app.services.ai_context_service import AiContextService
 from app.services.ai_key_service import AiProviderKeyService
 from app.services.auth_service import AuthService
+from app.services.chat_service import ChatService
+from app.services.conversation_service import ConversationService
 from app.services.dashboard_service import DashboardService
 from app.services.metric_snapshot_service import MetricSnapshotService
 from app.services.report_service import ReportService
@@ -15,6 +17,8 @@ __all__ = [
     "AiContextService",
     "AiProviderKeyService",
     "DashboardService",
+    "ChatService",
+    "ConversationService",
     "MetricSnapshotService",
     "ReportService",
     "SaasProjectService",

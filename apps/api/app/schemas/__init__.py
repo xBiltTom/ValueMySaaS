@@ -10,8 +10,22 @@ from app.schemas.ai_key import (
     AiProviderKeyListResponse,
     AiProviderKeyRead,
     AiProviderKeyUpdate,
+    AiProviderKeyVerifyRequest,
+    AiProviderKeyVerifyResponse,
 )
 from app.schemas.auth import Token, UserRead, UserRegister
+from app.schemas.chat_message import (
+    ChatMessageListResponse,
+    ChatMessageRead,
+    SendChatMessageRequest,
+    SendChatMessageResponse,
+)
+from app.schemas.conversation import (
+    ConversationCreate,
+    ConversationListResponse,
+    ConversationRead,
+    ConversationUpdate,
+)
 from app.schemas.dashboard import (
     DashboardRecommendation,
     LatestScoreSummary,
@@ -59,6 +73,14 @@ __all__ = [
     "AiProviderKeyListResponse",
     "AiProviderKeyRead",
     "AiProviderKeyUpdate",
+    "AiProviderKeyVerifyRequest",
+    "AiProviderKeyVerifyResponse",
+    "ChatMessageListResponse",
+    "ChatMessageRead",
+    "ConversationCreate",
+    "ConversationListResponse",
+    "ConversationRead",
+    "ConversationUpdate",
     "DashboardRecommendation",
     "LatestScoreSummary",
     "LatestSnapshotSummary",
@@ -89,6 +111,8 @@ __all__ = [
     "ScoreAlertItem",
     "ScoreDiagnosticItem",
     "ScoreRecommendationItem",
+    "SendChatMessageRequest",
+    "SendChatMessageResponse",
     "SeriesPoint",
     "Token",
     "UserRead",
