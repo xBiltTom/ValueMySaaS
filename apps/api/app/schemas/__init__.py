@@ -14,6 +14,14 @@ from app.schemas.saas_project import (
     SaasProjectRead,
     SaasProjectUpdate,
 )
+from app.schemas.saas_score import (
+    SaasScoreListItem,
+    SaasScoreListResponse,
+    SaasScoreRead,
+    ScoreAlertItem,
+    ScoreDiagnosticItem,
+    ScoreRecommendationItem,
+)
 
 __all__ = [
     "MetricSnapshotCreate",
@@ -26,6 +34,12 @@ __all__ = [
     "SaasProjectListResponse",
     "SaasProjectRead",
     "SaasProjectUpdate",
+    "SaasScoreListItem",
+    "SaasScoreListResponse",
+    "SaasScoreRead",
+    "ScoreAlertItem",
+    "ScoreDiagnosticItem",
+    "ScoreRecommendationItem",
     "Token",
     "UserRead",
     "UserRegister",
