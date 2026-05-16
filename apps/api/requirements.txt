@@ -1,68 +1,21 @@
-# =========================
-# CORE BACKEND
-# =========================
-fastapi==0.116.1
-uvicorn[standard]==0.35.0
+# Web framework
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
 
-# =========================
-# DATABASE
-# =========================
-sqlalchemy==2.0.43
+# Database
+sqlalchemy==2.0.36
 asyncpg==0.30.0
-alembic==1.16.5
+psycopg2-binary==2.9.10
+alembic==1.14.0
 
-# =========================
-# VALIDATION & SETTINGS
-# =========================
-pydantic==2.11.9
-pydantic-settings==2.11.0
-email-validator==2.3.0
+# Settings & validation
+pydantic==2.10.3
+pydantic-settings==2.6.1
 
-# =========================
-# AUTH & SECURITY
-# =========================
-python-jose[cryptography]==3.5.0
+# Auth & security
+python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
-bcrypt==4.3.0
-python-multipart==0.0.20
+cryptography==43.0.3
 
-# =========================
-# HTTP CLIENTS
-# =========================
-httpx==0.28.1
-
-# =========================
-# AI PROVIDERS
-# =========================
-openai==1.107.1
-
-# =========================
-# ENVIRONMENT
-# =========================
-python-dotenv==1.1.1
-
-# =========================
-# PDF REPORTS
-# =========================
-reportlab==4.4.3
-
-# =========================
-# UTILITIES
-# =========================
-orjson==3.11.3
-tenacity==9.1.2
-
-# =========================
-# TESTING
-# =========================
-pytest==8.4.2
-pytest-asyncio==1.2.0
-pytest-cov==7.0.0
-httpx==0.28.1
-
-# =========================
-# CODE QUALITY
-# =========================
-black==25.1.0
-isort==6.0.1
-ruff==0.13.0
+# Utils
+python-dotenv==1.0.1
