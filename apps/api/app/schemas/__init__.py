@@ -21,6 +21,7 @@ from app.schemas.metric_snapshot import (
     MetricSnapshotRead,
     MetricSnapshotUpdate,
 )
+from app.schemas.report import ReportListItem, ReportListResponse, ReportRead
 from app.schemas.saas_project import (
     SaasProjectCreate,
     SaasProjectListItem,
@@ -54,6 +55,9 @@ __all__ = [
     "ProjectSeries",
     "ProjectSummary",
     "RecentProjectSummary",
+    "ReportListItem",
+    "ReportListResponse",
+    "ReportRead",
     "SaasProjectCreate",
     "SaasProjectListItem",
     "SaasProjectListResponse",

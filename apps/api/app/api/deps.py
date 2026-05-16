@@ -9,6 +9,7 @@ from app.core.security import decode_access_token
 from app.db.session import get_db
 from app.models.user import User
 from app.repositories.metric_snapshot_repository import MetricSnapshotRepository
+from app.repositories.report_repository import ReportRepository
 from app.repositories.user_repository import UserRepository
 from app.repositories.saas_project_repository import SaasProjectRepository
 from app.repositories.saas_score_repository import SaasScoreRepository
@@ -16,6 +17,7 @@ from app.services.auth_service import AuthService
 from app.services.dashboard_service import DashboardService
 from app.services.metric_calculation_service import MetricCalculationService
 from app.services.metric_snapshot_service import MetricSnapshotService
+from app.services.report_service import ReportService
 from app.services.saas_project_service import SaasProjectService
 from app.services.saas_score_service import SaasScoreService
 
@@ -72,6 +74,29 @@ def get_dashboard_service(db: AsyncSession = Depends(get_db)) -> DashboardServic
         metric_snapshot_repository,
         saas_score_repository,
         metric_calculation_service,
+    )
+
+
+def get_report_service(db: AsyncSession = Depends(get_db)) -> ReportService:
+    saas_project_repository = SaasProjectRepository(db)
+    metric_snapshot_repository = MetricSnapshotRepository(db)
+    saas_score_repository = SaasScoreRepository(db)
+    metric_calculation_service = MetricCalculationService(
+        metric_snapshot_repository,
+        saas_project_repository,
+    )
+    dashboard_service = DashboardService(
+        saas_project_repository,
+        metric_snapshot_repository,
+        saas_score_repository,
+        metric_calculation_service,
+    )
+    return ReportService(
+        ReportRepository(db),
+        saas_project_repository,
+        metric_snapshot_repository,
+        saas_score_repository,
+        dashboard_service,
     )
 
 

@@ -5,6 +5,7 @@ from app.api.v1.endpoints import (
     dashboards,
     metric_calculations,
     metric_snapshots,
+    reports,
     saas_projects,
     saas_scores,
 )
@@ -16,3 +17,4 @@ api_router.include_router(metric_snapshots.router)
 api_router.include_router(metric_calculations.router)
 api_router.include_router(saas_scores.router)
 api_router.include_router(dashboards.router)
+api_router.include_router(reports.router)
