@@ -43,10 +43,10 @@ class FakeProject:
 
 
 class FakeKey:
-    def __init__(self, *, user_id: uuid.UUID) -> None:
+    def __init__(self, *, user_id: uuid.UUID, provider: AiProvider = AiProvider.OPENAI) -> None:
         self.id = uuid.uuid4()
         self.user_id = user_id
-        self.provider = AiProvider.OPENAI
+        self.provider = provider
         self.is_active = True
 
 
@@ -134,6 +134,24 @@ class FakeLlmClient:
         )
 
 
+class ResolvingFakeLlmClient:
+    def __init__(self) -> None:
+        from app.services.llm_client_service import LlmClientService
+
+        self.client = LlmClientService()
+
+    async def generate_analysis(self, *, provider, api_key, model_name, system_prompt, user_prompt):
+        resolved_model = self.client._resolve_litellm_model(provider=provider, model_name=model_name)
+        return LlmResponse(
+            output_text="Analisis generado con modelo resuelto.",
+            output_json=None,
+            tokens_input=10,
+            tokens_output=20,
+            estimated_cost=None,
+            model_name=resolved_model,
+        )
+
+
 def build_service(fake_user: FakeUser, project: FakeProject, key: FakeKey) -> AiAnalysisService:
     return AiAnalysisService(
         FakeAnalysisRepository(),
@@ -143,6 +161,18 @@ def build_service(fake_user: FakeUser, project: FakeProject, key: FakeKey) -> Ai
         FakeScoreRepository(),
         FakeContextService(),
         FakeLlmClient(),
+    )
+
+
+def build_resolving_service(fake_user: FakeUser, project: FakeProject, key: FakeKey) -> AiAnalysisService:
+    return AiAnalysisService(
+        FakeAnalysisRepository(),
+        FakeKeyService(key),
+        FakeProjectRepository([project]),
+        FakeSnapshotRepository(),
+        FakeScoreRepository(),
+        FakeContextService(),
+        ResolvingFakeLlmClient(),
     )
 
 
@@ -250,3 +280,24 @@ def test_foreign_project_returns_404():
     app.dependency_overrides.clear()
 
     assert response.status_code == 404
+
+
+def test_generate_analysis_persists_resolved_model_name():
+    fake_user = FakeUser()
+    project = FakeProject(owner_id=fake_user.id)
+    key = FakeKey(user_id=fake_user.id, provider=AiProvider.GEMINI)
+    client = build_client(fake_user, build_resolving_service(fake_user, project, key))
+
+    response = client.post(
+        f"/api/v1/saas-projects/{project.id}/ai-analyses",
+        json={
+            "ai_key_id": str(key.id),
+            "analysis_type": "FULL_DIAGNOSIS",
+            "model_name": "gemini-1.5-flash",
+        },
+    )
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 201
+    assert response.json()["model_name"] == "gemini/gemini-1.5-flash"
