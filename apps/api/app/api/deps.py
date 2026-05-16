@@ -12,6 +12,7 @@ from app.repositories.metric_snapshot_repository import MetricSnapshotRepository
 from app.repositories.user_repository import UserRepository
 from app.repositories.saas_project_repository import SaasProjectRepository
 from app.services.auth_service import AuthService
+from app.services.metric_calculation_service import MetricCalculationService
 from app.services.metric_snapshot_service import MetricSnapshotService
 from app.services.saas_project_service import SaasProjectService
 
@@ -28,6 +29,13 @@ def get_saas_project_service(db: AsyncSession = Depends(get_db)) -> SaasProjectS
 
 def get_metric_snapshot_service(db: AsyncSession = Depends(get_db)) -> MetricSnapshotService:
     return MetricSnapshotService(
+        MetricSnapshotRepository(db),
+        SaasProjectRepository(db),
+    )
+
+
+def get_metric_calculation_service(db: AsyncSession = Depends(get_db)) -> MetricCalculationService:
+    return MetricCalculationService(
         MetricSnapshotRepository(db),
         SaasProjectRepository(db),
     )

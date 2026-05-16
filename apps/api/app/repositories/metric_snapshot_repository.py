@@ -66,6 +66,36 @@ class MetricSnapshotRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_latest_by_project(
+        self,
+        *,
+        saas_project_id: UUID,
+    ) -> SaasMetricSnapshot | None:
+        result = await self.db.execute(
+            select(SaasMetricSnapshot)
+            .where(SaasMetricSnapshot.saas_project_id == saas_project_id)
+            .order_by(SaasMetricSnapshot.captured_at.desc())
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_previous_snapshot(
+        self,
+        *,
+        saas_project_id: UUID,
+        captured_at: datetime,
+    ) -> SaasMetricSnapshot | None:
+        result = await self.db.execute(
+            select(SaasMetricSnapshot)
+            .where(
+                SaasMetricSnapshot.saas_project_id == saas_project_id,
+                SaasMetricSnapshot.captured_at < captured_at,
+            )
+            .order_by(SaasMetricSnapshot.captured_at.desc())
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
     async def update(
         self,
         *,
