@@ -9,13 +9,19 @@ from app.core.security import decode_access_token
 from app.db.session import get_db
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
+from app.repositories.saas_project_repository import SaasProjectRepository
 from app.services.auth_service import AuthService
+from app.services.saas_project_service import SaasProjectService
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
 def get_auth_service(db: AsyncSession = Depends(get_db)) -> AuthService:
     return AuthService(UserRepository(db))
+
+
+def get_saas_project_service(db: AsyncSession = Depends(get_db)) -> SaasProjectService:
+    return SaasProjectService(SaasProjectRepository(db))
 
 
 async def get_current_user(
