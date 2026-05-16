@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import SaasCategory, SaasStage
@@ -15,23 +15,42 @@ class SaasProjectRepository:
         self,
         *,
         owner_id: UUID,
-        skip: int = 0,
-        limit: int = 50,
+        offset: int = 0,
+        limit: int = 20,
         stage: SaasStage | None = None,
         category: SaasCategory | None = None,
-    ) -> list[SaasProject]:
-        statement = select(SaasProject).where(
+        search: str | None = None,
+    ) -> tuple[list[SaasProject], int]:
+        filters = [
             SaasProject.owner_id == owner_id,
             SaasProject.deleted_at.is_(None),
-        )
+        ]
         if stage is not None:
-            statement = statement.where(SaasProject.stage == stage)
+            filters.append(SaasProject.stage == stage)
         if category is not None:
-            statement = statement.where(SaasProject.category == category)
+            filters.append(SaasProject.category == category)
+        if search is not None:
+            search_pattern = f"%{search}%"
+            filters.append(
+                or_(
+                    SaasProject.name.ilike(search_pattern),
+                    SaasProject.slug.ilike(search_pattern),
+                    SaasProject.description.ilike(search_pattern),
+                )
+            )
 
-        statement = statement.order_by(SaasProject.created_at.desc()).offset(skip).limit(limit)
+        statement = (
+            select(SaasProject)
+            .where(*filters)
+            .order_by(SaasProject.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        count_statement = select(func.count()).select_from(SaasProject).where(*filters)
+
         result = await self.db.execute(statement)
-        return list(result.scalars().all())
+        total_result = await self.db.execute(count_statement)
+        return list(result.scalars().all()), total_result.scalar_one()
 
     async def get_by_id_for_owner(self, *, project_id: UUID, owner_id: UUID) -> SaasProject | None:
         result = await self.db.execute(

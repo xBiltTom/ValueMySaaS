@@ -9,7 +9,6 @@ from app.models.enums import BusinessModel, SaasCategory, SaasStage
 
 class SaasProjectBase(BaseModel):
     name: str = Field(min_length=1, max_length=255)
-    slug: str = Field(min_length=1, max_length=255, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
     description: str | None = None
     category: SaasCategory | None = None
     stage: SaasStage = SaasStage.IDEA
@@ -26,14 +25,12 @@ class SaasProjectBase(BaseModel):
 
 
 class SaasProjectCreate(SaasProjectBase):
-    pass
+    slug: str | None = Field(default=None, min_length=1, max_length=255)
 
 
 class SaasProjectUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=255)
-    slug: str | None = Field(
-        default=None, min_length=1, max_length=255, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$"
-    )
+    slug: str | None = Field(default=None, min_length=1, max_length=255)
     description: str | None = None
     category: SaasCategory | None = None
     stage: SaasStage | None = None
@@ -54,6 +51,18 @@ class SaasProjectRead(SaasProjectBase):
 
     id: UUID
     owner_id: UUID
+    slug: str
     created_at: datetime
     updated_at: datetime
     deleted_at: datetime | None
+
+
+class SaasProjectListItem(SaasProjectRead):
+    pass
+
+
+class SaasProjectListResponse(BaseModel):
+    items: list[SaasProjectListItem]
+    total: int
+    limit: int
+    offset: int

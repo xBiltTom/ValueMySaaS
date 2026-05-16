@@ -1,3 +1,5 @@
+import re
+import unicodedata
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -5,7 +7,7 @@ from fastapi import HTTPException, status
 from app.models.enums import SaasCategory, SaasStage
 from app.models.saas_project import SaasProject
 from app.repositories.saas_project_repository import SaasProjectRepository
-from app.schemas.saas_project import SaasProjectCreate, SaasProjectUpdate
+from app.schemas.saas_project import SaasProjectCreate, SaasProjectListResponse, SaasProjectUpdate
 
 
 class SaasProjectService:
@@ -16,18 +18,21 @@ class SaasProjectService:
         self,
         *,
         owner_id: UUID,
-        skip: int = 0,
-        limit: int = 50,
+        offset: int = 0,
+        limit: int = 20,
         stage: SaasStage | None = None,
         category: SaasCategory | None = None,
-    ) -> list[SaasProject]:
-        return await self.project_repository.list_by_owner(
+        search: str | None = None,
+    ) -> SaasProjectListResponse:
+        items, total = await self.project_repository.list_by_owner(
             owner_id=owner_id,
-            skip=skip,
+            offset=offset,
             limit=limit,
             stage=stage,
             category=category,
+            search=search,
         )
+        return SaasProjectListResponse(items=items, total=total, limit=limit, offset=offset)
 
     async def get_project(self, *, project_id: UUID, owner_id: UUID) -> SaasProject:
         project = await self.project_repository.get_by_id_for_owner(
@@ -43,7 +48,7 @@ class SaasProjectService:
 
     async def create_project(self, *, owner_id: UUID, payload: SaasProjectCreate) -> SaasProject:
         data = payload.model_dump()
-        data["slug"] = data["slug"].lower()
+        data["slug"] = self._slugify(data["slug"] or data["name"])
         data["currency"] = data["currency"].upper()
 
         await self._ensure_slug_available(owner_id=owner_id, slug=data["slug"])
@@ -60,7 +65,7 @@ class SaasProjectService:
         data = payload.model_dump(exclude_unset=True)
 
         if "slug" in data and data["slug"] is not None:
-            data["slug"] = data["slug"].lower()
+            data["slug"] = self._slugify(data["slug"])
             await self._ensure_slug_available(
                 owner_id=owner_id,
                 slug=data["slug"],
@@ -92,3 +97,10 @@ class SaasProjectService:
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Project slug is already used by this user",
             )
+
+    def _slugify(self, value: str) -> str:
+        normalized = unicodedata.normalize("NFKD", value)
+        ascii_value = normalized.encode("ascii", "ignore").decode("ascii")
+        slug = re.sub(r"[^a-zA-Z0-9]+", "-", ascii_value.lower()).strip("-")
+        slug = re.sub(r"-{2,}", "-", slug)
+        return slug or "saas-project"

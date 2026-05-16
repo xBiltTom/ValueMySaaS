@@ -60,7 +60,17 @@ class FakeSaasProjectService:
     def __init__(self) -> None:
         self.projects: dict[uuid.UUID, FakeProject] = {}
 
-    async def list_projects(self, *, owner_id, skip=0, limit=50, stage=None, category=None):
+    def _slugify(self, value: str) -> str:
+        import re
+        import unicodedata
+
+        normalized = unicodedata.normalize("NFKD", value)
+        ascii_value = normalized.encode("ascii", "ignore").decode("ascii")
+        slug = re.sub(r"[^a-zA-Z0-9]+", "-", ascii_value.lower()).strip("-")
+        slug = re.sub(r"-{2,}", "-", slug)
+        return slug or "saas-project"
+
+    async def list_projects(self, *, owner_id, offset=0, limit=20, search=None, stage=None, category=None):
         projects = [
             project
             for project in self.projects.values()
@@ -68,12 +78,28 @@ class FakeSaasProjectService:
         ]
         if stage is not None:
             projects = [project for project in projects if project.stage == stage]
-        return projects[skip : skip + limit]
+        if search is not None:
+            search_value = search.lower()
+            projects = [
+                project
+                for project in projects
+                if search_value in project.name.lower()
+                or search_value in project.slug.lower()
+                or (project.description is not None and search_value in project.description.lower())
+            ]
+        projects.sort(key=lambda project: project.created_at, reverse=True)
+        return {
+            "items": projects[offset : offset + limit],
+            "total": len(projects),
+            "limit": limit,
+            "offset": offset,
+        }
 
     async def create_project(self, *, owner_id, payload):
+        slug = self._slugify(payload.slug or payload.name)
         if any(
             project.owner_id == owner_id
-            and project.slug == payload.slug.lower()
+            and project.slug == slug
             and project.deleted_at is None
             for project in self.projects.values()
         ):
@@ -84,7 +110,7 @@ class FakeSaasProjectService:
         project = FakeProject(
             owner_id=owner_id,
             name=payload.name,
-            slug=payload.slug.lower(),
+            slug=slug,
             stage=payload.stage,
         )
         project.description = payload.description
@@ -107,7 +133,7 @@ class FakeSaasProjectService:
         data = payload.model_dump(exclude_unset=True)
         for field, value in data.items():
             if field == "slug" and value is not None:
-                value = value.lower()
+                value = self._slugify(value)
             if field == "currency" and value is not None:
                 value = value.upper()
             setattr(project, field, value)
@@ -161,7 +187,43 @@ def test_create_saas_project():
     assert Decimal(data["current_price"]) == Decimal("19.90")
 
 
-def test_list_saas_projects_owned_by_current_user():
+def test_create_saas_project_generates_slug_when_missing():
+    fake_user = FakeUser()
+    fake_service = FakeSaasProjectService()
+    client = build_client(fake_user, fake_service)
+
+    response = client.post(
+        "/api/v1/saas-projects",
+        json={
+            "name": "Mi S\u00faper SaaS IA!",
+            "description": "Proyecto con slug autom\u00e1tico",
+        },
+    )
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 201
+    data = response.json()
+    assert data["slug"] == "mi-super-saas-ia"
+
+
+def test_create_saas_project_normalizes_custom_slug():
+    fake_user = FakeUser()
+    fake_service = FakeSaasProjectService()
+    client = build_client(fake_user, fake_service)
+
+    response = client.post(
+        "/api/v1/saas-projects",
+        json={"name": "CRM Pro", "slug": "   CRM+++Pro   "},
+    )
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 201
+    assert response.json()["slug"] == "crm-pro"
+
+
+def test_list_saas_projects_returns_paginated_response():
     fake_user = FakeUser()
     fake_service = FakeSaasProjectService()
     client = build_client(fake_user, fake_service)
@@ -174,8 +236,41 @@ def test_list_saas_projects_owned_by_current_user():
 
     assert response.status_code == 200
     data = response.json()
-    assert len(data) == 1
-    assert data[0]["slug"] == "two"
+    assert data["total"] == 1
+    assert data["limit"] == 20
+    assert data["offset"] == 0
+    assert len(data["items"]) == 1
+    assert data["items"][0]["slug"] == "two"
+
+
+def test_list_saas_projects_supports_offset_limit_and_search():
+    fake_user = FakeUser()
+    fake_service = FakeSaasProjectService()
+    client = build_client(fake_user, fake_service)
+    client.post(
+        "/api/v1/saas-projects",
+        json={"name": "StudyFlow AI", "description": "Productividad para estudiantes"},
+    )
+    client.post(
+        "/api/v1/saas-projects",
+        json={"name": "CRM Pro", "description": "Herramienta de ventas"},
+    )
+    client.post(
+        "/api/v1/saas-projects",
+        json={"name": "Analytics Hub", "description": "Dashboards y funnels"},
+    )
+
+    response = client.get("/api/v1/saas-projects?search=crm&offset=0&limit=1")
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] == 1
+    assert data["limit"] == 1
+    assert data["offset"] == 0
+    assert len(data["items"]) == 1
+    assert data["items"][0]["slug"] == "crm-pro"
 
 
 def test_get_update_and_delete_saas_project():

@@ -5,16 +5,22 @@ from fastapi import APIRouter, Depends, Query, Response, status
 from app.api.deps import get_current_user, get_saas_project_service
 from app.models.enums import SaasCategory, SaasStage
 from app.models.user import User
-from app.schemas.saas_project import SaasProjectCreate, SaasProjectRead, SaasProjectUpdate
+from app.schemas.saas_project import (
+    SaasProjectCreate,
+    SaasProjectListResponse,
+    SaasProjectRead,
+    SaasProjectUpdate,
+)
 from app.services.saas_project_service import SaasProjectService
 
 router = APIRouter(prefix="/saas-projects", tags=["SaaS Projects"])
 
 
-@router.get("", response_model=list[SaasProjectRead])
+@router.get("", response_model=SaasProjectListResponse)
 async def list_saas_projects(
-    skip: int = Query(default=0, ge=0),
-    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=20, ge=1, le=100),
+    search: str | None = Query(default=None),
     stage: SaasStage | None = None,
     category: SaasCategory | None = None,
     current_user: User = Depends(get_current_user),
@@ -22,8 +28,9 @@ async def list_saas_projects(
 ):
     return await project_service.list_projects(
         owner_id=current_user.id,
-        skip=skip,
+        offset=offset,
         limit=limit,
+        search=search,
         stage=stage,
         category=category,
     )
