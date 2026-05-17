@@ -36,9 +36,9 @@ export default function ProjectAiAnalysisPage() {
           Volver al dashboard
         </Link>
         <p className="mt-4 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">BYOK IA</p>
-        <h1 className="mt-1 font-display text-4xl font-semibold">Analisis IA</h1>
+        <h1 className="mt-1 font-display text-4xl font-semibold">Análisis IA</h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-          Genera diagnosticos asistidos usando tus propias API Keys BYOK y los datos reales del SaaS.
+          Genera diagnósticos asistidos usando tus propias API Keys BYOK y los datos reales del SaaS.
           {projectQuery.data ? ` Proyecto: ${projectQuery.data.name}.` : ""}
         </p>
       </div>
@@ -53,10 +53,10 @@ export default function ProjectAiAnalysisPage() {
           <Card>
             <CardHeader>
               <BrainCircuit className="h-6 w-6 text-primary" />
-              <CardTitle>Diagnostico complementario</CardTitle>
+              <CardTitle>Diagnóstico complementario</CardTitle>
               <CardDescription>
-                La IA interpreta contexto registrado: proyecto, metricas, score, alertas y reportes disponibles.
-                No reemplaza el diagnostico heuristico; lo complementa para mejora continua.
+                La IA interpreta contexto registrado: proyecto, métricas, score, alertas y reportes disponibles.
+                No reemplaza el diagnóstico heurístico; lo complementa para mejora continua.
               </CardDescription>
             </CardHeader>
           </Card>
@@ -69,7 +69,7 @@ export default function ProjectAiAnalysisPage() {
         </div>
         <div className="space-y-4">
           <div>
-            <h2 className="text-xl font-semibold">Historial de analisis</h2>
+            <h2 className="text-xl font-semibold">Historial de análisis</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Resultados generados por el backend usando tus claves BYOK activas.
             </p>

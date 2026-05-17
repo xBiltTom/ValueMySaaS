@@ -8,6 +8,7 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { Badge } from "@/components/ui/badge";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingState } from "@/components/shared/loading-state";
+import { formatEnum } from "@/lib/formatters";
 import { getApiErrorMessage } from "@/lib/api-client";
 import { listAiKeys } from "@/features/ai-keys/api";
 import { getProject } from "@/features/project-dashboard/api";
@@ -53,7 +54,7 @@ export default function ConversationPage() {
             {conversationQuery.data?.title || "Chat contextual"}
           </h1>
           <div className="mt-3 flex flex-wrap gap-2">
-            {conversationQuery.data ? <Badge>{conversationQuery.data.status}</Badge> : null}
+            {conversationQuery.data ? <Badge>{formatEnum(conversationQuery.data.status)}</Badge> : null}
             {conversationQuery.data?.model_name ? <Badge>{conversationQuery.data.model_name}</Badge> : null}
           </div>
         </div>

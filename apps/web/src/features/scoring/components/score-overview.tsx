@@ -24,17 +24,17 @@ export function ScoreOverview({ score }: { score: SaasScore }) {
         </div>
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            Diagnostico heuristico
+            Diagnóstico heurístico
           </p>
           <h1 className="mt-2 font-display text-4xl font-semibold">{formatEnum(score.sustainability_level)}</h1>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            Recomendacion de decision: {formatEnum(score.decision_recommendation)}. Este score resume valor,
-            sostenibilidad y riesgo con base en las metricas registradas.
+            Recomendación de decisión: {formatEnum(score.decision_recommendation)}. Este score resume valor,
+            sostenibilidad y riesgo con base en las métricas registradas.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Badge className="bg-primary/10 text-primary">{formatEnum(score.sustainability_level)}</Badge>
             <Badge>{formatEnum(score.decision_recommendation)}</Badge>
-            <Badge>Version {score.scoring_version}</Badge>
+            <Badge>Versión {score.scoring_version}</Badge>
           </div>
         </div>
       </div>

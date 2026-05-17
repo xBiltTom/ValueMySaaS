@@ -28,7 +28,7 @@ export function ProjectHeader({
           </div>
           <h1 className="mt-4 font-display text-4xl font-semibold">{project.name}</h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
-            {project.description || "Este SaaS aun no tiene descripcion registrada."}
+            {project.description || "Este SaaS aún no tiene descripción registrada."}
           </p>
           <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
             <span><strong>Precio:</strong> {formatCurrency(project.current_price, project.currency)}</span>
@@ -39,11 +39,11 @@ export function ProjectHeader({
         <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
           <Link href={`/projects/${project.id}/metrics`} className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-[#245448]">
             <PlusCircle className="h-4 w-4" />
-            Registrar metricas
+            Métricas
           </Link>
           <Button variant="secondary" onClick={onGenerateScore} disabled={!onGenerateScore || isGenerating}>
             <Gauge className="h-4 w-4" />
-            {isGenerating ? "Generando..." : "Generar diagnostico"}
+            {isGenerating ? "Generando..." : "Generar diagnóstico"}
           </Button>
           <Link href={`/projects/${project.id}/score`} className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-semibold hover:bg-white">
             <BarChart3 className="h-4 w-4" />
@@ -55,7 +55,7 @@ export function ProjectHeader({
           </Link>
           <Link href={`/projects/${project.id}/ai-analysis`} className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-semibold hover:bg-white">
             <BrainCircuit className="h-4 w-4" />
-            Analisis IA
+            Análisis IA
           </Link>
           <Link href={`/projects/${project.id}/chat`} className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-semibold hover:bg-white">
             <MessageSquareText className="h-4 w-4" />
@@ -63,12 +63,31 @@ export function ProjectHeader({
           </Link>
         </div>
       </div>
+      <div className="border-t border-border bg-[#fbf8f1] p-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Flujo recomendado</p>
+        <div className="mt-3 grid gap-2 text-sm text-muted-foreground md:grid-cols-7">
+          {[
+            "Registra métricas",
+            "Genera diagnóstico",
+            "Revisa dashboard",
+            "Genera reporte ejecutivo",
+            "Conecta BYOK IA",
+            "Genera análisis IA",
+            "Conversa con tu SaaS",
+          ].map((step, index) => (
+            <div key={step} className="rounded-md border border-border bg-white p-3">
+              <span className="text-xs font-semibold text-primary">{index + 1}</span>
+              <p className="mt-1 font-semibold text-foreground">{step}</p>
+            </div>
+          ))}
+        </div>
+      </div>
       <div className="grid border-t border-border bg-[#fbf8f1] text-sm text-muted-foreground sm:grid-cols-3">
         <Link href={`/projects/${project.id}/reports`} className="flex items-center gap-2 px-5 py-3 font-semibold text-primary hover:bg-muted">
           <FileText className="h-4 w-4" /> Reportes disponibles
         </Link>
         <Link href={`/projects/${project.id}/ai-analysis`} className="flex items-center gap-2 px-5 py-3 font-semibold text-primary hover:bg-muted">
-          <Bot className="h-4 w-4" /> Analisis IA BYOK
+          <Bot className="h-4 w-4" /> Análisis IA BYOK
         </Link>
         <Link href={`/projects/${project.id}/chat`} className="flex items-center gap-2 px-5 py-3 font-semibold text-primary hover:bg-muted">
           <MessageSquareText className="h-4 w-4" /> Chat contextual

@@ -44,7 +44,7 @@ export default function ProjectReportsPage() {
         <p className="mt-4 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Evidencia</p>
         <h1 className="mt-1 font-display text-4xl font-semibold">Reportes</h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-          Convierte metricas y diagnostico en evidencia para la toma de decisiones.
+          Convierte métricas y diagnóstico en evidencia para la toma de decisiones.
           {projectQuery.data ? ` Proyecto: ${projectQuery.data.name}.` : ""}
         </p>
       </div>
@@ -56,7 +56,7 @@ export default function ProjectReportsPage() {
       {basicMutation.isError || executiveMutation.isError ? (
         <ErrorState
           title="No se pudo generar el reporte"
-          message={`${getApiErrorMessage(basicMutation.error || executiveMutation.error)}. Verifica que el SaaS tenga metricas registradas y un diagnostico generado.`}
+          message={`${getApiErrorMessage(basicMutation.error || executiveMutation.error)}. Verifica que el SaaS tenga métricas registradas y un diagnóstico generado.`}
         />
       ) : null}
 

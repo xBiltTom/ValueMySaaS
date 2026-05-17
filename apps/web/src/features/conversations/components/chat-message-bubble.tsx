@@ -1,5 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
+import { formatDateTime } from "@/lib/formatters";
 import { ConversationMessage } from "@/features/conversations/types";
 import { roleLabel } from "@/features/conversations/utils";
 
@@ -19,7 +20,7 @@ export function ChatMessageBubble({ message }: { message: ConversationMessage })
       >
         <div className="mb-2 flex flex-wrap items-center gap-2 text-xs font-semibold opacity-80">
           <span>{roleLabel(message.role)}</span>
-          <span>{new Date(message.created_at).toLocaleString("es-PE")}</span>
+          <span>{formatDateTime(message.created_at)}</span>
         </div>
         {isAssistant ? (
           <div className="prose prose-neutral max-w-none prose-p:leading-7 prose-li:leading-7">

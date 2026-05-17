@@ -33,21 +33,21 @@ export function CreateConversationForm({ projectId }: { projectId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Nueva conversacion</CardTitle>
+        <CardTitle>Nueva conversación</CardTitle>
         <CardDescription>Define un foco para conversar sobre tu SaaS.</CardDescription>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>
           {mutation.isError ? (
-            <ErrorState title="No se pudo crear la conversacion" message={getApiErrorMessage(mutation.error)} />
+            <ErrorState title="No se pudo crear la conversación" message={getApiErrorMessage(mutation.error)} />
           ) : null}
           <label className="block">
             <span className="text-sm font-semibold">Titulo</span>
-            <Input className="mt-2" placeholder="Diagnostico de retencion" {...form.register("title")} />
+            <Input className="mt-2" placeholder="Diagnóstico de retención" {...form.register("title")} />
           </label>
           <Button type="submit" disabled={mutation.isPending}>
             <Plus className="h-4 w-4" />
-            {mutation.isPending ? "Creando..." : "Crear conversacion"}
+            {mutation.isPending ? "Creando..." : "Crear conversación"}
           </Button>
         </form>
       </CardContent>

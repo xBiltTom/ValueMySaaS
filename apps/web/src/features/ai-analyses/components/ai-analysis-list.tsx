@@ -3,6 +3,7 @@ import { BrainCircuit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/shared/empty-state";
+import { formatDateTime } from "@/lib/formatters";
 import { providerLabel } from "@/features/ai-keys/utils";
 import { AiAnalysisListResponse } from "@/features/ai-analyses/types";
 import { analysisTypeLabel } from "@/features/ai-analyses/utils";
@@ -12,8 +13,8 @@ export function AiAnalysisList({ projectId, analyses }: { projectId: string; ana
     return (
       <EmptyState
         icon={BrainCircuit}
-        title="Aun no hay analisis IA."
-        description="Genera el primer diagnostico complementario usando una API Key BYOK activa."
+        title="Aún no hay análisis IA."
+        description="Genera un análisis asistido usando una API Key activa y el contexto del SaaS."
       />
     );
   }
@@ -21,7 +22,7 @@ export function AiAnalysisList({ projectId, analyses }: { projectId: string; ana
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Analisis generados</CardTitle>
+        <CardTitle>Análisis generados</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {analyses.items.map((analysis) => (
@@ -31,7 +32,7 @@ export function AiAnalysisList({ projectId, analyses }: { projectId: string; ana
                 <div>
                   <h3 className="font-semibold">{analysisTypeLabel(analysis.analysis_type)}</h3>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {new Date(analysis.created_at).toLocaleString("es-PE")}
+                    {formatDateTime(analysis.created_at)}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">

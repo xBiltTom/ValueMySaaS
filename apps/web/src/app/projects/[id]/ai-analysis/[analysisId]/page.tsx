@@ -29,7 +29,7 @@ export default function AiAnalysisDetailPage() {
         <div>
           <Link href={`/projects/${projectId}/ai-analysis`} className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
             <ArrowLeft className="h-4 w-4" />
-            Volver a analisis IA
+            Volver a análisis IA
           </Link>
           <p className="mt-4 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             {projectQuery.data?.name || "Proyecto"}

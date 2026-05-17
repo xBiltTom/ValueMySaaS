@@ -8,8 +8,8 @@ export function AiKeyList({ aiKeys }: { aiKeys: AiKeyListResponse }) {
     return (
       <EmptyState
         icon={KeyRound}
-        title="Aun no tienes API Keys de IA."
-        description="Registra tu primera clave BYOK para dejar lista la siguiente fase de analisis asistido por IA."
+        title="Aún no tienes API Keys de IA."
+        description="Configura una clave BYOK para habilitar análisis IA y chat contextual."
       />
     );
   }

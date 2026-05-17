@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { getApiErrorMessage } from "@/lib/api-client";
+import { formatDateTime, formatEnum } from "@/lib/formatters";
 import { deleteConversation } from "@/features/conversations/api";
 import { ConversationListResponse } from "@/features/conversations/types";
 
@@ -25,8 +26,8 @@ export function ConversationList({ projectId, conversations }: { projectId: stri
     return (
       <EmptyState
         icon={MessageSquareText}
-        title="Aun no hay conversaciones."
-        description="Crea una conversacion para preguntar sobre metricas, riesgos, score y acciones de mejora."
+        title="Aún no hay conversaciones."
+        description="Crea una conversación para preguntar sobre métricas, riesgos, score o acciones de mejora."
       />
     );
   }
@@ -38,18 +39,18 @@ export function ConversationList({ projectId, conversations }: { projectId: stri
       </CardHeader>
       <CardContent className="space-y-3">
         {deleteMutation.isError ? (
-          <ErrorState title="No se pudo eliminar la conversacion" message={getApiErrorMessage(deleteMutation.error)} />
+          <ErrorState title="No se pudo eliminar la conversación" message={getApiErrorMessage(deleteMutation.error)} />
         ) : null}
         {conversations.items.map((conversation) => (
           <article key={conversation.id} className="rounded-md border border-border bg-white p-4">
             <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
               <Link href={`/projects/${projectId}/chat/${conversation.id}`} className="min-w-0 flex-1">
-                <h3 className="font-semibold">{conversation.title || "Conversacion sin titulo"}</h3>
+                <h3 className="font-semibold">{conversation.title || "Conversación sin título"}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Actualizada: {new Date(conversation.updated_at).toLocaleString("es-PE")}
+                  Actualizada: {formatDateTime(conversation.updated_at)}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Badge>{conversation.status}</Badge>
+                  <Badge>{formatEnum(conversation.status)}</Badge>
                   {conversation.model_name ? <Badge>{conversation.model_name}</Badge> : null}
                 </div>
               </Link>
@@ -57,7 +58,7 @@ export function ConversationList({ projectId, conversations }: { projectId: stri
                 type="button"
                 variant="danger"
                 onClick={() => {
-                  if (window.confirm("Eliminar esta conversacion?")) deleteMutation.mutate(conversation.id);
+                  if (window.confirm("¿Eliminar esta conversación?")) deleteMutation.mutate(conversation.id);
                 }}
                 disabled={deleteMutation.isPending}
               >

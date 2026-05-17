@@ -60,10 +60,10 @@ export default function ProjectDashboardPage() {
           {!dashboardQuery.data.latest_snapshot ? (
             <EmptyState
               icon={Database}
-              title="Aun no hay snapshots para este SaaS."
-              description="Registra metricas para activar calculos, graficas historicas y diagnostico de sostenibilidad."
+              title="Aún no hay snapshots de métricas."
+              description="Registra un corte de métricas para activar cálculos, score y dashboard histórico."
               actionHref={`/projects/${projectId}/metrics`}
-              actionLabel="Registrar metricas"
+              actionLabel="Registrar métricas"
             />
           ) : null}
 
@@ -73,7 +73,7 @@ export default function ProjectDashboardPage() {
           </div>
 
           <div className="grid gap-6 xl:grid-cols-2">
-            <ProjectHistoryChart title="MRR historico" data={dashboardQuery.data.series.mrr} />
+            <ProjectHistoryChart title="MRR histórico" data={dashboardQuery.data.series.mrr} />
             <ProjectHistoryChart title="Usuarios activos" data={dashboardQuery.data.series.active_users} color="#d8753a" />
             <ProjectHistoryChart title="Churn rate" data={dashboardQuery.data.series.churn_rate} color="#b42318" />
             <ProjectHistoryChart title="Score general" data={dashboardQuery.data.series.overall_score} color="#2f6f60" />
@@ -87,14 +87,14 @@ export default function ProjectDashboardPage() {
           <div className="rounded-lg border border-border bg-[#fbf8f1] p-5">
             <p className="text-sm text-muted-foreground">
               Siguiente paso natural: revisar el{" "}
-              <Link href={`/projects/${projectId}/score`} className="font-semibold text-primary">diagnostico completo</Link>
+              <Link href={`/projects/${projectId}/score`} className="font-semibold text-primary">diagnóstico completo</Link>
               {", generar "}
               <Link href={`/projects/${projectId}/reports`} className="font-semibold text-primary">reportes</Link>
               {", pedir un "}
-              <Link href={`/projects/${projectId}/ai-analysis`} className="font-semibold text-primary">analisis IA BYOK</Link>
+              <Link href={`/projects/${projectId}/ai-analysis`} className="font-semibold text-primary">análisis IA BYOK</Link>
               {", abrir el "}
               <Link href={`/projects/${projectId}/chat`} className="font-semibold text-primary">chat contextual</Link>
-              {" "}o registrar otro corte de metricas para comparar evolucion.
+              {" "}o registrar otro corte de métricas para comparar evolución.
             </p>
           </div>
         </div>

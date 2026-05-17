@@ -35,10 +35,10 @@ export default function ProjectChatPage() {
           <ArrowLeft className="h-4 w-4" />
           Volver al dashboard
         </Link>
-        <p className="mt-4 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Conversacion</p>
+        <p className="mt-4 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Conversación</p>
         <h1 className="mt-1 font-display text-4xl font-semibold">Chat contextual</h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-          Conversa sobre tu SaaS usando metricas, score, alertas, reportes y analisis registrados.
+          Conversa sobre tu SaaS usando métricas, score, alertas, reportes y análisis registrados.
           {projectQuery.data ? ` Proyecto: ${projectQuery.data.name}.` : ""}
         </p>
       </div>

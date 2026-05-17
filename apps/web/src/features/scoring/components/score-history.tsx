@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatEnum } from "@/lib/utils";
+import { formatDateTime, formatEnum } from "@/lib/utils";
 import { SaasScoreListResponse } from "@/features/scoring/types";
 
 export function ScoreHistory({ scores }: { scores: SaasScoreListResponse }) {
@@ -15,7 +15,7 @@ export function ScoreHistory({ scores }: { scores: SaasScoreListResponse }) {
             <div key={score.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-white p-4">
               <div>
                 <p className="font-semibold">Score {score.overall_score}</p>
-                <p className="text-sm text-muted-foreground">{new Date(score.created_at).toLocaleString("es-PE")}</p>
+                <p className="text-sm text-muted-foreground">{formatDateTime(score.created_at)}</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Badge>{formatEnum(score.sustainability_level)}</Badge>
@@ -24,7 +24,7 @@ export function ScoreHistory({ scores }: { scores: SaasScoreListResponse }) {
             </div>
           ))
         ) : (
-          <p className="text-sm text-muted-foreground">No hay diagnosticos generados todavia.</p>
+          <p className="text-sm text-muted-foreground">No hay diagnósticos generados todavía.</p>
         )}
       </CardContent>
     </Card>

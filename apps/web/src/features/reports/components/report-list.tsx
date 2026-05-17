@@ -3,6 +3,7 @@ import { FileSearch } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/shared/empty-state";
+import { formatDateTime, formatEnum } from "@/lib/formatters";
 import { SaasReportListResponse } from "@/features/reports/types";
 import { reportTypeLabel } from "@/features/reports/utils";
 
@@ -11,8 +12,8 @@ export function ReportList({ projectId, reports }: { projectId: string; reports:
     return (
       <EmptyState
         icon={FileSearch}
-        title="Aun no hay reportes generados."
-        description="Genera un reporte basico o ejecutivo para convertir las metricas y el diagnostico en evidencia."
+        title="Aún no hay reportes generados."
+        description="Genera un reporte básico o ejecutivo para convertir el diagnóstico en evidencia."
       />
     );
   }
@@ -30,13 +31,13 @@ export function ReportList({ projectId, reports }: { projectId: string; reports:
                 <div>
                   <h3 className="font-semibold">{report.title}</h3>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    {new Date(report.generated_at || report.created_at).toLocaleString("es-PE")}
+                    {formatDateTime(report.generated_at || report.created_at)}
                   </p>
                 </div>
                 <Badge className="bg-primary/10 text-primary">{reportTypeLabel(report.report_type)}</Badge>
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
-                <Badge>{report.status}</Badge>
+                <Badge>{formatEnum(report.status)}</Badge>
                 {report.metric_snapshot_id ? <Badge>Snapshot vinculado</Badge> : null}
                 {report.score_id ? <Badge>Score vinculado</Badge> : null}
               </div>

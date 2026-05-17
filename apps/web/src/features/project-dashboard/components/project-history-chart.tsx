@@ -2,13 +2,14 @@
 
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatDate } from "@/lib/formatters";
 import { MaybeNumber } from "@/types/api";
 
 type Point = { date: string; label: string | null; value: MaybeNumber };
 
 export function ProjectHistoryChart({ title, data, color = "#173f35" }: { title: string; data: Point[]; color?: string }) {
   const chartData = data.map((item) => ({
-    label: item.label || new Date(item.date).toLocaleDateString("es-PE", { month: "short", day: "2-digit" }),
+    label: item.label || formatDate(item.date),
     value: item.value === null ? null : Number(item.value),
   }));
 
@@ -30,7 +31,7 @@ export function ProjectHistoryChart({ title, data, color = "#173f35" }: { title:
             </ResponsiveContainer>
           </div>
         ) : (
-          <p className="py-12 text-center text-sm text-muted-foreground">Sin serie historica para esta metrica.</p>
+          <p className="py-12 text-center text-sm text-muted-foreground">Sin serie histórica para esta métrica.</p>
         )}
       </CardContent>
     </Card>

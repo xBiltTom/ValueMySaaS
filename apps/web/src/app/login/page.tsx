@@ -58,7 +58,7 @@ export default function LoginPage() {
             </Button>
           </form>
           <p className="mt-5 text-center text-sm text-muted-foreground">
-            Aun no tienes cuenta?{" "}
+            ¿Aún no tienes cuenta?{" "}
             <Link href="/register" className="font-semibold text-primary">Registrate</Link>
           </p>
         </CardContent>

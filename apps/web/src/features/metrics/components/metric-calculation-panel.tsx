@@ -14,7 +14,7 @@ export function MetricCalculationPanel({ calculation }: { calculation: MetricCal
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Calculos latest</CardTitle>
+        <CardTitle>Cálculos latest</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-3">

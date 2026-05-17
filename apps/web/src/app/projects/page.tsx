@@ -37,8 +37,8 @@ export default function ProjectsPage() {
       {projectsQuery.data && projectsQuery.data.items.length === 0 ? (
         <EmptyState
           icon={FolderPlus}
-          title="Aun no tienes SaaS registrados."
-          description="La lista viene directamente de /saas-projects. Crea el primer proyecto para alimentar dashboards y scores."
+          title="Aún no tienes SaaS registrados."
+          description="Crea tu primer SaaS para empezar a medir valor, sostenibilidad y riesgo."
           actionHref="/projects/new"
           actionLabel="Crear mi primer SaaS"
         />

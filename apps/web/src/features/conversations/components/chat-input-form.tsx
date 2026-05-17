@@ -70,7 +70,7 @@ export function ChatInputForm({
         {mutation.isError ? (
           <ErrorState
             title="No se pudo enviar el mensaje"
-            message={`${getApiErrorMessage(mutation.error)}. Verifica que la API Key este activa, que el modelo sea compatible y que el SaaS tenga contexto suficiente.`}
+            message={`${getApiErrorMessage(mutation.error)}. Verifica que la API Key esté activa, que el modelo sea compatible y vuelve a intentarlo.`}
           />
         ) : null}
         <div className="grid gap-3 lg:grid-cols-2">
@@ -109,7 +109,7 @@ export function ChatInputForm({
           <span className="text-sm font-semibold">Mensaje</span>
           <Textarea
             className="mt-2 min-h-32"
-            placeholder="Que significa que mi churn este alto y que deberia mejorar primero?"
+            placeholder="¿Qué significa que mi churn esté alto y qué debería mejorar primero?"
             {...form.register("message")}
           />
           {form.formState.errors.message ? (

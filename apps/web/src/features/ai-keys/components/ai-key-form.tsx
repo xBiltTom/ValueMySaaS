@@ -89,7 +89,7 @@ export function AiKeyForm() {
             ) : null}
           </label>
           <p className="rounded-md border border-border bg-white p-3 text-xs leading-5 text-muted-foreground">
-            Modelo sugerido para verificar despues: <strong>{providerHints[provider]}</strong>
+            Modelo sugerido para verificar después: <strong>{providerHints[provider]}</strong>
           </p>
           <Button type="submit" disabled={mutation.isPending}>
             <Save className="h-4 w-4" />

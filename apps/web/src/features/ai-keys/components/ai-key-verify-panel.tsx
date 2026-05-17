@@ -32,7 +32,7 @@ export function AiKeyVerifyPanel({ aiKey }: { aiKey: AiKey }) {
         <Input className="mt-2" placeholder={providerHints[aiKey.provider]} {...form.register("model_name")} />
       </label>
       {mutation.isError ? (
-        <ErrorState title="No se pudo verificar la conexion" message={getApiErrorMessage(mutation.error)} />
+        <ErrorState title="No se pudo verificar la conexión" message={`${getApiErrorMessage(mutation.error)}. Revisa que la API Key esté activa y que el modelo sea compatible con el proveedor.`} />
       ) : null}
       {mutation.data ? (
         <div className="mt-3 flex gap-3 rounded-md border border-primary/20 bg-primary/10 p-3 text-sm text-primary">
@@ -43,7 +43,7 @@ export function AiKeyVerifyPanel({ aiKey }: { aiKey: AiKey }) {
         </div>
       ) : null}
       <Button className="mt-3" type="submit" disabled={mutation.isPending || !aiKey.is_active}>
-        {mutation.isPending ? "Verificando..." : "Verificar conexion"}
+        {mutation.isPending ? "Verificando..." : "Verificar conexión"}
       </Button>
       {!aiKey.is_active ? (
         <p className="mt-2 text-xs text-muted-foreground">Activa la key antes de verificarla.</p>

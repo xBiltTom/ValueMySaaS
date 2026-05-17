@@ -23,7 +23,7 @@ export function AiAnalysisResult({ analysis }: { analysis: AiAnalysis }) {
 
   return (
     <Card className="p-5">
-      <p className="text-sm text-muted-foreground">El analisis no tiene resultado disponible.</p>
+      <p className="text-sm text-muted-foreground">El análisis no tiene resultado disponible.</p>
     </Card>
   );
 }

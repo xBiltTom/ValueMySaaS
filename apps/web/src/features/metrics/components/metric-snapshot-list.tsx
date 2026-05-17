@@ -2,6 +2,7 @@ import { Calendar, Database } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/empty-state";
+import { formatDateTime } from "@/lib/formatters";
 import { MetricSnapshotListResponse } from "@/features/metrics/types";
 
 export function MetricSnapshotList({ snapshots }: { snapshots: MetricSnapshotListResponse }) {
@@ -9,8 +10,8 @@ export function MetricSnapshotList({ snapshots }: { snapshots: MetricSnapshotLis
     return (
       <EmptyState
         icon={Database}
-        title="Aun no hay snapshots."
-        description="Registra el primer corte de metricas para activar calculos, graficas y diagnostico."
+        title="Aún no hay snapshots de métricas."
+        description="Registra un corte de métricas para activar cálculos, score y dashboard histórico."
       />
     );
   }
@@ -28,7 +29,7 @@ export function MetricSnapshotList({ snapshots }: { snapshots: MetricSnapshotLis
                 <h3 className="font-semibold">{snapshot.period_label || "Sin periodo"}</h3>
                 <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
-                  {new Date(snapshot.captured_at).toLocaleString("es-PE")}
+                  {formatDateTime(snapshot.captured_at)}
                 </p>
               </div>
               <Badge>{snapshot.mrr ? `MRR ${snapshot.mrr}` : "MRR sin dato"}</Badge>

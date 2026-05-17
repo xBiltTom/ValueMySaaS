@@ -29,7 +29,7 @@ const fieldLabels: Record<keyof MetricSnapshotFormValues, string> = {
   churned_customers: "Clientes perdidos",
   nps: "NPS",
   support_tickets: "Tickets de soporte",
-  critical_bugs: "Bugs criticos",
+  critical_bugs: "Bugs críticos",
   uptime_percentage: "Uptime (%)",
   notes: "Notas",
 };
@@ -98,12 +98,12 @@ export function MetricSnapshotForm({ projectId }: { projectId: string }) {
     <form className="space-y-5" onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>
       {mutation.isSuccess ? (
         <div className="rounded-md border border-primary/20 bg-primary/10 p-4 text-sm font-semibold text-primary">
-          Snapshot creado. Ya puedes generar diagnostico con el ultimo registro.
+          Snapshot creado. Ya puedes generar diagnóstico con el último registro.
         </div>
       ) : null}
       {mutation.isError ? <ErrorState message={getApiErrorMessage(mutation.error)} /> : null}
 
-      <MetricSectionCard title="Periodo" description="Define a que corte pertenecen los datos.">
+      <MetricSectionCard title="Periodo" description="Define a qué corte pertenecen los datos.">
         <label className="block">
           <span className="text-sm font-semibold">{fieldLabels.period_label}</span>
           <Input className="mt-2" placeholder="Marzo 2026" {...form.register("period_label")} />
@@ -118,13 +118,13 @@ export function MetricSnapshotForm({ projectId }: { projectId: string }) {
         ))}
       </MetricSectionCard>
 
-      <MetricSectionCard title="Usuarios y adquisicion" description="Volumen, activacion y clientes de pago.">
+      <MetricSectionCard title="Usuarios y adquisición" description="Volumen, activación y clientes de pago.">
         {(["total_users", "active_users", "paying_customers", "new_users", "new_paying_customers"] as const).map((name) => (
           <Field key={name} name={name} register={form.register} error={errors[name]?.message} />
         ))}
       </MetricSectionCard>
 
-      <MetricSectionCard title="Retencion y operacion" description="Riesgo de salida y salud operacional.">
+      <MetricSectionCard title="Retención y operación" description="Riesgo de salida y salud operacional.">
         {(["churned_customers", "nps", "support_tickets", "critical_bugs", "uptime_percentage"] as const).map((name) => (
           <Field key={name} name={name} register={form.register} error={errors[name]?.message} />
         ))}

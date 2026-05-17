@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ErrorState } from "@/components/shared/error-state";
+import { formatDateTime } from "@/lib/formatters";
 import { getApiErrorMessage } from "@/lib/api-client";
 import { deleteAiKey, updateAiKey } from "@/features/ai-keys/api";
 import { AiKey } from "@/features/ai-keys/types";
@@ -31,7 +32,7 @@ export function AiKeyCard({ aiKey }: { aiKey: AiKey }) {
   });
 
   const onDelete = () => {
-    if (window.confirm("Eliminar esta API Key? Esta accion no mostrara ni recuperara la clave.")) {
+    if (window.confirm("¿Eliminar esta API Key? Esta acción no mostrará ni recuperará la clave.")) {
       deleteMutation.mutate();
     }
   };
@@ -49,7 +50,7 @@ export function AiKeyCard({ aiKey }: { aiKey: AiKey }) {
           <h3 className="mt-3 text-lg font-semibold">{aiKey.label || "Sin etiqueta"}</h3>
           <p className="mt-1 font-mono text-sm text-muted-foreground">{maskedKey(aiKey.key_last_four)}</p>
           <p className="mt-2 text-xs text-muted-foreground">
-            Actualizada: {new Date(aiKey.updated_at || aiKey.created_at).toLocaleString("es-PE")}
+            Actualizada: {formatDateTime(aiKey.updated_at || aiKey.created_at)}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

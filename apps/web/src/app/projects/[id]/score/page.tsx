@@ -53,12 +53,12 @@ export default function ProjectScorePage() {
           </Link>
           <p className="mt-4 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Score</p>
           <h1 className="mt-1 font-display text-4xl font-semibold">
-            {projectQuery.data?.name || "Diagnostico"}
+            {projectQuery.data?.name || "Diagnóstico"}
           </h1>
         </div>
         <Button onClick={() => scoreMutation.mutate()} disabled={scoreMutation.isPending}>
           <Gauge className="h-4 w-4" />
-          {scoreMutation.isPending ? "Generando..." : "Generar nuevo diagnostico"}
+          {scoreMutation.isPending ? "Generando..." : "Generar nuevo diagnóstico"}
         </Button>
       </div>
 
@@ -69,10 +69,10 @@ export default function ProjectScorePage() {
       {latestScoreQuery.isError && !latestScoreQuery.data ? (
         <EmptyState
           icon={Gauge}
-          title="Aun no hay diagnostico para este SaaS."
-          description="Genera un score a partir del ultimo snapshot registrado. Si faltan metricas, el backend devolvera una explicacion."
+          title="Aún no hay diagnóstico."
+          description="Genera un score a partir del último snapshot registrado. Si faltan métricas, el backend devolverá una explicación."
           actionHref={`/projects/${projectId}/metrics`}
-          actionLabel="Revisar metricas"
+          actionLabel="Revisar métricas"
         />
       ) : null}
 

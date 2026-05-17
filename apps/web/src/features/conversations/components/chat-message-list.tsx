@@ -17,8 +17,8 @@ export function ChatMessageList({ messages }: { messages: ConversationMessageLis
     return (
       <EmptyState
         icon={MessageSquareText}
-        title="Esta conversacion aun no tiene mensajes."
-        description="Pregunta sobre metricas, riesgos, score o acciones de mejora continua."
+        title="Esta conversación aún no tiene mensajes."
+        description="Pregunta sobre métricas, riesgos, score o acciones de mejora continua."
       />
     );
   }

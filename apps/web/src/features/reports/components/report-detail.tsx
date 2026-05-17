@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { formatDateTime, formatEnum } from "@/lib/formatters";
 import { SaasReport } from "@/features/reports/types";
 import { reportTypeLabel } from "@/features/reports/utils";
 import { ReportJsonRenderer } from "@/features/reports/components/report-json-renderer";
@@ -13,12 +14,12 @@ export function ReportDetail({ report }: { report: SaasReport }) {
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Reporte</p>
             <h1 className="mt-2 font-display text-4xl font-semibold">{report.title}</h1>
             <p className="mt-3 text-sm text-muted-foreground">
-              Generado: {new Date(report.generated_at || report.created_at).toLocaleString("es-PE")}
+              Generado: {formatDateTime(report.generated_at || report.created_at)}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Badge className="bg-primary/10 text-primary">{reportTypeLabel(report.report_type)}</Badge>
-            <Badge>{report.status}</Badge>
+            <Badge>{formatEnum(report.status)}</Badge>
           </div>
         </div>
       </Card>

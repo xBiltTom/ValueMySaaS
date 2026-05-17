@@ -10,15 +10,15 @@ export function ByokInfoCard() {
         </div>
         <CardTitle>Modelo BYOK</CardTitle>
         <CardDescription>
-          Conecta tu propia API Key para habilitar analisis avanzados sin trasladar costos de IA a la plataforma.
+          Conecta tu propia API Key para habilitar análisis avanzados sin trasladar costos de IA a la plataforma.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex gap-3 rounded-md border border-primary/15 bg-primary/10 p-4 text-sm leading-6 text-primary">
           <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0" />
           <p>
-            La clave se envia al backend para cifrado y nunca se vuelve a mostrar completa. En esta pantalla solo veras
-            proveedor, etiqueta, estado y los ultimos 4 caracteres.
+            La clave se envía al backend para cifrado y nunca se vuelve a mostrar completa. En esta pantalla solo verás
+            proveedor, etiqueta, estado y los últimos 4 caracteres.
           </p>
         </div>
       </CardContent>

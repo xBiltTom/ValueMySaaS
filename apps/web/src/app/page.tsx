@@ -22,10 +22,14 @@ export default function Home() {
             ITSM, sostenibilidad y mejora continua para SaaS
           </p>
           <h1 className="font-display text-5xl font-semibold leading-[0.95] tracking-tight text-[#16110d] md:text-7xl">
-            Evalua el valor y sostenibilidad de tu micro-SaaS
+            Evalúa el valor y sostenibilidad de tu micro-SaaS
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
-            ValueMySaaS convierte metricas de negocio, crecimiento y operacion en diagnosticos claros
+            Registra métricas, genera diagnósticos, visualiza riesgos y convierte tus datos en reportes
+            accionables para mejora continua.
+          </p>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
+            ValueMySaaS convierte métricas de negocio, crecimiento y operación en diagnósticos claros
             para decidir si continuar, mejorar, pivotar o pausar tu producto digital.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -43,11 +47,11 @@ export default function Home() {
           <div className="rounded-lg border border-border bg-[#fffdf8]/90 p-4 shadow-2xl shadow-primary/10 backdrop-blur">
             <div className="grid gap-3">
               <div className="rounded-md bg-primary p-5 text-primary-foreground">
-                <p className="text-sm opacity-80">Decision recomendada</p>
+                <p className="text-sm opacity-80">Decisión recomendada</p>
                 <p className="mt-3 text-3xl font-semibold">Mejorar antes de escalar</p>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                {["Finanzas", "Crecimiento", "Retencion", "Riesgo"].map((item, index) => (
+                {["Finanzas", "Crecimiento", "Retención", "Riesgo"].map((item, index) => (
                   <div key={item} className="rounded-md border border-border bg-white p-4">
                     <p className="text-sm text-muted-foreground">{item}</p>
                     <div className="mt-4 h-2 rounded-full bg-muted">
@@ -66,7 +70,7 @@ export default function Home() {
           {[
             ["Finanzas", LineChart],
             ["Crecimiento", Sparkles],
-            ["Retencion", RefreshCcw],
+            ["Retención", RefreshCcw],
             ["Producto", BrainCircuit],
             ["Riesgo", ShieldAlert],
           ].map(([label, Icon]) => (
@@ -74,7 +78,7 @@ export default function Home() {
               <Icon className="h-6 w-6 text-primary" />
               <h2 className="mt-4 font-semibold">{String(label)}</h2>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Indicadores reales para entender valor, estabilidad y proxima accion.
+                Indicadores reales para entender valor, estabilidad y próxima acción.
               </p>
             </div>
           ))}
@@ -86,10 +90,49 @@ export default function Home() {
           <h2 className="font-display text-4xl font-semibold">Mejora continua, no solo reportes</h2>
         </div>
         <p className="text-sm leading-7 text-muted-foreground md:col-span-2">
-          El nucleo es el scoring operativo: registrar SaaS, cargar metricas, detectar riesgo y priorizar
-          decisiones. La IA BYOK entra como complemento avanzado para analisis contextual cuando el usuario
+          El núcleo es el scoring operativo: registrar SaaS, cargar métricas, detectar riesgo y priorizar
+          decisiones. La IA BYOK entra como complemento avanzado para análisis contextual cuando el usuario
           quiera conectar su propia API Key.
         </p>
+      </section>
+
+      <section className="border-t border-border bg-[#fbf8f1] px-5 py-16">
+        <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-[0.7fr_1.3fr]">
+          <h2 className="font-display text-4xl font-semibold">Flujo de mejora continua</h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              "Registra SaaS",
+              "Captura métricas",
+              "Genera score",
+              "Revisa dashboard",
+              "Genera reportes",
+              "Usa IA BYOK opcional",
+            ].map((step, index) => (
+              <div key={step} className="rounded-lg border border-border bg-white p-4">
+                <span className="text-xs font-semibold text-muted-foreground">Paso {index + 1}</span>
+                <p className="mt-2 font-semibold">{step}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-5 py-16">
+        <div className="rounded-lg border border-border bg-primary p-8 text-primary-foreground md:p-10">
+          <h2 className="font-display text-4xl font-semibold">Gestión de servicios TI aplicada a SaaS emergentes</h2>
+          <p className="mt-4 max-w-3xl text-sm leading-7 opacity-85">
+            El MVP conecta valor del servicio, medición, riesgo, continuidad y toma de decisiones. Funciona sin IA:
+            la capa BYOK solo amplía el análisis cuando el usuario decide usar su propia clave.
+          </p>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <Link href="/register" className="inline-flex h-11 items-center justify-center rounded-md bg-white px-4 text-sm font-semibold text-primary">
+              Crear cuenta
+            </Link>
+            <Link href="/login" className="inline-flex h-11 items-center justify-center rounded-md border border-white/40 px-4 text-sm font-semibold">
+              Iniciar sesión
+            </Link>
+          </div>
+        </div>
       </section>
     </main>
   );

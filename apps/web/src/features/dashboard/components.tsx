@@ -5,7 +5,7 @@ import { AlertTriangle, FolderKanban, Gauge, Lightbulb, Trophy } from "lucide-re
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MetricCard } from "@/components/shared/metric-card";
-import { formatEnum } from "@/lib/utils";
+import { formatDate, formatEnum } from "@/lib/utils";
 import { PortfolioDashboardResponse } from "@/features/dashboard/types";
 
 export function PortfolioDashboard({ data }: { data: PortfolioDashboardResponse }) {
@@ -21,7 +21,7 @@ export function PortfolioDashboard({ data }: { data: PortfolioDashboardResponse 
           icon={Gauge}
           label="Score promedio"
           value={data.average_overall_score ?? "Sin score"}
-          hint="Basado en diagnosticos reales generados."
+          hint="Basado en diagnósticos reales generados."
         />
         <MetricCard
           icon={AlertTriangle}
@@ -34,7 +34,7 @@ export function PortfolioDashboard({ data }: { data: PortfolioDashboardResponse 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Distribucion por etapa</CardTitle>
+            <CardTitle>Distribución por etapa</CardTitle>
           </CardHeader>
           <CardContent>
             {stageData.length ? (
@@ -49,7 +49,7 @@ export function PortfolioDashboard({ data }: { data: PortfolioDashboardResponse 
                 </ResponsiveContainer>
               </div>
             ) : (
-              <p className="py-12 text-center text-sm text-muted-foreground">No hay etapas para graficar aun.</p>
+              <p className="py-12 text-center text-sm text-muted-foreground">No hay etapas para graficar aún.</p>
             )}
           </CardContent>
         </Card>
@@ -89,7 +89,7 @@ export function PortfolioDashboard({ data }: { data: PortfolioDashboardResponse 
                   <h3 className="font-semibold">{project.name}</h3>
                   <p className="text-sm text-muted-foreground">{formatEnum(project.category)} · {formatEnum(project.stage)}</p>
                 </div>
-                <Badge>{new Date(project.created_at).toLocaleDateString("es-PE")}</Badge>
+                <Badge>{formatDate(project.created_at)}</Badge>
               </div>
             ))}
           </CardContent>
@@ -99,8 +99,8 @@ export function PortfolioDashboard({ data }: { data: PortfolioDashboardResponse 
             <CardTitle>Referentes del portafolio</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <ProjectScoreLabel icon={Trophy} label="Mas saludable" project={data.healthiest_project} />
-            <ProjectScoreLabel icon={AlertTriangle} label="Mas riesgoso" project={data.riskiest_project} />
+            <ProjectScoreLabel icon={Trophy} label="Más saludable" project={data.healthiest_project} />
+            <ProjectScoreLabel icon={AlertTriangle} label="Más riesgoso" project={data.riskiest_project} />
           </CardContent>
         </Card>
       </div>

@@ -36,9 +36,9 @@ export default function ProjectMetricsPage() {
           <ArrowLeft className="h-4 w-4" />
           Volver al dashboard
         </Link>
-        <p className="mt-4 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Metricas</p>
+        <p className="mt-4 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Métricas</p>
         <h1 className="mt-1 font-display text-4xl font-semibold">
-          {projectQuery.data?.name || "Registrar metricas"}
+          {projectQuery.data?.name || "Registrar métricas"}
         </h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
           Captura snapshots reales para alimentar calculos, score y mejora continua.

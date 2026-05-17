@@ -30,8 +30,8 @@ export default function DashboardPage() {
       {dashboardQuery.data && dashboardQuery.data.total_projects === 0 ? (
         <EmptyState
           icon={FolderPlus}
-          title="Aun no tienes SaaS registrados."
-          description="Crea tu primer SaaS para empezar a medir valor, sostenibilidad, riesgo y recomendaciones de mejora continua."
+          title="Aún no tienes SaaS registrados."
+          description="Crea tu primer SaaS para empezar a medir valor, sostenibilidad y riesgo."
           actionHref="/projects/new"
           actionLabel="Crear mi primer SaaS"
         />

@@ -1,16 +1,18 @@
+import { formatDateTime, formatNullable } from "@/lib/formatters";
+
 const keyLabels: Record<string, string> = {
   executive_summary: "Resumen ejecutivo",
   main_findings: "Hallazgos principales",
   recommendations: "Recomendaciones",
   alerts: "Alertas",
-  metrics: "Metricas",
-  metric_cards: "Metricas clave",
+  metrics: "Métricas",
+  metric_cards: "Métricas clave",
   score: "Score",
-  latest_score: "Ultimo score",
-  latest_snapshot: "Ultimo snapshot",
+  latest_score: "Último score",
+  latest_snapshot: "Último snapshot",
   sustainability_level: "Nivel de sostenibilidad",
-  decision_recommendation: "Recomendacion de decision",
-  generated_at: "Fecha de generacion",
+  decision_recommendation: "Recomendación de decisión",
+  generated_at: "Fecha de generación",
   service_value_assessment: "Evaluacion del valor del servicio",
   data_quality: "Calidad de datos",
   has_snapshot: "Tiene snapshot",
@@ -29,12 +31,12 @@ export function humanizeKey(key: string) {
 }
 
 export function displayValue(value: unknown) {
-  if (value === null || value === undefined) return "Sin dato";
-  if (typeof value === "boolean") return value ? "Si" : "No";
+  if (value === null || value === undefined) return formatNullable(value);
+  if (typeof value === "boolean") return formatNullable(value);
   if (typeof value === "number") return new Intl.NumberFormat("es-PE").format(value);
   if (typeof value === "string") {
     if (/^\d{4}-\d{2}-\d{2}T/.test(value)) {
-      return new Date(value).toLocaleString("es-PE");
+      return formatDateTime(value);
     }
     return value;
   }
@@ -42,7 +44,7 @@ export function displayValue(value: unknown) {
 }
 
 export function reportTypeLabel(type: string) {
-  if (type === "BASIC") return "Basico";
+  if (type === "BASIC") return "Básico";
   if (type === "EXECUTIVE") return "Ejecutivo";
   return humanizeKey(type);
 }

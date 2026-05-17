@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ValueMySaaS Web
 
-## Getting Started
+Frontend de ValueMySaaS construido con Next.js, TypeScript, Tailwind CSS, TanStack Query, React Hook Form, Zod, Recharts y React Markdown.
 
-First, run the development server:
+ValueMySaaS evalúa valor, sostenibilidad y riesgo de ideas SaaS, micro-SaaS, MVPs o productos en operación. La IA es una capa complementaria BYOK; el núcleo del sistema son métricas, score, dashboard, reportes y mejora continua.
+
+## Requisitos
+
+- Node.js
+- Backend de ValueMySaaS corriendo en `http://localhost:8000`
+- Base de datos configurada para el backend
+
+## Variables de Entorno
+
+Crear `.env.local`:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+## Instalación
+
+```bash
+npm install
+```
+
+## Desarrollo
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abrir `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+```
 
-## Learn More
+## Rutas Principales
 
-To learn more about Next.js, take a look at the following resources:
+- `/`
+- `/login`
+- `/register`
+- `/dashboard`
+- `/projects`
+- `/projects/new`
+- `/projects/[id]`
+- `/projects/[id]/metrics`
+- `/projects/[id]/score`
+- `/projects/[id]/reports`
+- `/projects/[id]/reports/[reportId]`
+- `/settings/ai-keys`
+- `/projects/[id]/ai-analysis`
+- `/projects/[id]/ai-analysis/[analysisId]`
+- `/projects/[id]/chat`
+- `/projects/[id]/chat/[conversationId]`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Flujo de Demo Recomendado
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Registrar usuario.
+2. Crear SaaS.
+3. Registrar métricas.
+4. Generar diagnóstico.
+5. Revisar dashboard individual.
+6. Generar reporte ejecutivo.
+7. Configurar y verificar API Key BYOK.
+8. Generar análisis IA.
+9. Crear conversación y preguntar al chat contextual.
 
-## Deploy on Vercel
+## Seguridad BYOK
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- El frontend nunca muestra la API Key completa después de guardarla.
+- Solo se muestra `key_last_four` como `•••• abcd`.
+- La API Key no se guarda en `localStorage`.
+- Análisis IA y chat usan `ai_key_id`; no piden claves manualmente.

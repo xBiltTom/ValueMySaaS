@@ -59,17 +59,17 @@ export function AiAnalysisForm({ projectId, activeKeys }: { projectId: string; a
     <Card>
       <CardHeader>
         <BrainCircuit className="h-6 w-6 text-primary" />
-        <CardTitle>Generar analisis asistido</CardTitle>
+        <CardTitle>Generar análisis asistido</CardTitle>
         <CardDescription>
-          Usa una key BYOK activa y el contexto registrado del proyecto: metricas, score, alertas y reportes.
+          Usa una key BYOK activa y el contexto registrado del proyecto: métricas, score, alertas y reportes.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>
           {mutation.isError ? (
             <ErrorState
-              title="No se pudo generar el analisis IA"
-              message={`${getApiErrorMessage(mutation.error)}. Verifica que la API Key este activa, que el modelo sea compatible y que el SaaS tenga datos suficientes.`}
+              title="No se pudo generar el análisis IA"
+              message={`${getApiErrorMessage(mutation.error)}. Verifica que la API Key esté activa, que el modelo sea compatible y que el SaaS tenga contexto suficiente.`}
             />
           ) : null}
           <label className="block">
@@ -83,7 +83,7 @@ export function AiAnalysisForm({ projectId, activeKeys }: { projectId: string; a
             </Select>
           </label>
           <label className="block">
-            <span className="text-sm font-semibold">Tipo de analisis</span>
+            <span className="text-sm font-semibold">Tipo de análisis</span>
             <Select className="mt-2" {...form.register("analysis_type")}>
               {analysisTypes.map((type) => (
                 <option key={type} value={type}>
@@ -116,7 +116,7 @@ export function AiAnalysisForm({ projectId, activeKeys }: { projectId: string; a
           ) : null}
           <Button type="submit" disabled={mutation.isPending || !activeKeys.length}>
             <Sparkles className="h-4 w-4" />
-            {mutation.isPending ? "Generando..." : "Generar analisis IA"}
+            {mutation.isPending ? "Generando..." : "Generar análisis IA"}
           </Button>
         </form>
       </CardContent>

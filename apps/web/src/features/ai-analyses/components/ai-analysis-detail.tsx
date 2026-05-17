@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { formatDateTime } from "@/lib/formatters";
 import { providerLabel } from "@/features/ai-keys/utils";
 import { AiAnalysis } from "@/features/ai-analyses/types";
 import { analysisTypeLabel } from "@/features/ai-analyses/utils";
@@ -12,11 +13,11 @@ export function AiAnalysisDetail({ analysis }: { analysis: AiAnalysis }) {
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Analisis asistido
+              Análisis asistido
             </p>
             <h1 className="mt-2 font-display text-4xl font-semibold">{analysisTypeLabel(analysis.analysis_type)}</h1>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              Generado el {new Date(analysis.created_at).toLocaleString("es-PE")} como diagnostico complementario
+              Generado el {formatDateTime(analysis.created_at)} como diagnóstico complementario
               basado en datos registrados del SaaS.
             </p>
           </div>
