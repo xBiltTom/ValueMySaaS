@@ -46,7 +46,8 @@ export default function ProjectsPage() {
       {projectsQuery.data && projectsQuery.data.items.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {projectsQuery.data.items.map((project) => (
-            <Card key={project.id} className="p-5">
+            <Link key={project.id} href={`/projects/${project.id}`} className="block">
+            <Card className="h-full p-5 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-semibold">{project.name}</h2>
@@ -65,6 +66,7 @@ export default function ProjectsPage() {
                 <p className="mt-1">Mercado: {project.target_market || "Sin definir"}</p>
               </div>
             </Card>
+            </Link>
           ))}
         </div>
       ) : null}
