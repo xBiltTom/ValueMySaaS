@@ -13,18 +13,38 @@ import { createMetricSnapshot } from "@/features/metrics/api";
 import { metricSnapshotSchema, MetricSnapshotFormValues } from "@/features/metrics/schemas";
 import { MetricSectionCard } from "@/features/metrics/components/metric-section-card";
 
+const fieldLabels: Record<keyof MetricSnapshotFormValues, string> = {
+  period_label: "Periodo",
+  captured_at: "Fecha de captura",
+  mrr: "MRR",
+  monthly_revenue: "Ingresos mensuales",
+  monthly_costs: "Costos mensuales",
+  cash_available: "Caja disponible",
+  marketing_spend: "Gasto en marketing",
+  total_users: "Usuarios totales",
+  active_users: "Usuarios activos",
+  paying_customers: "Clientes de pago",
+  new_users: "Nuevos usuarios",
+  new_paying_customers: "Nuevos clientes de pago",
+  churned_customers: "Clientes perdidos",
+  nps: "NPS",
+  support_tickets: "Tickets de soporte",
+  critical_bugs: "Bugs criticos",
+  uptime_percentage: "Uptime (%)",
+  notes: "Notas",
+};
+
 function Field({
-  label,
+  name,
   type = "number",
   register,
   error,
 }: {
-  label: string;
+  name: keyof MetricSnapshotFormValues;
   type?: string;
   register: ReturnType<typeof useForm<MetricSnapshotFormValues>>["register"];
   error?: string;
 }) {
-  const name = label;
   const options =
     type === "number"
       ? {
@@ -33,12 +53,12 @@ function Field({
       : undefined;
   return (
     <label className="block">
-      <span className="text-sm font-semibold">{label}</span>
+      <span className="text-sm font-semibold">{fieldLabels[name]}</span>
       <Input
         className="mt-2"
         type={type}
         step={type === "number" ? "0.01" : undefined}
-        {...register(name as keyof MetricSnapshotFormValues, options)}
+        {...register(name, options)}
       />
       {error ? <p className="mt-1 text-xs font-medium text-destructive">{error}</p> : null}
     </label>
@@ -85,34 +105,34 @@ export function MetricSnapshotForm({ projectId }: { projectId: string }) {
 
       <MetricSectionCard title="Periodo" description="Define a que corte pertenecen los datos.">
         <label className="block">
-          <span className="text-sm font-semibold">period_label</span>
+          <span className="text-sm font-semibold">{fieldLabels.period_label}</span>
           <Input className="mt-2" placeholder="Marzo 2026" {...form.register("period_label")} />
           {errors.period_label ? <p className="mt-1 text-xs font-medium text-destructive">{errors.period_label.message}</p> : null}
         </label>
-        <Field label="captured_at" type="datetime-local" register={form.register} />
+        <Field name="captured_at" type="datetime-local" register={form.register} />
       </MetricSectionCard>
 
       <MetricSectionCard title="Finanzas" description="Ingresos, costos y combustible para operar.">
         {(["mrr", "monthly_revenue", "monthly_costs", "cash_available", "marketing_spend"] as const).map((name) => (
-          <Field key={name} label={name} register={form.register} error={errors[name]?.message} />
+          <Field key={name} name={name} register={form.register} error={errors[name]?.message} />
         ))}
       </MetricSectionCard>
 
       <MetricSectionCard title="Usuarios y adquisicion" description="Volumen, activacion y clientes de pago.">
         {(["total_users", "active_users", "paying_customers", "new_users", "new_paying_customers"] as const).map((name) => (
-          <Field key={name} label={name} register={form.register} error={errors[name]?.message} />
+          <Field key={name} name={name} register={form.register} error={errors[name]?.message} />
         ))}
       </MetricSectionCard>
 
       <MetricSectionCard title="Retencion y operacion" description="Riesgo de salida y salud operacional.">
         {(["churned_customers", "nps", "support_tickets", "critical_bugs", "uptime_percentage"] as const).map((name) => (
-          <Field key={name} label={name} register={form.register} error={errors[name]?.message} />
+          <Field key={name} name={name} register={form.register} error={errors[name]?.message} />
         ))}
       </MetricSectionCard>
 
       <MetricSectionCard title="Notas" description="Contexto cualitativo del periodo.">
         <label className="block md:col-span-2">
-          <span className="text-sm font-semibold">notes</span>
+          <span className="text-sm font-semibold">{fieldLabels.notes}</span>
           <Textarea className="mt-2" {...form.register("notes")} />
         </label>
       </MetricSectionCard>

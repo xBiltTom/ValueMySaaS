@@ -1,24 +1,29 @@
 import { z } from "zod";
 
-const optionalNumber = z.number().min(0, "Debe ser 0 o mayor.").optional();
+const optionalMoneyOrRate = z.number().min(0, "Debe ser 0 o mayor.").optional();
+const optionalCount = z
+  .number()
+  .int("Debe ser un numero entero.")
+  .min(0, "Debe ser 0 o mayor.")
+  .optional();
 
 export const metricSnapshotSchema = z.object({
   period_label: z.string().min(2, "El periodo es obligatorio."),
   captured_at: z.string().optional(),
-  mrr: optionalNumber,
-  monthly_revenue: optionalNumber,
-  monthly_costs: optionalNumber,
-  cash_available: optionalNumber,
-  marketing_spend: optionalNumber,
-  total_users: optionalNumber,
-  active_users: optionalNumber,
-  paying_customers: optionalNumber,
-  new_users: optionalNumber,
-  new_paying_customers: optionalNumber,
-  churned_customers: optionalNumber,
+  mrr: optionalMoneyOrRate,
+  monthly_revenue: optionalMoneyOrRate,
+  monthly_costs: optionalMoneyOrRate,
+  cash_available: optionalMoneyOrRate,
+  marketing_spend: optionalMoneyOrRate,
+  total_users: optionalCount,
+  active_users: optionalCount,
+  paying_customers: optionalCount,
+  new_users: optionalCount,
+  new_paying_customers: optionalCount,
+  churned_customers: optionalCount,
   nps: z.number().min(-100).max(100).optional(),
-  support_tickets: optionalNumber,
-  critical_bugs: optionalNumber,
+  support_tickets: optionalCount,
+  critical_bugs: optionalCount,
   uptime_percentage: z.number().min(0).max(100).optional(),
   notes: z.string().optional(),
 });
