@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BarChart3, Bot, BrainCircuit, FileText, Gauge, PlusCircle } from "lucide-react";
+import { BarChart3, Bot, BrainCircuit, FileText, Gauge, MessageSquareText, PlusCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -57,6 +57,10 @@ export function ProjectHeader({
             <BrainCircuit className="h-4 w-4" />
             Analisis IA
           </Link>
+          <Link href={`/projects/${project.id}/chat`} className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-semibold hover:bg-white">
+            <MessageSquareText className="h-4 w-4" />
+            Chat
+          </Link>
         </div>
       </div>
       <div className="grid border-t border-border bg-[#fbf8f1] text-sm text-muted-foreground sm:grid-cols-3">
@@ -66,7 +70,9 @@ export function ProjectHeader({
         <Link href={`/projects/${project.id}/ai-analysis`} className="flex items-center gap-2 px-5 py-3 font-semibold text-primary hover:bg-muted">
           <Bot className="h-4 w-4" /> Analisis IA BYOK
         </Link>
-        <span className="flex items-center gap-2 px-5 py-3"><Bot className="h-4 w-4" /> Chat contextual futuro</span>
+        <Link href={`/projects/${project.id}/chat`} className="flex items-center gap-2 px-5 py-3 font-semibold text-primary hover:bg-muted">
+          <MessageSquareText className="h-4 w-4" /> Chat contextual
+        </Link>
       </div>
     </Card>
   );

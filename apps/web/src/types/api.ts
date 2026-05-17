@@ -348,3 +348,53 @@ export type AiAnalysisListResponse = {
   limit: number;
   offset: number;
 };
+
+export type ConversationStatus = "ACTIVE" | "ARCHIVED" | "DELETED";
+
+export type Conversation = {
+  id: string;
+  saas_project_id: string;
+  user_id: string;
+  title: string | null;
+  provider: AiProvider | null;
+  model_name: string | null;
+  system_prompt_version: string;
+  status: ConversationStatus;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+};
+
+export type ConversationListResponse = {
+  items: Conversation[];
+  total: number;
+  limit: number;
+  offset: number;
+};
+
+export type ConversationMessageRole = "SYSTEM" | "USER" | "ASSISTANT" | "TOOL";
+
+export type ConversationMessage = {
+  id: string;
+  conversation_id: string;
+  role: ConversationMessageRole;
+  content: string;
+  message_metadata: Record<string, unknown> | null;
+  token_count: number | null;
+  created_at: string;
+};
+
+export type ConversationMessageListResponse = {
+  items: ConversationMessage[];
+  total: number;
+  limit: number;
+  offset: number;
+};
+
+export type SendConversationMessageResponse = {
+  conversation_id: string;
+  user_message: ConversationMessage;
+  assistant_message: ConversationMessage;
+  model_name: string;
+  provider: AiProvider;
+};

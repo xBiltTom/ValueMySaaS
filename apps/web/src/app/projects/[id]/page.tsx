@@ -92,6 +92,8 @@ export default function ProjectDashboardPage() {
               <Link href={`/projects/${projectId}/reports`} className="font-semibold text-primary">reportes</Link>
               {", pedir un "}
               <Link href={`/projects/${projectId}/ai-analysis`} className="font-semibold text-primary">analisis IA BYOK</Link>
+              {", abrir el "}
+              <Link href={`/projects/${projectId}/chat`} className="font-semibold text-primary">chat contextual</Link>
               {" "}o registrar otro corte de metricas para comparar evolucion.
             </p>
           </div>
