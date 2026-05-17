@@ -1,0 +1,51 @@
+"use client";
+
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft, LayoutDashboard } from "lucide-react";
+import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { ErrorState } from "@/components/shared/error-state";
+import { LoadingState } from "@/components/shared/loading-state";
+import { getApiErrorMessage } from "@/lib/api-client";
+import { getProject } from "@/features/project-dashboard/api";
+import { getAiAnalysis } from "@/features/ai-analyses/api";
+import { AiAnalysisDetail } from "@/features/ai-analyses/components/ai-analysis-detail";
+
+export default function AiAnalysisDetailPage() {
+  const params = useParams<{ id: string; analysisId: string }>();
+  const projectId = params.id;
+  const analysisId = params.analysisId;
+
+  const projectQuery = useQuery({ queryKey: ["project", projectId], queryFn: () => getProject(projectId) });
+  const analysisQuery = useQuery({
+    queryKey: ["ai-analysis", projectId, analysisId],
+    queryFn: () => getAiAnalysis(projectId, analysisId),
+  });
+
+  return (
+    <DashboardShell>
+      <div className="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+        <div>
+          <Link href={`/projects/${projectId}/ai-analysis`} className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
+            <ArrowLeft className="h-4 w-4" />
+            Volver a analisis IA
+          </Link>
+          <p className="mt-4 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            {projectQuery.data?.name || "Proyecto"}
+          </p>
+        </div>
+        <Link href={`/projects/${projectId}`} className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-semibold hover:bg-white">
+          <LayoutDashboard className="h-4 w-4" />
+          Dashboard del proyecto
+        </Link>
+      </div>
+
+      {projectQuery.isLoading || analysisQuery.isLoading ? <LoadingState /> : null}
+      {projectQuery.isError || analysisQuery.isError ? (
+        <ErrorState message={getApiErrorMessage(projectQuery.error || analysisQuery.error)} />
+      ) : null}
+      {analysisQuery.data ? <AiAnalysisDetail analysis={analysisQuery.data} /> : null}
+    </DashboardShell>
+  );
+}

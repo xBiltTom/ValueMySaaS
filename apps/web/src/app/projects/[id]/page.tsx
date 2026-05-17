@@ -90,6 +90,8 @@ export default function ProjectDashboardPage() {
               <Link href={`/projects/${projectId}/score`} className="font-semibold text-primary">diagnostico completo</Link>
               {", generar "}
               <Link href={`/projects/${projectId}/reports`} className="font-semibold text-primary">reportes</Link>
+              {", pedir un "}
+              <Link href={`/projects/${projectId}/ai-analysis`} className="font-semibold text-primary">analisis IA BYOK</Link>
               {" "}o registrar otro corte de metricas para comparar evolucion.
             </p>
           </div>

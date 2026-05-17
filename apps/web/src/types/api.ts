@@ -313,3 +313,38 @@ export type VerifyAiKeyResponse = {
   model_name: string;
   message: string;
 };
+
+export type AiAnalysisType =
+  | "EXECUTIVE_SUMMARY"
+  | "RISK_ANALYSIS"
+  | "PRICING_ANALYSIS"
+  | "GROWTH_ANALYSIS"
+  | "RETENTION_ANALYSIS"
+  | "FULL_DIAGNOSIS"
+  | "CUSTOM";
+
+export type AiAnalysis = {
+  id: string;
+  saas_project_id: string;
+  metric_snapshot_id: string | null;
+  score_id: string | null;
+  user_id: string;
+  provider: AiProvider;
+  model_name: string | null;
+  analysis_type: AiAnalysisType;
+  prompt_version: string;
+  input_context: Record<string, unknown> | null;
+  output_text: string;
+  output_json: Record<string, unknown> | null;
+  tokens_input: number | null;
+  tokens_output: number | null;
+  estimated_cost: string | number | null;
+  created_at: string;
+};
+
+export type AiAnalysisListResponse = {
+  items: AiAnalysis[];
+  total: number;
+  limit: number;
+  offset: number;
+};
