@@ -2,14 +2,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { clearAuthToken, getAuthToken } from "@/lib/auth-token";
+import { useEffect, useSyncExternalStore } from "react";
+import { clearAuthToken, getAuthToken, subscribeToAuthToken } from "@/lib/auth-token";
 import { getCurrentUser } from "@/features/auth/api";
 
 export function useCurrentUser({ redirectToLogin = false } = {}) {
   const router = useRouter();
   const pathname = usePathname();
-  const token = getAuthToken();
+  const token = useSyncExternalStore(subscribeToAuthToken, getAuthToken, () => null);
 
   useEffect(() => {
     if (redirectToLogin && !token) {
@@ -17,11 +17,18 @@ export function useCurrentUser({ redirectToLogin = false } = {}) {
     }
   }, [pathname, redirectToLogin, router, token]);
 
-  return useQuery({
+  const userQuery = useQuery({
     queryKey: ["auth", "me"],
     queryFn: getCurrentUser,
     enabled: Boolean(token),
   });
+
+  return {
+    ...userQuery,
+    authToken: token,
+    hasToken: Boolean(token),
+    isCheckingToken: false,
+  };
 }
 
 export function useLogout() {

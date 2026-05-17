@@ -11,7 +11,7 @@ import { useCurrentUser } from "@/features/auth/use-auth";
 export function DashboardShell({ children }: { children: ReactNode }) {
   const userQuery = useCurrentUser({ redirectToLogin: true });
 
-  if (userQuery.isLoading) {
+  if (userQuery.isCheckingToken || !userQuery.hasToken || userQuery.isLoading) {
     return (
       <main className="min-h-screen p-6">
         <LoadingState label="Validando sesion..." />
