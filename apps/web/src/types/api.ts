@@ -260,3 +260,30 @@ export type ProjectDashboardResponse = {
     Array<{ date: string; label: string | null; value: MaybeNumber }>
   >;
 };
+
+export type ReportType = "BASIC" | "EXECUTIVE" | "AI_ASSISTED" | "SCENARIO_SIMULATION";
+export type ReportStatus = "DRAFT" | "GENERATED" | "FAILED";
+
+export type SaasReport = {
+  id: string;
+  saas_project_id: string;
+  user_id: string;
+  metric_snapshot_id: string | null;
+  score_id: string | null;
+  ai_analysis_id: string | null;
+  title: string;
+  report_type: ReportType;
+  status: ReportStatus;
+  content: Record<string, unknown> | null;
+  file_url: string | null;
+  generated_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SaasReportListResponse = {
+  items: SaasReport[];
+  total: number;
+  limit: number;
+  offset: number;
+};

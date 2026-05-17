@@ -88,6 +88,8 @@ export default function ProjectDashboardPage() {
             <p className="text-sm text-muted-foreground">
               Siguiente paso natural: revisar el{" "}
               <Link href={`/projects/${projectId}/score`} className="font-semibold text-primary">diagnostico completo</Link>
+              {", generar "}
+              <Link href={`/projects/${projectId}/reports`} className="font-semibold text-primary">reportes</Link>
               {" "}o registrar otro corte de metricas para comparar evolucion.
             </p>
           </div>
