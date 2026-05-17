@@ -287,3 +287,29 @@ export type SaasReportListResponse = {
   limit: number;
   offset: number;
 };
+
+export type AiProvider = "OPENAI" | "GEMINI" | "ANTHROPIC" | "OPENROUTER" | "OTHER";
+
+export type AiKey = {
+  id: string;
+  provider: AiProvider;
+  label: string | null;
+  key_last_four: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AiKeyListResponse = {
+  items: AiKey[];
+  total: number;
+  limit: number;
+  offset: number;
+};
+
+export type VerifyAiKeyResponse = {
+  ok: boolean;
+  provider: AiProvider;
+  model_name: string;
+  message: string;
+};
