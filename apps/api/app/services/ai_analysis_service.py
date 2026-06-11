@@ -364,7 +364,8 @@ class AiAnalysisService:
 
         if phase == ProjectPhase.PLANNING:
             system_prompt = PLANNING_SYSTEM_PROMPT
-            user_prompt = self._build_planning_prompt(project=project)
+            latest_snapshot = await self.metric_snapshot_repository.get_latest_by_project(saas_project_id=project_id)
+            user_prompt = self._build_planning_prompt(project=project, snapshot=latest_snapshot)
             input_context: dict | None = {"phase": phase.value, "project_stage": project.stage.value}
         else:
             system_prompt = IMPLEMENTED_SYSTEM_PROMPT
@@ -394,7 +395,7 @@ class AiAnalysisService:
         """Determina la fase de evaluación basada en el stage del proyecto."""
         return ProjectPhase.PLANNING if stage in PLANNING_STAGES else ProjectPhase.IMPLEMENTED
 
-    def _build_planning_prompt(self, *, project) -> str:
+    def _build_planning_prompt(self, *, project, snapshot) -> str:
         """Construye el prompt para proyectos en fase PLANNING.
 
         Incluye todos los campos descriptivos del proyecto con su contexto
@@ -405,6 +406,8 @@ class AiAnalysisService:
             "Descripción": project.description or "No provisto",
             "Problema principal que resuelve (PESO 30%)": project.main_problem or "No provisto",
             "Propuesta de valor (PESO 25%)": project.value_proposition or "No provisto",
+            "Competidores identificados": project.competitors or "No provisto",
+            "Estrategia de adquisición (Go-to-Market)": project.acquisition_strategy or "No provisto",
             "Mercado objetivo (PESO 20%)": project.target_market or "No provisto",
             "Audiencia objetivo": project.target_audience or "No provisto",
             "País/región de enfoque": project.country_focus or "No provisto",
@@ -414,6 +417,13 @@ class AiAnalysisService:
             "Notas sobre pricing": project.pricing_notes or "No provisto",
             "Etapa actual": project.stage.value,
         }
+        
+        if snapshot:
+            fields["Costos operativos mensuales estimados"] = f"{snapshot.monthly_costs} {project.currency}" if snapshot.monthly_costs else "No provisto"
+            if snapshot.custom_metrics:
+                fields["Inversión inicial estimada (CAPEX)"] = str(snapshot.custom_metrics.get("initial_investment_estimated", "No provisto"))
+                fields["Tiempo estimado para MVP (meses)"] = str(snapshot.custom_metrics.get("time_to_mvp_months", "No provisto"))
+                fields["Meta de usuarios (Año 1)"] = str(snapshot.custom_metrics.get("expected_users_year_1", "No provisto"))
 
         fields_text = "\n".join(f"  {k}: {v}" for k, v in fields.items())
 

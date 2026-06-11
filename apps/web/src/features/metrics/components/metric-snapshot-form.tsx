@@ -89,7 +89,7 @@ export function MetricSnapshotForm({ projectId, projectStage = "LAUNCHED" }: { p
   const queryClient = useQueryClient();
   const form = useForm<MetricSnapshotFormValues>({
     resolver: zodResolver(metricSnapshotSchema),
-    defaultValues: { period_label: "", captured_at: new Date().toISOString().slice(0, 16), notes: "" },
+    defaultValues: { period_label: "", captured_at: new Date().toISOString().slice(0, 16), notes: "", custom_metrics: {} },
   });
 
   const isPlanning = projectStage === "PLANNING" || projectStage === "IDEA";
@@ -140,7 +140,7 @@ export function MetricSnapshotForm({ projectId, projectStage = "LAUNCHED" }: { p
           <div className="mt-4 flex items-start gap-2 rounded-2xl border border-status-warning-border/60 bg-card/70 p-3">
             <Info className="h-4 w-4 text-status-warning-fg shrink-0 mt-0.5" />
             <p className="text-xs text-status-warning-text leading-relaxed">
-              Para proyectos en planeación, solo necesitas tus <strong>costos estimados</strong> y <strong>notas del periodo</strong>. El análisis de viabilidad lo hace la <strong>IA</strong> con tu propuesta de valor.
+              Estima los <strong>costos, tiempo e inversión</strong> que necesitarás. Esto ayudará a la IA a determinar si tu plan es realista y viable para estudiantes.
             </p>
           </div>
         )}
@@ -200,12 +200,30 @@ export function MetricSnapshotForm({ projectId, projectStage = "LAUNCHED" }: { p
           {isPlanning ? (
             <>
               <NumberInput
-                label="Costos operativos (S/ o $)"
-                help="Servidores, APIs, herramientas, etc."
+                label="Costos operativos mensuales (S/ o $)"
+                help="Servidores, dominios, APIs estimadas..."
                 placeholder="Ej: 50"
                 register={reg} name="monthly_costs" errors={errors}
               />
-              <div className="sm:col-span-1">
+              <NumberInput
+                label="Inversión inicial estimada (CAPEX)"
+                help="Cuánto dinero necesitas para construir y lanzar el MVP"
+                placeholder="Ej: 500"
+                register={reg} name="custom_metrics.initial_investment_estimated" errors={errors}
+              />
+              <NumberInput
+                label="Tiempo estimado para MVP (Meses)"
+                help="¿Cuántos meses te tomará tener la primera versión lista?"
+                placeholder="Ej: 3"
+                register={reg} name="custom_metrics.time_to_mvp_months" errors={errors} integer
+              />
+              <NumberInput
+                label="Meta de usuarios (Año 1)"
+                help="¿Cuántos usuarios esperas tener al terminar el primer año?"
+                placeholder="Ej: 1000"
+                register={reg} name="custom_metrics.expected_users_year_1" errors={errors} integer
+              />
+              <div className="sm:col-span-2">
                 <FieldLabel help="Anotaciones sobre tu planificación financiera">Notas del periodo</FieldLabel>
                 <textarea
                   rows={3}

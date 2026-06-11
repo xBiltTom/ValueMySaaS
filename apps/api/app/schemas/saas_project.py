@@ -18,6 +18,8 @@ class SaasProjectBase(BaseModel):
     country_focus: str | None = Field(default=None, max_length=100)
     main_problem: str | None = None
     value_proposition: str | None = None
+    competitors: str | None = None
+    acquisition_strategy: str | None = None
     pricing_notes: str | None = None
     current_price: Decimal | None = Field(default=None, ge=0)
     currency: str = Field(default="USD", min_length=3, max_length=10)
@@ -40,6 +42,8 @@ class SaasProjectUpdate(BaseModel):
     country_focus: str | None = Field(default=None, max_length=100)
     main_problem: str | None = None
     value_proposition: str | None = None
+    competitors: str | None = None
+    acquisition_strategy: str | None = None
     pricing_notes: str | None = None
     current_price: Decimal | None = Field(default=None, ge=0)
     currency: str | None = Field(default=None, min_length=3, max_length=10)

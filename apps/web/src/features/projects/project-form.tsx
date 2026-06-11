@@ -129,6 +129,7 @@ export function ProjectForm() {
       stage: "PLANNING", business_model: "SUBSCRIPTION",
       target_market: "", target_audience: "",
       main_problem: "", value_proposition: "",
+      competitors: "", acquisition_strategy: "",
       current_price: 0, currency: "USD",
     },
   });
@@ -405,6 +406,35 @@ export function ProjectForm() {
                 />
                 <FieldError message={form.formState.errors.value_proposition?.message} />
               </div>
+
+              {isPlanning && (
+                <>
+                  <div>
+                    <Label>
+                      ¿Quiénes son tus competidores?
+                      <Tooltip text="Ej: Startups similares, Excel, WhatsApp, o alternativas gratuitas." />
+                    </Label>
+                    <PremiumTextarea
+                      rows={2}
+                      placeholder="Ej: Actualmente usan Excel y grupos de WhatsApp..."
+                      {...form.register("competitors")}
+                    />
+                    <FieldError message={form.formState.errors.competitors?.message} />
+                  </div>
+                  <div>
+                    <Label>
+                      Estrategia de adquisición (Go-to-Market)
+                      <Tooltip text="¿Cómo piensas conseguir a tus primeros 10-100 clientes reales?" />
+                    </Label>
+                    <PremiumTextarea
+                      rows={2}
+                      placeholder="Ej: Contactaré bodegas por Facebook y haré visitas presenciales..."
+                      {...form.register("acquisition_strategy")}
+                    />
+                    <FieldError message={form.formState.errors.acquisition_strategy?.message} />
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}
