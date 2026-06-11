@@ -19,32 +19,42 @@ export function ReportList({ projectId, reports }: { projectId: string; reports:
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Reportes generados</CardTitle>
-      </CardHeader>
-      <CardContent className="grid gap-3 md:grid-cols-2">
+    <section className="mt-8">
+      <h2 className="font-display text-2xl font-bold mb-6 flex items-center gap-2">
+        <FileSearch className="h-6 w-6 text-primary" />
+        Reportes Generados
+      </h2>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {reports.items.map((report) => (
-          <Link key={report.id} href={`/projects/${projectId}/reports/${report.id}`} className="block">
-            <article className="h-full rounded-md border border-border bg-card p-4 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="font-semibold">{report.title}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {formatDateTime(report.generated_at || report.created_at)}
-                  </p>
+          <Link key={report.id} href={`/projects/${projectId}/reports/${report.id}`} className="block h-full">
+            <article className="bento-card h-full flex flex-col justify-between p-6 cursor-pointer group">
+              <div>
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <Badge className="bg-primary/10 text-primary uppercase text-[10px] tracking-widest font-bold">
+                    {reportTypeLabel(report.report_type)}
+                  </Badge>
+                  <div className="h-8 w-8 rounded-full bg-muted/50 flex items-center justify-center group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
+                    <FileSearch className="h-4 w-4" />
+                  </div>
                 </div>
-                <Badge className="bg-primary/10 text-primary">{reportTypeLabel(report.report_type)}</Badge>
+                <h3 className="font-display text-xl font-bold mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                  {report.title}
+                </h3>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  {formatDateTime(report.generated_at || report.created_at)}
+                </p>
               </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Badge>{formatEnum(report.status)}</Badge>
-                {report.metric_snapshot_id ? <Badge>Snapshot vinculado</Badge> : null}
-                {report.score_id ? <Badge>Score vinculado</Badge> : null}
+              <div className="mt-6 flex flex-wrap gap-2">
+                <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-wider bg-background">
+                  {formatEnum(report.status)}
+                </Badge>
+                {report.metric_snapshot_id ? <Badge variant="secondary" className="text-[10px] uppercase">Snapshot</Badge> : null}
+                {report.score_id ? <Badge variant="secondary" className="text-[10px] uppercase">Score</Badge> : null}
               </div>
             </article>
           </Link>
         ))}
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 }
