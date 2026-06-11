@@ -64,8 +64,7 @@
   --status-warning-text: #92400e;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
+.dark {
     /* DARK MODE (Neon Tech) */
     --background: #050505;
     --foreground: #ededed;
@@ -95,7 +94,6 @@
     --status-warning-border: #78350f;
     --status-warning-fg: #fbbf24;
     --status-warning-text: #fcd34d;
-  }
 }
 
 @layer base {
@@ -127,12 +125,10 @@
       radial-gradient(circle at 100% 40%, rgba(0, 243, 255, 0.1) 0%, transparent 40%);
   }
   
-  @media (prefers-color-scheme: dark) {
-    .hero-gradient {
-      background: 
-        radial-gradient(circle at 50% -20%, rgba(204, 255, 0, 0.2) 0%, transparent 60%),
-        radial-gradient(circle at 100% 40%, rgba(0, 243, 255, 0.15) 0%, transparent 50%);
-    }
+  :is(.dark .hero-gradient) {
+    background: 
+      radial-gradient(circle at 50% -20%, rgba(204, 255, 0, 0.2) 0%, transparent 60%),
+      radial-gradient(circle at 100% 40%, rgba(0, 243, 255, 0.15) 0%, transparent 50%);
   }
 
   /* Bento Grid Card */
@@ -152,13 +148,11 @@
     border-color: var(--primary);
   }
   
-  @media (prefers-color-scheme: dark) {
-    .bento-card {
-      box-shadow: 0 4px 20px -2px rgba(0,0,0,0.4);
-    }
-    .bento-card:hover {
-      box-shadow: 0 0 20px -4px rgba(204,255,0,0.15);
-    }
+  :is(.dark .bento-card) {
+    box-shadow: 0 4px 20px -2px rgba(0,0,0,0.4);
+  }
+  :is(.dark .bento-card):hover {
+    box-shadow: 0 0 20px -4px rgba(204,255,0,0.15);
   }
 
   .input-premium {
@@ -217,9 +211,7 @@
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
     opacity: 0.4;
   }
-  @media (prefers-color-scheme: dark) {
-    .noise-bg::before {
-      opacity: 0.15;
-    }
+  :is(.dark .noise-bg)::before {
+    opacity: 0.15;
   }
 }

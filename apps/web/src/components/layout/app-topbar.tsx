@@ -5,6 +5,7 @@ import { LogOut, Menu, Plus } from "lucide-react";
 import { User } from "@/types/api";
 import { Button } from "@/components/ui/button";
 import { useLogout } from "@/features/auth/use-auth";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function AppTopbar({ user, onMenuClick }: { user?: User; onMenuClick?: () => void }) {
   const logout = useLogout();
@@ -36,6 +37,7 @@ export function AppTopbar({ user, onMenuClick }: { user?: User; onMenuClick?: ()
             <Plus className="h-4 w-4 cursor-pointer" />
             Nuevo SaaS
           </Link>
+          <ThemeToggle />
           <div className="hidden text-right sm:block">
             <p className="text-sm font-semibold">{user?.full_name || user?.username || "Usuario"}</p>
             <p className="text-xs text-muted-foreground">{user?.email}</p>
