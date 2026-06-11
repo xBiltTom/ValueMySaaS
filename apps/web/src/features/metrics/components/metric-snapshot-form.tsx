@@ -139,9 +139,14 @@ export function MetricSnapshotForm({ projectId, projectStage = "LAUNCHED" }: { p
         {isPlanning && (
           <div className="mt-4 flex items-start gap-2 rounded-2xl border border-status-warning-border/60 bg-card/70 p-3">
             <Info className="h-4 w-4 text-status-warning-fg shrink-0 mt-0.5" />
-            <p className="text-xs text-status-warning-text leading-relaxed">
-              Estima los <strong>costos, tiempo e inversión</strong> que necesitarás. Esto ayudará a la IA a determinar si tu plan es realista y viable para estudiantes.
-            </p>
+            <div className="space-y-1.5">
+              <p className="text-xs text-status-warning-text leading-relaxed">
+                Estima los <strong>costos, tiempo e inversión</strong> que necesitarás. Esto ayudará a la IA a determinar si tu plan es realista y viable para estudiantes.
+              </p>
+              <p className="text-xs text-status-warning-text/80 leading-relaxed italic">
+                <strong>Nota:</strong> Si desconoces un dato, puedes dejarlo vacío. Sin embargo, la información omitida no será tomada en cuenta, lo que hará que el análisis sea menos preciso.
+              </p>
+            </div>
           </div>
         )}
       </div>

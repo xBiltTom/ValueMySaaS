@@ -376,6 +376,14 @@ export function ProjectForm() {
                   {isPlanning && <p className="text-xs text-accent-foreground font-medium">⚡ La IA usará esto para evaluarte</p>}
                 </div>
               </div>
+              
+              {isPlanning && (
+                <div className="rounded-xl border border-muted-foreground/20 bg-card p-3 mb-4">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    <span className="font-bold">Flexibilidad:</span> Si aún no tienes clara alguna de las respuestas, <span className="font-semibold text-foreground">puedes dejar el campo vacío</span>. Sin embargo, ten en cuenta que la IA no podrá evaluar esa dimensión y <span className="text-status-warning-text font-medium">el análisis de viabilidad será mucho menos preciso</span>.
+                  </p>
+                </div>
+              )}
 
               <div>
                 <Label required>
@@ -501,7 +509,7 @@ export function ProjectForm() {
                   <div>
                     <p className="text-sm font-bold text-status-warning-text">¿No sabes el precio exacto?</p>
                     <p className="text-xs text-status-warning-text mt-0.5 leading-relaxed">
-                      En planeación, el precio es una estimación. La IA evaluará si tu estrategia de precios es viable para el mercado que apuntas.
+                      En planeación, el precio es una estimación. Puedes dejarlo en 0, pero la IA <span className="font-bold">no podrá evaluar la viabilidad de tu estrategia de precios</span> para el mercado al que apuntas.
                     </p>
                   </div>
                 </div>
