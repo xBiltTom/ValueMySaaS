@@ -12,17 +12,21 @@ from app.repositories.ai_analysis_repository import AiAnalysisRepository
 from app.repositories.ai_key_repository import AiProviderKeyRepository
 from app.repositories.chat_message_repository import ChatMessageRepository
 from app.repositories.conversation_repository import ConversationRepository
+from app.repositories.credit_transaction_repository import CreditTransactionRepository
 from app.repositories.metric_snapshot_repository import MetricSnapshotRepository
 from app.repositories.report_repository import ReportRepository
-from app.repositories.user_repository import UserRepository
 from app.repositories.saas_project_repository import SaasProjectRepository
 from app.repositories.saas_score_repository import SaasScoreRepository
+from app.repositories.system_ai_key_repository import SystemAiKeyRepository
+from app.repositories.user_repository import UserRepository
+from app.services.admin_service import AdminService
 from app.services.ai_analysis_service import AiAnalysisService
 from app.services.ai_context_service import AiContextService
 from app.services.ai_key_service import AiProviderKeyService
 from app.services.auth_service import AuthService
 from app.services.chat_service import ChatService
 from app.services.conversation_service import ConversationService
+from app.services.credit_service import CreditService
 from app.services.dashboard_service import DashboardService
 from app.services.llm_client_service import LlmClientService
 from app.services.metric_calculation_service import MetricCalculationService
@@ -30,13 +34,49 @@ from app.services.metric_snapshot_service import MetricSnapshotService
 from app.services.report_service import ReportService
 from app.services.saas_project_service import SaasProjectService
 from app.services.saas_score_service import SaasScoreService
+from app.services.system_ai_key_service import SystemAiKeyService
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
+# ---------------------------------------------------------------------------
+# Infraestructura base
+# ---------------------------------------------------------------------------
+
 def get_auth_service(db: AsyncSession = Depends(get_db)) -> AuthService:
     return AuthService(UserRepository(db))
 
+
+def get_llm_client_service() -> LlmClientService:
+    return LlmClientService()
+
+
+# ---------------------------------------------------------------------------
+# Sistema de créditos
+# ---------------------------------------------------------------------------
+
+def get_credit_service(db: AsyncSession = Depends(get_db)) -> CreditService:
+    return CreditService(
+        user_repository=UserRepository(db),
+        ai_key_repository=AiProviderKeyRepository(db),
+        system_ai_key_repository=SystemAiKeyRepository(db),
+        credit_transaction_repository=CreditTransactionRepository(db),
+    )
+
+
+def get_system_ai_key_service(
+    db: AsyncSession = Depends(get_db),
+    llm_client_service: LlmClientService = Depends(get_llm_client_service),
+) -> SystemAiKeyService:
+    return SystemAiKeyService(
+        system_ai_key_repository=SystemAiKeyRepository(db),
+        llm_client_service=llm_client_service,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Servicios de proyectos y métricas
+# ---------------------------------------------------------------------------
 
 def get_saas_project_service(db: AsyncSession = Depends(get_db)) -> SaasProjectService:
     return SaasProjectService(SaasProjectRepository(db))
@@ -110,12 +150,12 @@ def get_report_service(db: AsyncSession = Depends(get_db)) -> ReportService:
     )
 
 
+# ---------------------------------------------------------------------------
+# Servicios de IA
+# ---------------------------------------------------------------------------
+
 def get_ai_key_service(db: AsyncSession = Depends(get_db)) -> AiProviderKeyService:
     return AiProviderKeyService(AiProviderKeyRepository(db), LlmClientService())
-
-
-def get_llm_client_service() -> LlmClientService:
-    return LlmClientService()
 
 
 def get_ai_context_service(db: AsyncSession = Depends(get_db)) -> AiContextService:
@@ -143,6 +183,7 @@ def get_ai_context_service(db: AsyncSession = Depends(get_db)) -> AiContextServi
 def get_ai_analysis_service(
     db: AsyncSession = Depends(get_db),
     llm_client_service: LlmClientService = Depends(get_llm_client_service),
+    credit_service: CreditService = Depends(get_credit_service),
 ) -> AiAnalysisService:
     saas_project_repository = SaasProjectRepository(db)
     metric_snapshot_repository = MetricSnapshotRepository(db)
@@ -164,13 +205,14 @@ def get_ai_analysis_service(
         dashboard_service,
     )
     return AiAnalysisService(
-        AiAnalysisRepository(db),
-        AiProviderKeyService(AiProviderKeyRepository(db)),
-        saas_project_repository,
-        metric_snapshot_repository,
-        saas_score_repository,
-        ai_context_service,
-        llm_client_service,
+        ai_analysis_repository=AiAnalysisRepository(db),
+        credit_service=credit_service,
+        saas_project_repository=saas_project_repository,
+        metric_snapshot_repository=metric_snapshot_repository,
+        saas_score_repository=saas_score_repository,
+        ai_context_service=ai_context_service,
+        llm_client_service=llm_client_service,
+        user_repository=UserRepository(db),
     )
 
 
@@ -184,6 +226,7 @@ def get_conversation_service(db: AsyncSession = Depends(get_db)) -> Conversation
 def get_chat_service(
     db: AsyncSession = Depends(get_db),
     llm_client_service: LlmClientService = Depends(get_llm_client_service),
+    credit_service: CreditService = Depends(get_credit_service),
 ) -> ChatService:
     saas_project_repository = SaasProjectRepository(db)
     metric_snapshot_repository = MetricSnapshotRepository(db)
@@ -205,14 +248,36 @@ def get_chat_service(
         dashboard_service,
     )
     return ChatService(
-        saas_project_repository,
-        ConversationRepository(db),
-        ChatMessageRepository(db),
-        AiProviderKeyService(AiProviderKeyRepository(db), llm_client_service),
-        ai_context_service,
-        llm_client_service,
+        saas_project_repository=saas_project_repository,
+        conversation_repository=ConversationRepository(db),
+        chat_message_repository=ChatMessageRepository(db),
+        credit_service=credit_service,
+        ai_context_service=ai_context_service,
+        llm_client_service=llm_client_service,
+        user_repository=UserRepository(db),
     )
 
+
+# ---------------------------------------------------------------------------
+# Admin
+# ---------------------------------------------------------------------------
+
+def get_admin_service(
+    db: AsyncSession = Depends(get_db),
+    credit_service: CreditService = Depends(get_credit_service),
+) -> AdminService:
+    return AdminService(
+        user_repository=UserRepository(db),
+        credit_transaction_repository=CreditTransactionRepository(db),
+        system_ai_key_repository=SystemAiKeyRepository(db),
+        ai_analysis_repository=AiAnalysisRepository(db),
+        credit_service=credit_service,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Autenticación
+# ---------------------------------------------------------------------------
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
@@ -220,7 +285,7 @@ async def get_current_user(
 ) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
+        detail="No se pudieron validar las credenciales.",
         headers={"WWW-Authenticate": "Bearer"},
     )
 

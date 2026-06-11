@@ -38,15 +38,15 @@ export function AiKeyForm() {
   });
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Registrar API Key</CardTitle>
-        <CardDescription>La clave solo se usa para enviarla al backend y cifrarla. No se guarda en localStorage.</CardDescription>
+    <Card className="glass-card rounded-3xl">
+      <CardHeader className="px-6 md:px-8 pt-6 md:pt-8 pb-4">
+        <CardTitle className="text-2xl font-display">Registrar API Key</CardTitle>
+        <CardDescription className="text-base mt-2">La clave solo se usa para enviarla al backend y cifrarla. No se guarda en localStorage.</CardDescription>
       </CardHeader>
-      <CardContent>
-        <form className="space-y-4" onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>
+      <CardContent className="px-6 md:px-8 pb-6 md:pb-8">
+        <form className="space-y-5" onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>
           {mutation.isSuccess ? (
-            <div className="rounded-md border border-primary/20 bg-primary/10 p-4 text-sm font-semibold text-primary">
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm font-semibold text-primary">
               API Key guardada. El campo sensible fue limpiado.
             </div>
           ) : null}
@@ -56,7 +56,7 @@ export function AiKeyForm() {
 
           <label className="block">
             <span className="text-sm font-semibold">Proveedor</span>
-            <Select className="mt-2" {...form.register("provider")}>
+            <Select className="input-premium h-12 rounded-xl text-base mt-2" {...form.register("provider")}>
               {aiProviders.map((item) => (
                 <option key={item} value={item}>
                   {providerLabels[item]}
@@ -66,9 +66,9 @@ export function AiKeyForm() {
           </label>
           <label className="block">
             <span className="text-sm font-semibold">Etiqueta</span>
-            <Input className="mt-2" placeholder="Google AI Studio" {...form.register("label")} />
+            <Input className="input-premium h-12 rounded-xl text-base mt-2" placeholder="Google AI Studio" {...form.register("label")} />
             {form.formState.errors.label ? (
-              <p className="mt-1 text-xs font-medium text-destructive">{form.formState.errors.label.message}</p>
+              <p className="mt-1.5 text-[13px] font-medium text-destructive">{form.formState.errors.label.message}</p>
             ) : null}
           </label>
           <label className="block">
@@ -78,23 +78,26 @@ export function AiKeyForm() {
                 type={showKey ? "text" : "password"}
                 placeholder="Pega tu API Key"
                 autoComplete="off"
+                className="input-premium h-12 rounded-xl text-base font-mono"
                 {...form.register("api_key")}
               />
-              <Button type="button" variant="secondary" onClick={() => setShowKey((value) => !value)} aria-label="Mostrar u ocultar API Key">
-                {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              <Button type="button" variant="secondary" className="h-12 w-12 rounded-xl" onClick={() => setShowKey((value) => !value)} aria-label="Mostrar u ocultar API Key">
+                {showKey ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </Button>
             </div>
             {form.formState.errors.api_key ? (
-              <p className="mt-1 text-xs font-medium text-destructive">{form.formState.errors.api_key.message}</p>
+              <p className="mt-1.5 text-[13px] font-medium text-destructive">{form.formState.errors.api_key.message}</p>
             ) : null}
           </label>
-          <p className="rounded-md border border-border bg-white p-3 text-xs leading-5 text-muted-foreground">
+          <p className="rounded-xl border border-border bg-white/50 p-4 text-sm leading-relaxed text-muted-foreground">
             Modelo sugerido para verificar después: <strong>{providerHints[provider]}</strong>
           </p>
-          <Button type="submit" disabled={mutation.isPending}>
-            <Save className="h-4 w-4" />
-            {mutation.isPending ? "Guardando..." : "Guardar API Key"}
-          </Button>
+          <div className="pt-2">
+            <Button type="submit" disabled={mutation.isPending} className="btn-premium w-full h-12 text-base rounded-xl">
+              <Save className="h-4 w-4 mr-2" />
+              {mutation.isPending ? "Guardando..." : "Guardar API Key"}
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

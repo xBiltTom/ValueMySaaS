@@ -60,3 +60,11 @@ class AiAnalysisRepository:
         if analysis_type is not None:
             statement = statement.where(AiAnalysis.analysis_type == analysis_type)
         return statement
+
+    async def count_total(self) -> int:
+        """Total de análisis en el sistema. Usado por el admin para estadísticas."""
+        result = await self.db.execute(
+            select(func.count()).select_from(AiAnalysis)
+        )
+        return result.scalar_one()
+

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Power, PowerOff, Trash2 } from "lucide-react";
+import { Power, PowerOff, Trash2, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { AiKey } from "@/features/ai-keys/types";
 import { maskedKey } from "@/features/ai-keys/utils";
 import { ProviderBadge } from "@/features/ai-keys/components/provider-badge";
 import { AiKeyVerifyPanel } from "@/features/ai-keys/components/ai-key-verify-panel";
+import { cn } from "@/lib/utils";
 
 export function AiKeyCard({ aiKey }: { aiKey: AiKey }) {
   const [showVerify, setShowVerify] = useState(false);
@@ -38,31 +39,31 @@ export function AiKeyCard({ aiKey }: { aiKey: AiKey }) {
   };
 
   return (
-    <Card className="p-5">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+    <Card className={cn("p-6 rounded-3xl transition-all duration-300", aiKey.is_active ? "glass-card border-primary/20 shadow-[0_8px_30px_rgb(79,70,229,0.06)] scale-[1.01]" : "bg-white/50 border-border opacity-70 hover:opacity-100")}>
+      <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-start">
         <div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
             <ProviderBadge provider={aiKey.provider} />
-            <Badge className={aiKey.is_active ? "bg-primary/10 text-primary" : "text-muted-foreground"}>
-              {aiKey.is_active ? "Activa" : "Inactiva"}
+            <Badge className={cn("px-3 py-1 rounded-full text-xs font-semibold", aiKey.is_active ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
+              {aiKey.is_active ? <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Activa</span> : "Inactiva"}
             </Badge>
           </div>
-          <h3 className="mt-3 text-lg font-semibold">{aiKey.label || "Sin etiqueta"}</h3>
-          <p className="mt-1 font-mono text-sm text-muted-foreground">{maskedKey(aiKey.key_last_four)}</p>
-          <p className="mt-2 text-xs text-muted-foreground">
+          <h3 className="mt-4 text-xl font-display font-semibold">{aiKey.label || "Sin etiqueta"}</h3>
+          <p className="mt-1 font-mono text-sm text-muted-foreground bg-muted/50 px-2 py-1 rounded inline-block">{maskedKey(aiKey.key_last_four)}</p>
+          <p className="mt-3 text-xs text-muted-foreground/80">
             Actualizada: {formatDateTime(aiKey.updated_at || aiKey.created_at)}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={() => setShowVerify((value) => !value)}>
+          <Button variant="secondary" className="h-10 rounded-xl" onClick={() => setShowVerify((value) => !value)}>
             Verificar
           </Button>
-          <Button variant="ghost" onClick={() => updateMutation.mutate()} disabled={updateMutation.isPending}>
-            {aiKey.is_active ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+          <Button variant="ghost" className="h-10 rounded-xl" onClick={() => updateMutation.mutate()} disabled={updateMutation.isPending}>
+            {aiKey.is_active ? <PowerOff className="h-4 w-4 mr-2" /> : <Power className="h-4 w-4 mr-2" />}
             {aiKey.is_active ? "Desactivar" : "Activar"}
           </Button>
-          <Button variant="danger" onClick={onDelete} disabled={deleteMutation.isPending}>
-            <Trash2 className="h-4 w-4" />
+          <Button variant="danger" className="h-10 rounded-xl" onClick={onDelete} disabled={deleteMutation.isPending}>
+            <Trash2 className="h-4 w-4 mr-2" />
             Eliminar
           </Button>
         </div>
@@ -73,7 +74,7 @@ export function AiKeyCard({ aiKey }: { aiKey: AiKey }) {
       {deleteMutation.isError ? (
         <ErrorState title="No se pudo eliminar la API Key" message={getApiErrorMessage(deleteMutation.error)} />
       ) : null}
-      {showVerify ? <AiKeyVerifyPanel aiKey={aiKey} /> : null}
+      {showVerify ? <div className="mt-6 pt-4 border-t border-border/50"><AiKeyVerifyPanel aiKey={aiKey} /></div> : null}
     </Card>
   );
 }

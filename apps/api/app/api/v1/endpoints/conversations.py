@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi.responses import StreamingResponse
 
 from app.api.deps import get_chat_service, get_conversation_service, get_current_user
 from app.models.enums import ConversationStatus
@@ -129,4 +130,28 @@ async def send_message(
         conversation_id=conversation_id,
         owner_id=current_user.id,
         payload=payload,
+    )
+
+@router.post("/{conversation_id}/stream")
+async def stream_message(
+    project_id: UUID,
+    conversation_id: UUID,
+    payload: SendChatMessageRequest,
+    current_user: User = Depends(get_current_user),
+    chat_service: ChatService = Depends(get_chat_service),
+):
+    event_generator = await chat_service.stream_message(
+        project_id=project_id,
+        conversation_id=conversation_id,
+        owner_id=current_user.id,
+        payload=payload,
+    )
+    return StreamingResponse(
+        event_generator,
+        media_type="text/event-stream; charset=utf-8",
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
     )

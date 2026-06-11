@@ -104,6 +104,24 @@ class AiProviderKeyService:
             message="AI key verified successfully.",
         )
 
+    async def list_models(
+        self,
+        *,
+        user_id: UUID,
+        key_id: UUID,
+    ):
+        from app.schemas.ai_key import AiModelListResponse, AiModelItem
+        key, api_key = await self.get_decrypted_key_for_user(key_id=key_id, user_id=user_id)
+        
+        models = await self.llm_client_service.list_provider_models(
+            provider=key.provider,
+            api_key=api_key
+        )
+        return AiModelListResponse(
+            items=[AiModelItem(id=m["id"], name=m["name"]) for m in models],
+            provider=key.provider
+        )
+
     async def get_decrypted_key_for_user(self, *, key_id: UUID, user_id: UUID) -> tuple[AiProviderKey, str]:
         key = await self.ai_key_repository.get_active_by_id_for_user(key_id=key_id, user_id=user_id)
         if key is None:

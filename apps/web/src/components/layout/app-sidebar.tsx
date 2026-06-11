@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, FolderKanban, KeyRound, Leaf } from "lucide-react";
+import { BarChart3, FolderKanban, KeyRound, Leaf, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { User } from "@/types/api";
 
 const items = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
@@ -12,13 +13,20 @@ const items = [
 ];
 
 export function AppSidebar({
+  user,
   mobileOpen = false,
   onClose,
 }: {
+  user?: User | null;
   mobileOpen?: boolean;
   onClose?: () => void;
 }) {
   const pathname = usePathname();
+
+  const navItems = [...items];
+  if (user?.role === "ADMIN") {
+    navItems.push({ href: "/dashboard/admin", label: "Administración", icon: Shield });
+  }
 
   return (
     <>
@@ -33,7 +41,7 @@ export function AppSidebar({
           </span>
         </Link>
         <nav className="mt-9 space-y-1">
-          {items.map((item) => {
+          {navItems.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link
@@ -89,7 +97,7 @@ export function AppSidebar({
           </button>
         </div>
         <nav className="mt-9 space-y-1">
-          {items.map((item) => {
+          {navItems.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link

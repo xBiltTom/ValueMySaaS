@@ -18,24 +18,31 @@ export default function DashboardPage() {
 
   return (
     <DashboardShell>
-      <div className="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+      <div className="mb-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Portafolio</p>
-          <h1 className="mt-1 font-display text-4xl font-semibold">Dashboard de sostenibilidad</h1>
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/50 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-foreground mb-3">
+            <div className="h-1.5 w-1.5 rounded-full bg-accent"></div>
+            Portafolio
+          </div>
+          <h1 className="font-display text-4xl font-bold tracking-tight md:text-5xl">Dashboard de Sostenibilidad</h1>
         </div>
       </div>
 
       {dashboardQuery.isLoading ? <LoadingState /> : null}
       {dashboardQuery.isError ? <ErrorState message={getApiErrorMessage(dashboardQuery.error)} /> : null}
+      
       {dashboardQuery.data && dashboardQuery.data.total_projects === 0 ? (
-        <EmptyState
-          icon={FolderPlus}
-          title="Aún no tienes SaaS registrados."
-          description="Crea tu primer SaaS para empezar a medir valor, sostenibilidad y riesgo."
-          actionHref="/projects/new"
-          actionLabel="Crear mi primer SaaS"
-        />
+        <div className="mt-8">
+          <EmptyState
+            icon={FolderPlus}
+            title="Aún no tienes SaaS registrados."
+            description="Crea tu primer SaaS para empezar a medir valor, sostenibilidad y riesgo."
+            actionHref="/projects/new"
+            actionLabel="Crear mi primer SaaS"
+          />
+        </div>
       ) : null}
+      
       {dashboardQuery.data && dashboardQuery.data.total_projects > 0 ? (
         <PortfolioDashboard data={dashboardQuery.data} />
       ) : null}

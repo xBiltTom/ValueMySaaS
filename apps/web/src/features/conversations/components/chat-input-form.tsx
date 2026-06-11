@@ -1,126 +1,117 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Send } from "lucide-react";
-import { useMemo } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm } from "react-hook-form";
+import { Send, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ErrorState } from "@/components/shared/error-state";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { getApiErrorMessage } from "@/lib/api-client";
-import { AiKey } from "@/features/ai-keys/types";
-import { providerHints, providerLabels } from "@/features/ai-keys/constants";
-import { maskedKey } from "@/features/ai-keys/utils";
-import { sendConversationMessage } from "@/features/conversations/api";
-import { sendMessageSchema, SendMessageFormValues } from "@/features/conversations/schemas";
 import { suggestedQuestions } from "@/features/conversations/utils";
+import { useEffect, useRef } from "react";
 
 export function ChatInputForm({
   projectId,
   conversationId,
-  activeKeys,
+  append,
+  isChatLoading,
+  selectedKeyId,
+  selectedModel,
+  isEmptyChat
 }: {
   projectId: string;
   conversationId: string;
-  activeKeys: AiKey[];
+  append: (message: any, opts: any) => void;
+  isChatLoading: boolean;
+  selectedKeyId: string;
+  selectedModel: string;
+  isEmptyChat: boolean;
 }) {
-  const queryClient = useQueryClient();
-  const firstKey = activeKeys[0];
-  const form = useForm<SendMessageFormValues>({
-    resolver: zodResolver(sendMessageSchema),
-    defaultValues: {
-      ai_key_id: firstKey?.id || "",
-      model_name: firstKey ? providerHints[firstKey.provider] : "",
-      message: "",
-    },
+  const form = useForm<{ message: string }>({
+    defaultValues: { message: "" },
   });
 
-  const selectedKeyId = useWatch({ control: form.control, name: "ai_key_id" });
-  const selectedKey = useMemo(
-    () => activeKeys.find((key) => key.id === selectedKeyId) || firstKey,
-    [activeKeys, firstKey, selectedKeyId],
-  );
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  const mutation = useMutation({
-    mutationFn: (values: SendMessageFormValues) =>
-      sendConversationMessage(projectId, conversationId, {
-        ai_key_id: values.ai_key_id,
-        model_name: values.model_name || null,
-        message: values.message,
-      }),
-    onSuccess: async () => {
-      const currentKey = form.getValues("ai_key_id");
-      const currentModel = form.getValues("model_name");
-      form.reset({ ai_key_id: currentKey, model_name: currentModel, message: "" });
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["conversation-messages", projectId, conversationId] }),
-        queryClient.invalidateQueries({ queryKey: ["conversation", projectId, conversationId] }),
-        queryClient.invalidateQueries({ queryKey: ["conversations", projectId] }),
-      ]);
-    },
-  });
+  // Auto-resize textarea
+  const watchMessage = form.watch("message");
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+    }
+  }, [watchMessage]);
+
+  const onSubmit = (values: { message: string }) => {
+    if (!values.message.trim() || isChatLoading) return;
+    
+    append(
+      { role: "user", content: values.message },
+      {
+        body: {
+          ai_key_id: selectedKeyId === "CREDITS" ? undefined : selectedKeyId,
+          model_name: selectedModel || undefined,
+          message: values.message,
+        },
+      }
+    );
+    form.reset({ message: "" });
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      form.handleSubmit(onSubmit)();
+    }
+  };
 
   return (
-    <Card className="p-4">
-      <form className="space-y-4" onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>
-        {mutation.isError ? (
-          <ErrorState
-            title="No se pudo enviar el mensaje"
-            message={`${getApiErrorMessage(mutation.error)}. Verifica que la API Key esté activa, que el modelo sea compatible y vuelve a intentarlo.`}
-          />
-        ) : null}
-        <div className="grid gap-3 lg:grid-cols-2">
-          <label className="block">
-            <span className="text-sm font-semibold">API Key activa</span>
-            <Select className="mt-2" {...form.register("ai_key_id")}>
-              {activeKeys.map((key) => (
-                <option key={key.id} value={key.id}>
-                  {key.label || "Sin etiqueta"} - {providerLabels[key.provider]} - {maskedKey(key.key_last_four)}
-                </option>
-              ))}
-            </Select>
-          </label>
-          <label className="block">
-            <span className="text-sm font-semibold">Modelo opcional</span>
-            <Input
-              className="mt-2"
-              placeholder={selectedKey ? providerHints[selectedKey.provider] : "gemini-1.5-flash"}
-              {...form.register("model_name")}
-            />
-          </label>
-        </div>
-        <div className="flex flex-wrap gap-2">
+    <div className="w-full max-w-3xl mx-auto flex flex-col gap-4">
+      {isEmptyChat && (
+        <div className="flex flex-wrap gap-2 justify-center mb-2">
           {suggestedQuestions.map((question) => (
             <button
               key={question}
               type="button"
-              className="rounded-full border border-border bg-white px-3 py-1 text-xs font-semibold text-muted-foreground transition hover:border-primary/40 hover:text-primary"
-              onClick={() => form.setValue("message", question, { shouldValidate: true })}
+              className="rounded-full border bg-white px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm hover:border-primary/40 hover:text-primary transition-all flex items-center gap-2"
+              onClick={() => {
+                form.setValue("message", question);
+                if (textareaRef.current) textareaRef.current.focus();
+              }}
             >
+              <Sparkles className="h-3.5 w-3.5" />
               {question}
             </button>
           ))}
         </div>
-        <label className="block">
-          <span className="text-sm font-semibold">Mensaje</span>
-          <Textarea
-            className="mt-2 min-h-32"
-            placeholder="¿Qué significa que mi churn esté alto y qué debería mejorar primero?"
-            {...form.register("message")}
-          />
-          {form.formState.errors.message ? (
-            <p className="mt-1 text-xs font-medium text-destructive">{form.formState.errors.message.message}</p>
-          ) : null}
-        </label>
-        <Button type="submit" disabled={mutation.isPending || !activeKeys.length}>
+      )}
+
+      <form 
+        className="relative flex items-end w-full rounded-3xl bg-muted/30 border border-border/60 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] focus-within:shadow-md focus-within:border-primary/30 focus-within:bg-white transition-all overflow-hidden" 
+        onSubmit={form.handleSubmit(onSubmit)}
+      >
+        <Textarea
+          {...form.register("message")}
+          ref={(e) => {
+            form.register("message").ref(e);
+            textareaRef.current = e;
+          }}
+          onKeyDown={handleKeyDown}
+          placeholder="Escribe un mensaje..."
+          className="min-h-[56px] max-h-[200px] w-full resize-none bg-transparent border-0 py-4 pl-6 pr-14 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60 text-base"
+          rows={1}
+        />
+        <Button 
+          type="submit" 
+          disabled={!watchMessage?.trim() || isChatLoading} 
+          className="absolute right-2 bottom-2 h-10 w-10 p-0 inline-flex items-center justify-center rounded-full transition-all duration-200 shadow-sm disabled:opacity-30 disabled:bg-muted-foreground"
+        >
           <Send className="h-4 w-4" />
-          {mutation.isPending ? "Pensando..." : "Enviar mensaje"}
         </Button>
       </form>
-    </Card>
+      <div className="text-center">
+        <p className="text-xs text-muted-foreground/60">
+          La IA puede cometer errores. Considera verificar la información importante.
+        </p>
+      </div>
+    </div>
   );
 }

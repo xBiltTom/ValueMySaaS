@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, status
+from fastapi.responses import StreamingResponse
 
 from app.api.deps import get_ai_analysis_service, get_current_user
 from app.models.enums import AiAnalysisType
@@ -25,6 +26,28 @@ async def generate_ai_analysis(
         project_id=project_id,
         owner_id=current_user.id,
         payload=payload,
+    )
+
+
+@router.post("/stream")
+async def generate_ai_analysis_stream(
+    project_id: UUID,
+    payload: AiAnalysisCreate,
+    current_user: User = Depends(get_current_user),
+    ai_analysis_service: AiAnalysisService = Depends(get_ai_analysis_service),
+):
+    event_generator = await ai_analysis_service.stream_analysis(
+        project_id=project_id,
+        owner_id=current_user.id,
+        payload=payload,
+    )
+    return StreamingResponse(
+        event_generator,
+        media_type="text/plain; charset=utf-8",
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive"
+        }
     )
 
 

@@ -52,6 +52,44 @@ class LlmClientService:
             model_name=resolved_model,
         )
 
+    async def stream_analysis(
+        self,
+        *,
+        provider: AiProvider,
+        api_key: str,
+        model_name: str | None,
+        system_prompt: str,
+        user_prompt: str,
+    ):
+        resolved_model = self._resolve_litellm_model(provider=provider, model_name=model_name)
+        try:
+            from litellm import acompletion
+            kwargs = {
+                "model": resolved_model,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                "api_key": api_key,
+                "temperature": 0.2,
+                "drop_params": True,
+                "stream": True,
+            }
+            response = await acompletion(**kwargs)
+            
+            async def event_generator():
+                try:
+                    async for chunk in response:
+                        delta = chunk.choices[0].delta.content or ""
+                        if delta:
+                            yield delta
+                except Exception as e:
+                    yield f"\n[Error de generación: {str(e)}]"
+            
+            return resolved_model, event_generator()
+        except Exception as exc:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="AI provider request failed") from exc
+
     async def verify_connection(
         self,
         *,
@@ -179,3 +217,55 @@ class LlmClientService:
         if isinstance(usage, dict):
             return usage.get(key)
         return None
+
+    async def list_provider_models(self, *, provider: AiProvider, api_key: str) -> list[dict]:
+        import urllib.request
+        import json
+        import asyncio
+
+        def _fetch_models(url: str, headers: dict | None = None) -> list[dict]:
+            req_headers = headers or {}
+            if "User-Agent" not in req_headers:
+                req_headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                
+            req = urllib.request.Request(url, headers=req_headers)
+            try:
+                with urllib.request.urlopen(req, timeout=10) as response:
+                    data = json.loads(response.read().decode("utf-8"))
+                    if provider == AiProvider.GEMINI:
+                        return [{"id": m["name"].replace("models/", ""), "name": m.get("displayName", m["name"])} for m in data.get("models", [])]
+                    elif provider == AiProvider.OPENROUTER:
+                        return [{"id": m["id"], "name": m.get("name", m["id"])} for m in data.get("data", [])]
+                    else:
+                        return [{"id": m["id"], "name": m["id"]} for m in data.get("data", [])]
+            except Exception as e:
+                print(f"Error fetching models: {e}")
+                return []
+
+        if provider == AiProvider.OPENAI:
+            url = "https://api.openai.com/v1/models"
+            headers = {"Authorization": f"Bearer {api_key}"}
+            return await asyncio.to_thread(_fetch_models, url, headers)
+        elif provider == AiProvider.OPENROUTER:
+            url = "https://openrouter.ai/api/v1/models"
+            headers = {"Authorization": f"Bearer {api_key}"}
+            return await asyncio.to_thread(_fetch_models, url, headers)
+        elif provider == AiProvider.GEMINI:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
+            return await asyncio.to_thread(_fetch_models, url)
+        elif provider == AiProvider.OTHER:
+            # Assume it's Groq if OTHER is used for Groq. Try Groq.
+            url = "https://api.groq.com/openai/v1/models"
+            headers = {"Authorization": f"Bearer {api_key}"}
+            models = await asyncio.to_thread(_fetch_models, url, headers)
+            # LiteLLM needs 'groq/' prefix for OTHER provider
+            return [{"id": f"groq/{m['id']}", "name": m["name"]} for m in models]
+        elif provider == AiProvider.ANTHROPIC:
+            # Anthropic doesn't have an endpoint. Provide static list.
+            return [
+                {"id": "claude-3-5-sonnet-20240620", "name": "Claude 3.5 Sonnet"},
+                {"id": "claude-3-5-haiku-20241022", "name": "Claude 3.5 Haiku"},
+                {"id": "claude-3-opus-20240229", "name": "Claude 3 Opus"}
+            ]
+        
+        return []

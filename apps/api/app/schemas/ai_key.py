@@ -46,3 +46,11 @@ class AiProviderKeyVerifyResponse(BaseModel):
     provider: AiProvider
     model_name: str
     message: str
+
+class AiModelItem(BaseModel):
+    id: str
+    name: str
+
+class AiModelListResponse(BaseModel):
+    items: list[AiModelItem]
+    provider: AiProvider

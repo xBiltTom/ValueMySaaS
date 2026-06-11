@@ -1,98 +1,302 @@
 "use client";
 
 import Link from "next/link";
-import { BarChart3, Bot, BrainCircuit, FileText, Gauge, MessageSquareText, PlusCircle } from "lucide-react";
+import { useState } from "react";
+import {
+  Rocket, BarChart3, BrainCircuit, MessageSquareText,
+  FileText, PlusCircle, Sparkles, ArrowRight, ChevronRight,
+  Zap, TrendingUp, Shield, Target, CheckCircle2, Clock
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { formatCurrency, formatEnum } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { formatEnum } from "@/lib/utils";
 import { SaasProject } from "@/features/project-dashboard/types";
+import { AiAnalysisModal } from "@/features/ai-analyses/components/ai-analysis-modal";
+
+const STAGE_LABELS: Record<string, string> = {
+  IDEA: "Idea",
+  PLANNING: "Planeación",
+  MVP: "MVP",
+  LAUNCHED: "Lanzado",
+  GROWING: "En crecimiento",
+  PAUSED: "Pausado",
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  EDTECH: "EdTech", FINTECH: "FinTech", HEALTHTECH: "HealthTech",
+  PRODUCTIVITY: "Productividad", MARKETING: "Marketing",
+  ECOMMERCE: "E-commerce", AI: "Inteligencia Artificial",
+  DEVELOPER_TOOLS: "Dev Tools", OTHER: "Otro",
+};
 
 export function ProjectHeader({
   project,
   onGenerateScore,
   isGenerating,
+  onLaunchProject,
+  isLaunching,
 }: {
   project: SaasProject;
   onGenerateScore?: () => void;
   isGenerating?: boolean;
+  onLaunchProject?: () => void;
+  isLaunching?: boolean;
 }) {
+  const [showLaunchConfirm, setShowLaunchConfirm] = useState(false);
+  const isPlanning = project.stage === "PLANNING" || project.stage === "IDEA";
+
+  const [showAiModal, setShowAiModal] = useState(false);
+
+  const planningActions = [
+    { type: 'button', onClick: () => setShowAiModal(true), icon: BrainCircuit, label: "Análisis IA", color: "text-violet-600", bg: "bg-violet-50 hover:bg-violet-100 border-violet-200" },
+    { type: 'link', href: `/projects/${project.id}/score`, icon: BarChart3, label: "Ver Score", color: "text-indigo-600", bg: "bg-indigo-50 hover:bg-indigo-100 border-indigo-200" },
+    { type: 'link', href: `/projects/${project.id}/chat`, icon: MessageSquareText, label: "Tutor IA", color: "text-sky-600", bg: "bg-sky-50 hover:bg-sky-100 border-sky-200" },
+    { type: 'link', href: `/projects/${project.id}/reports`, icon: FileText, label: "Reportes", color: "text-emerald-600", bg: "bg-emerald-50 hover:bg-emerald-100 border-emerald-200" },
+  ];
+
+  const launchedActions = [
+    { type: 'link', href: `/projects/${project.id}/metrics`, icon: PlusCircle, label: "Métricas", color: "text-primary", bg: "bg-primary/5 hover:bg-primary/10 border-primary/20" },
+    { type: 'link', href: `/projects/${project.id}/score`, icon: BarChart3, label: "Score", color: "text-indigo-600", bg: "bg-indigo-50 hover:bg-indigo-100 border-indigo-200" },
+    { type: 'button', onClick: () => setShowAiModal(true), icon: BrainCircuit, label: "Análisis IA", color: "text-violet-600", bg: "bg-violet-50 hover:bg-violet-100 border-violet-200" },
+    { type: 'link', href: `/projects/${project.id}/reports`, icon: FileText, label: "Reportes", color: "text-emerald-600", bg: "bg-emerald-50 hover:bg-emerald-100 border-emerald-200" },
+    { type: 'link', href: `/projects/${project.id}/chat`, icon: MessageSquareText, label: "Chat", color: "text-sky-600", bg: "bg-sky-50 hover:bg-sky-100 border-sky-200" },
+  ];
+
+  const actions = isPlanning ? planningActions : launchedActions;
+
   return (
-    <Card className="overflow-hidden">
-      <div className="grid gap-5 p-5 lg:grid-cols-[1fr_auto]">
-        <div>
-          <div className="flex flex-wrap gap-2">
-            <Badge className="bg-primary/10 text-primary">{formatEnum(project.stage)}</Badge>
-            <Badge>{formatEnum(project.category)}</Badge>
-            <Badge>{formatEnum(project.business_model)}</Badge>
-          </div>
-          <h1 className="mt-4 font-display text-4xl font-semibold">{project.name}</h1>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
-            {project.description || "Este SaaS aún no tiene descripción registrada."}
-          </p>
-          <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
-            <span><strong>Precio:</strong> {formatCurrency(project.current_price, project.currency)}</span>
-            <span><strong>Mercado:</strong> {project.target_market || "Sin definir"}</span>
-            <span><strong>Moneda:</strong> {project.currency}</span>
-          </div>
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
-          <Link href={`/projects/${project.id}/metrics`} className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-[#245448]">
-            <PlusCircle className="h-4 w-4" />
-            Métricas
-          </Link>
-          <Button variant="secondary" onClick={onGenerateScore} disabled={!onGenerateScore || isGenerating}>
-            <Gauge className="h-4 w-4" />
-            {isGenerating ? "Generando..." : "Generar diagnóstico"}
-          </Button>
-          <Link href={`/projects/${project.id}/score`} className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-semibold hover:bg-white">
-            <BarChart3 className="h-4 w-4" />
-            Ver score
-          </Link>
-          <Link href={`/projects/${project.id}/reports`} className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-semibold hover:bg-white">
-            <FileText className="h-4 w-4" />
-            Reportes
-          </Link>
-          <Link href={`/projects/${project.id}/ai-analysis`} className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-semibold hover:bg-white">
-            <BrainCircuit className="h-4 w-4" />
-            Análisis IA
-          </Link>
-          <Link href={`/projects/${project.id}/chat`} className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-semibold hover:bg-white">
-            <MessageSquareText className="h-4 w-4" />
-            Chat
-          </Link>
-        </div>
-      </div>
-      <div className="border-t border-border bg-[#fbf8f1] p-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Flujo recomendado</p>
-        <div className="mt-3 grid gap-2 text-sm text-muted-foreground md:grid-cols-7">
-          {[
-            "Registra métricas",
-            "Genera diagnóstico",
-            "Revisa dashboard",
-            "Genera reporte ejecutivo",
-            "Conecta BYOK IA",
-            "Genera análisis IA",
-            "Conversa con tu SaaS",
-          ].map((step, index) => (
-            <div key={step} className="rounded-md border border-border bg-white p-3">
-              <span className="text-xs font-semibold text-primary">{index + 1}</span>
-              <p className="mt-1 font-semibold text-foreground">{step}</p>
+    <div className="space-y-4">
+      {/* Hero header card */}
+      <div className={cn(
+        "relative overflow-hidden rounded-3xl border p-6 md:p-8",
+        isPlanning
+          ? "border-amber-200/60 bg-gradient-to-br from-amber-50 via-white to-violet-50"
+          : "border-primary/20 bg-gradient-to-br from-indigo-50 via-white to-teal-50"
+      )}>
+        {/* Ambient glow */}
+        <div className={cn(
+          "pointer-events-none absolute inset-0 opacity-40",
+          isPlanning
+            ? "bg-[radial-gradient(ellipse_at_top_right,rgba(251,191,36,0.3),transparent_60%)]"
+            : "bg-[radial-gradient(ellipse_at_top_right,rgba(99,102,241,0.2),transparent_60%)]"
+        )} />
+
+        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          {/* Left: project info */}
+          <div className="min-w-0 flex-1">
+            {/* Phase badge strip */}
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <span className={cn(
+                "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold tracking-wide border",
+                isPlanning
+                  ? "bg-amber-100 text-amber-800 border-amber-300"
+                  : "bg-primary/10 text-primary border-primary/20"
+              )}>
+                {isPlanning
+                  ? <><Clock className="h-3 w-3" /> {STAGE_LABELS[project.stage] ?? project.stage}</>
+                  : <><Zap className="h-3 w-3" /> {STAGE_LABELS[project.stage] ?? project.stage}</>
+                }
+              </span>
+              {project.category && (
+                <span className="inline-flex items-center rounded-full bg-white/80 border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
+                  {CATEGORY_LABELS[project.category] ?? project.category}
+                </span>
+              )}
+              {project.business_model && (
+                <span className="inline-flex items-center rounded-full bg-white/80 border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
+                  {formatEnum(project.business_model)}
+                </span>
+              )}
             </div>
-          ))}
+
+            <h1 className="font-display text-3xl font-bold text-foreground md:text-4xl leading-tight">
+              {project.name}
+            </h1>
+
+            {project.description && (
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
+                {project.description}
+              </p>
+            )}
+
+            {/* Meta info pills */}
+            <div className="mt-5 flex flex-wrap gap-3">
+              {project.target_market && (
+                <div className="flex items-center gap-1.5 rounded-xl bg-white/70 border border-border/50 px-3 py-1.5 text-xs">
+                  <Target className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="font-medium text-foreground">{project.target_market}</span>
+                </div>
+              )}
+              {project.value_proposition && (
+                <div className="flex items-center gap-1.5 rounded-xl bg-white/70 border border-border/50 px-3 py-1.5 text-xs max-w-xs truncate">
+                  <Sparkles className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className="font-medium text-foreground truncate">{project.value_proposition}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right: phase-specific CTA */}
+          {isPlanning ? (
+            <div className="shrink-0">
+              {showLaunchConfirm ? (
+                <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5 max-w-xs space-y-3 shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <Rocket className="h-5 w-5 text-amber-600" />
+                    <h3 className="font-semibold text-amber-900 text-sm">¿Listo para lanzar?</h3>
+                  </div>
+                  <p className="text-xs text-amber-800 leading-relaxed">
+                    Cambiarás el proyecto a fase <strong>LAUNCHED</strong>. Esto activará métricas reales, cálculos financieros y análisis avanzados.
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowLaunchConfirm(false)}
+                      className="flex-1 rounded-xl border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-50 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={() => { onLaunchProject?.(); setShowLaunchConfirm(false); }}
+                      disabled={isLaunching}
+                      className="flex-1 rounded-xl bg-amber-500 px-3 py-2 text-xs font-bold text-white hover:bg-amber-600 disabled:opacity-50 transition-colors flex items-center justify-center gap-1"
+                    >
+                      <Rocket className="h-3 w-3" />
+                      {isLaunching ? "Lanzando..." : "¡Lanzar!"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowLaunchConfirm(true)}
+                  className="group relative overflow-hidden rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-400 to-orange-500 px-6 py-5 shadow-lg shadow-amber-200 transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-amber-300 active:scale-[0.98]"
+                >
+                  <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="relative flex items-center gap-3">
+                    <div className="rounded-full bg-white/20 p-2">
+                      <Rocket className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-xs font-bold uppercase tracking-wider text-amber-100">¿Tu proyecto está listo?</p>
+                      <p className="text-base font-bold text-white">Marcar como Lanzado</p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-white ml-1 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="shrink-0 flex flex-col items-end gap-2">
+              <div className="flex items-center gap-2 rounded-2xl bg-white/80 border border-primary/20 px-4 py-3">
+                <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-sm font-semibold text-foreground">Proyecto Activo</span>
+              </div>
+              <Button
+                onClick={onGenerateScore}
+                disabled={!onGenerateScore || isGenerating}
+                className="btn-premium rounded-xl"
+              >
+                <TrendingUp className="h-4 w-4" />
+                {isGenerating ? "Analizando..." : "Generar Score"}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
-      <div className="grid border-t border-border bg-[#fbf8f1] text-sm text-muted-foreground sm:grid-cols-3">
-        <Link href={`/projects/${project.id}/reports`} className="flex items-center gap-2 px-5 py-3 font-semibold text-primary hover:bg-muted">
-          <FileText className="h-4 w-4" /> Reportes disponibles
-        </Link>
-        <Link href={`/projects/${project.id}/ai-analysis`} className="flex items-center gap-2 px-5 py-3 font-semibold text-primary hover:bg-muted">
-          <Bot className="h-4 w-4" /> Análisis IA BYOK
-        </Link>
-        <Link href={`/projects/${project.id}/chat`} className="flex items-center gap-2 px-5 py-3 font-semibold text-primary hover:bg-muted">
-          <MessageSquareText className="h-4 w-4" /> Chat contextual
-        </Link>
+
+      {/* Action navigation grid */}
+      <div className={cn(
+        "grid gap-3",
+        isPlanning ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-2 sm:grid-cols-3 md:grid-cols-5"
+      )}>
+        {actions.map((action, i) => {
+          const actionClass = cn(
+            "group flex items-center gap-3 rounded-2xl border p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 text-left",
+            action.bg
+          );
+          const ActionContent = (
+            <>
+              <action.icon className={cn("h-5 w-5 shrink-0", action.color)} />
+              <span className={cn("text-sm font-semibold", action.color)}>{action.label}</span>
+              <ChevronRight className={cn("ml-auto h-3.5 w-3.5 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all", action.color)} />
+            </>
+          );
+          if (action.type === 'button') {
+            return (
+              <button key={i} onClick={action.onClick} className={actionClass}>
+                {ActionContent}
+              </button>
+            );
+          }
+          return (
+            <Link key={i} href={action.href || "#"} className={actionClass}>
+              {ActionContent}
+            </Link>
+          );
+        })}
       </div>
-    </Card>
+
+      {/* Planning phase: generate score CTA (separate row for planning) */}
+      {isPlanning && (
+        <button
+          onClick={onGenerateScore}
+          disabled={!onGenerateScore || isGenerating}
+          className="group flex w-full items-center justify-between rounded-2xl border border-dashed border-primary/30 bg-primary/5 px-5 py-4 text-primary transition-all hover:bg-primary/10 hover:border-primary/50 disabled:opacity-50"
+        >
+          <span className="flex items-center gap-3">
+            <div className="rounded-xl bg-primary/10 p-2">
+              <Shield className="h-4 w-4 text-primary" />
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-bold">{isGenerating ? "Generando diagnóstico..." : "Generar diagnóstico de viabilidad"}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Evalúa el potencial de tu idea con IA y métricas ponderadas</p>
+            </div>
+          </span>
+          <ArrowRight className="h-4 w-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+        </button>
+      )}
+
+      {/* Planning phase workflow steps */}
+      {isPlanning && (
+        <div className="rounded-3xl border border-border/60 bg-white/60 backdrop-blur-sm p-5">
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Flujo recomendado para ideas en planeación</p>
+          <div className="flex items-start gap-0 overflow-x-auto pb-1">
+            {[
+              { step: 1, label: "Define tu idea", desc: "Registra nombre, problema y propuesta de valor", done: true },
+              { step: 2, label: "Análisis IA", desc: "Genera tu primer análisis de viabilidad con IA", done: false },
+              { step: 3, label: "Score de viabilidad", desc: "Revisa los puntajes por dimensión", done: false },
+              { step: 4, label: "Itera tu modelo", desc: "Ajusta y valida con el tutor inteligente", done: false },
+              { step: 5, label: "¡Lanza!", desc: "Cuando estés listo, marca tu proyecto como lanzado", done: false },
+            ].map((item, i, arr) => (
+              <div key={item.step} className="flex items-start gap-0 min-w-0">
+                <div className="flex flex-col items-center min-w-[120px] max-w-[140px] px-2">
+                  <div className={cn(
+                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold border-2",
+                    item.done
+                      ? "bg-emerald-500 text-white border-emerald-500"
+                      : "bg-white text-muted-foreground border-border"
+                  )}>
+                    {item.done ? <CheckCircle2 className="h-4 w-4" /> : item.step}
+                  </div>
+                  <p className="mt-2 text-center text-xs font-bold text-foreground leading-tight">{item.label}</p>
+                  <p className="mt-1 text-center text-[10px] text-muted-foreground leading-tight hidden sm:block">{item.desc}</p>
+                </div>
+                {i < arr.length - 1 && (
+                  <div className="mt-4 flex-1 min-w-[16px]">
+                    <div className="h-px w-full bg-border mt-0" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      <AiAnalysisModal 
+        isOpen={showAiModal} 
+        onClose={() => setShowAiModal(false)} 
+        projectId={project.id} 
+        projectStage={project.stage} 
+      />
+    </div>
   );
 }

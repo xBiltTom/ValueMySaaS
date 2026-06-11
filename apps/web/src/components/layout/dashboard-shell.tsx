@@ -14,7 +14,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
   if (userQuery.isCheckingToken || !userQuery.hasToken || userQuery.isLoading) {
     return (
-      <main className="min-h-screen p-6">
+      <main className="min-h-screen p-6 bg-background">
         <LoadingState label="Validando sesion..." />
       </main>
     );
@@ -22,18 +22,18 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
   if (userQuery.isError) {
     return (
-      <main className="min-h-screen p-6">
+      <main className="min-h-screen p-6 bg-background">
         <ErrorState message={getApiErrorMessage(userQuery.error)} />
       </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background lg:pl-72">
-      <AppSidebar mobileOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-      <div className="min-w-0">
+    <div className="noise-bg min-h-screen bg-background hero-gradient lg:pl-72 relative overflow-hidden text-foreground">
+      <AppSidebar user={userQuery.data} mobileOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <div className="min-w-0 relative z-10 h-screen overflow-y-auto">
         <AppTopbar user={userQuery.data} onMenuClick={() => setIsSidebarOpen(true)} />
-        <main className="mx-auto w-full max-w-7xl px-4 py-6 md:px-7">{children}</main>
+        <main className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8 pb-20">{children}</main>
       </div>
     </div>
   );

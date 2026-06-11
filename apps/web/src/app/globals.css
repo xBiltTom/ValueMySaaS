@@ -1,20 +1,5 @@
 @import "tailwindcss";
-
-:root {
-  --background: #f7f5ef;
-  --foreground: #17130f;
-  --card: #fffdf8;
-  --card-foreground: #17130f;
-  --muted: #ece7dc;
-  --muted-foreground: #6f6557;
-  --border: #ded5c7;
-  --primary: #173f35;
-  --primary-foreground: #f8f3e8;
-  --accent: #d8753a;
-  --accent-foreground: #1d120b;
-  --destructive: #b42318;
-  --ring: #2f6f60;
-}
+@source "../node_modules/streamdown/dist/*.js";
 
 @theme inline {
   --color-background: var(--background);
@@ -30,38 +15,168 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-ring: var(--ring);
-  --font-sans: var(--font-sans);
-  --font-display: var(--font-display);
+  --font-sans: var(--font-sans), system-ui, sans-serif;
+  --font-display: var(--font-display), sans-serif;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), sans-serif;
+:root {
+  /* LIGHT MODE (Brutalist / Clean Tech) */
+  --background: #fcfcfc;
+  --foreground: #050505;
+  --card: #ffffff;
+  --card-foreground: #050505;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --border: #e4e4e7;
+  --primary: #050505; /* Deep black for main actions */
+  --primary-foreground: #ccff00; /* Electric lime text/icons inside primary buttons */
+  --accent: #ccff00; /* Electric Lime */
+  --accent-foreground: #050505;
+  --destructive: #ef4444;
+  --ring: rgba(5, 5, 5, 0.3);
 }
 
-button,
-a,
-input,
-select,
-textarea {
-  outline-color: var(--ring);
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* DARK MODE (Neon Tech) */
+    --background: #050505;
+    --foreground: #ededed;
+    --card: #0a0a0a;
+    --card-foreground: #ededed;
+    --muted: #1f1f1f;
+    --muted-foreground: #a1a1aa;
+    --border: #222222;
+    --primary: #ccff00; /* Electric Lime for main actions */
+    --primary-foreground: #050505;
+    --accent: #00f3ff; /* Neon Cyan */
+    --accent-foreground: #050505;
+    --destructive: #ef4444;
+    --ring: rgba(204, 255, 0, 0.4);
+  }
 }
 
-::selection {
-  background: #cfe7df;
-  color: #10251f;
+@layer base {
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: var(--accent-foreground);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
 }
 
-.grain {
-  background-image:
-    radial-gradient(circle at 20% 20%, rgba(216, 117, 58, 0.16), transparent 26rem),
-    radial-gradient(circle at 80% 0%, rgba(23, 63, 53, 0.12), transparent 30rem),
-    linear-gradient(135deg, rgba(255,255,255,0.72), rgba(255,255,255,0));
-}
+@layer utilities {
+  .hero-gradient {
+    background: 
+      radial-gradient(circle at 50% -20%, rgba(204, 255, 0, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 100% 40%, rgba(0, 243, 255, 0.1) 0%, transparent 40%);
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    .hero-gradient {
+      background: 
+        radial-gradient(circle at 50% -20%, rgba(204, 255, 0, 0.2) 0%, transparent 60%),
+        radial-gradient(circle at 100% 40%, rgba(0, 243, 255, 0.15) 0%, transparent 50%);
+    }
+  }
 
-.field-grid {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  /* Bento Grid Card */
+  .bento-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    box-shadow: 0 4px 20px -2px rgba(0,0,0,0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bento-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px -4px rgba(0,0,0,0.08);
+    border-color: var(--primary);
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    .bento-card {
+      box-shadow: 0 4px 20px -2px rgba(0,0,0,0.4);
+    }
+    .bento-card:hover {
+      box-shadow: 0 0 20px -4px rgba(204,255,0,0.15);
+    }
+  }
+
+  .input-premium {
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    color: var(--foreground);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .input-premium:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px var(--ring);
+  }
+
+  .btn-premium {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border-radius: 0.5rem;
+    font-family: var(--font-display);
+    font-weight: 600;
+  }
+  
+  .btn-premium::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.2), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+  }
+  
+  .btn-premium:hover::after {
+    transform: translateX(100%);
+  }
+  
+  .btn-premium:active {
+    transform: scale(0.98);
+  }
+
+  /* Grain overlay */
+  .noise-bg {
+    position: relative;
+  }
+  .noise-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+    opacity: 0.4;
+  }
+  @media (prefers-color-scheme: dark) {
+    .noise-bg::before {
+      opacity: 0.15;
+    }
+  }
 }

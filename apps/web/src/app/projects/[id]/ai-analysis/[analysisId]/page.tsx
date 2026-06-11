@@ -1,9 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, LayoutDashboard } from "lucide-react";
+import { ArrowLeft, BrainCircuit, LayoutDashboard } from "lucide-react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingState } from "@/components/shared/loading-state";
@@ -11,11 +12,13 @@ import { getApiErrorMessage } from "@/lib/api-client";
 import { getProject } from "@/features/project-dashboard/api";
 import { getAiAnalysis } from "@/features/ai-analyses/api";
 import { AiAnalysisDetail } from "@/features/ai-analyses/components/ai-analysis-detail";
+import { AiAnalysisModal } from "@/features/ai-analyses/components/ai-analysis-modal";
 
 export default function AiAnalysisDetailPage() {
   const params = useParams<{ id: string; analysisId: string }>();
   const projectId = params.id;
   const analysisId = params.analysisId;
+  const [showAiModal, setShowAiModal] = useState(false);
 
   const projectQuery = useQuery({ queryKey: ["project", projectId], queryFn: () => getProject(projectId) });
   const analysisQuery = useQuery({
@@ -35,10 +38,19 @@ export default function AiAnalysisDetailPage() {
             {projectQuery.data?.name || "Proyecto"}
           </p>
         </div>
-        <Link href={`/projects/${projectId}`} className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-semibold hover:bg-white">
-          <LayoutDashboard className="h-4 w-4" />
-          Dashboard del proyecto
-        </Link>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <button
+            onClick={() => setShowAiModal(true)}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-violet-600 px-4 text-sm font-semibold text-white hover:bg-violet-700"
+          >
+            <BrainCircuit className="h-4 w-4" />
+            Generar otro análisis
+          </button>
+          <Link href={`/projects/${projectId}`} className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-semibold hover:bg-white">
+            <LayoutDashboard className="h-4 w-4" />
+            Dashboard
+          </Link>
+        </div>
       </div>
 
       {projectQuery.isLoading || analysisQuery.isLoading ? <LoadingState /> : null}
@@ -46,6 +58,15 @@ export default function AiAnalysisDetailPage() {
         <ErrorState message={getApiErrorMessage(projectQuery.error || analysisQuery.error)} />
       ) : null}
       {analysisQuery.data ? <AiAnalysisDetail analysis={analysisQuery.data} /> : null}
+
+      {projectQuery.data && (
+        <AiAnalysisModal 
+          isOpen={showAiModal} 
+          onClose={() => setShowAiModal(false)} 
+          projectId={projectQuery.data.id} 
+          projectStage={projectQuery.data.stage} 
+        />
+      )}
     </DashboardShell>
   );
 }

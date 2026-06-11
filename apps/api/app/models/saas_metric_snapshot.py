@@ -26,41 +26,15 @@ class SaasMetricSnapshot(Base):
 
     # Financial metrics
     mrr: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), nullable=True)
-    arr: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), nullable=True)
-    monthly_revenue: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), nullable=True)
     monthly_costs: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), nullable=True)
-    gross_profit: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), nullable=True)
-    net_profit: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), nullable=True)
-    cash_available: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), nullable=True)
-    burn_rate: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), nullable=True)
 
     # Acquisition metrics
     total_users: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    active_users: Mapped[int | None] = mapped_column(Integer, nullable=True)
     paying_customers: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    new_users: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    new_paying_customers: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    churned_customers: Mapped[int | None] = mapped_column(Integer, nullable=True)
     cac: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
-    marketing_spend: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), nullable=True)
 
     # SaaS metrics (stored as percentages or ratios)
     churn_rate: Mapped[Decimal | None] = mapped_column(Numeric(8, 4), nullable=True)
-    retention_rate: Mapped[Decimal | None] = mapped_column(Numeric(8, 4), nullable=True)
-    conversion_rate: Mapped[Decimal | None] = mapped_column(Numeric(8, 4), nullable=True)
-    arpu: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
-    ltv: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), nullable=True)
-    ltv_cac_ratio: Mapped[Decimal | None] = mapped_column(Numeric(8, 4), nullable=True)
-    payback_months: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
-    growth_rate: Mapped[Decimal | None] = mapped_column(Numeric(8, 4), nullable=True)
-    runway_months: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
-
-    # Product / service metrics
-    nps: Mapped[Decimal | None] = mapped_column(Numeric(6, 2), nullable=True)
-    avg_session_minutes: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
-    support_tickets: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    critical_bugs: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    uptime_percentage: Mapped[Decimal | None] = mapped_column(Numeric(6, 3), nullable=True)
 
     # Flexible extra data
     custom_metrics: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
