@@ -88,6 +88,29 @@ def _auto_fill_derived_metrics(data: dict) -> dict:
     return d
 
 
+def _pack_custom_metrics(data: dict) -> dict:
+    """Mueve todas las claves que no son columnas oficiales de SQLAlchemy al diccionario custom_metrics."""
+    valid_columns = {
+        "period_label", "captured_at", "mrr", "monthly_costs", 
+        "total_users", "paying_customers", "cac", "churn_rate", 
+        "notes", "custom_metrics"
+    }
+    custom_metrics = data.get("custom_metrics") or {}
+    
+    keys_to_move = [k for k in data.keys() if k not in valid_columns]
+    for k in keys_to_move:
+        val = data.pop(k)
+        if val is not None:
+            if isinstance(val, Decimal):
+                custom_metrics[k] = str(val)
+            else:
+                custom_metrics[k] = val
+                
+    if custom_metrics:
+        data["custom_metrics"] = custom_metrics
+    return data
+
+
 class MetricSnapshotService:
     def __init__(
         self,
@@ -116,6 +139,8 @@ class MetricSnapshotService:
         else:
             # Auto-calcular métricas derivadas antes de persistir (only for launched projects)
             data = _auto_fill_derived_metrics(data)
+
+        data = _pack_custom_metrics(data)
 
         return await self.metric_snapshot_repository.create(saas_project_id=project_id, data=data)
 
@@ -183,6 +208,7 @@ class MetricSnapshotService:
             data["captured_at"] = self._normalize_captured_at(data["captured_at"])
         # Auto-calcular métricas derivadas también en actualizaciones
         data = _auto_fill_derived_metrics(data)
+        data = _pack_custom_metrics(data)
         return await self.metric_snapshot_repository.update(snapshot=snapshot, data=data)
 
     async def delete_snapshot(
