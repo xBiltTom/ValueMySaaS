@@ -17,7 +17,7 @@ export function AdminPanel() {
   const MODEL_PLACEHOLDER: Record<string, string> = {
     OPENAI: "gpt-4o-mini",
     GEMINI: "gemini/gemini-1.5-flash",
-    GROQ: "groq/llama-3-70b-versatile",
+    GROQ: "groq/llama-3.3-70b-versatile",
     NVIDIA: "nvidia_nim/meta/llama-3.1-70b-instruct",
     ANTHROPIC: "claude-haiku-4-5-20251001",
     OPENROUTER: "openrouter/mistralai/mistral-7b-instruct",

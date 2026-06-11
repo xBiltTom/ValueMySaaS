@@ -192,7 +192,7 @@ class LlmClientService:
 
         if provider == AiProvider.GROQ:
             if not model_name:
-                return "groq/llama-3-70b-versatile"
+                return "groq/llama-3.3-70b-versatile"
             return model_name if model_name.startswith("groq/") else f"groq/{model_name}"
 
         if provider == AiProvider.NVIDIA:

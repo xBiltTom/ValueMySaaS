@@ -17,7 +17,7 @@ export const providerHints: Record<AiProvider, string> = {
   ANTHROPIC: "claude-3-5-haiku-20241022",
   GEMINI: "gemini/gemini-1.5-flash",
   OPENROUTER: "openrouter/meta-llama/llama-3.1-8b-instruct",
-  GROQ: "groq/llama-3-70b-versatile",
+  GROQ: "groq/llama-3.3-70b-versatile",
   NVIDIA: "nvidia_nim/meta/llama-3.1-70b-instruct",
   OTHER: "together_ai/mistralai/Mistral-7B-Instruct-v0.1",
 };
@@ -39,8 +39,8 @@ export const providerModels: Record<AiProvider, { id: string; name: string }[]> 
     { id: "gemini/gemini-2.0-flash", name: "Gemini 2.0 Flash" },
   ],
   GROQ: [
-    { id: "groq/llama-3-70b-versatile", name: "Llama 3 70B (recomendado)" },
-    { id: "groq/llama-3-8b-instant", name: "Llama 3 8B (rápido)" },
+    { id: "groq/llama-3.3-70b-versatile", name: "Llama 3.3 70B (recomendado)" },
+    { id: "groq/llama-3.1-8b-instant", name: "Llama 3.1 8B" },
     { id: "groq/mixtral-8x7b-32768", name: "Mixtral 8x7B" },
   ],
   NVIDIA: [

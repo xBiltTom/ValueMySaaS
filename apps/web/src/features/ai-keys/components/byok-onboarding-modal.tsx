@@ -43,7 +43,7 @@ const PROVIDERS = [
       'Ve a "API Keys" → "Create API Key"',
       "Copia la key y pégala aquí",
     ],
-    modelExample: "groq/llama-3-70b-versatile",
+    modelExample: "groq/llama-3.3-70b-versatile",
     quota: "~14,400 tokens / minuto",
   },
 ];
