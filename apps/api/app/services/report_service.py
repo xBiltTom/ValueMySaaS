@@ -29,62 +29,41 @@ class ReportService:
         self.dashboard_service = dashboard_service
 
     async def generate_basic_report(self, *, project_id: UUID, owner_id: UUID) -> Report:
-        project = await self._ensure_project_owned(project_id=project_id, owner_id=owner_id)
-        dashboard = await self.dashboard_service.get_project_dashboard(
-            project_id=project_id,
-            owner_id=owner_id,
-        )
-        latest_snapshot = await self.metric_snapshot_repository.get_latest_by_project(
-            saas_project_id=project_id,
-        )
-        latest_score = await self.saas_score_repository.get_latest_by_project(
-            saas_project_id=project_id,
-        )
-        generated_at = datetime.now(timezone.utc)
-        content = self._basic_content(
-            dashboard=dashboard,
-            latest_score=latest_score,
-            generated_at=generated_at,
+        project, dashboard, latest_snapshot, latest_score, generated_at = await self._gather_report_data(
+            project_id=project_id, owner_id=owner_id
         )
         return await self._create_report(
             project_id=project_id,
             owner_id=owner_id,
             title=f"Reporte basico de {project.name}",
             report_type=ReportType.BASIC,
-            content=content,
+            content=self._basic_content(dashboard=dashboard, latest_score=latest_score, generated_at=generated_at),
             generated_at=generated_at,
             metric_snapshot_id=latest_snapshot.id if latest_snapshot else None,
             score_id=latest_score.id if latest_score else None,
         )
 
     async def generate_executive_report(self, *, project_id: UUID, owner_id: UUID) -> Report:
-        project = await self._ensure_project_owned(project_id=project_id, owner_id=owner_id)
-        dashboard = await self.dashboard_service.get_project_dashboard(
-            project_id=project_id,
-            owner_id=owner_id,
-        )
-        latest_snapshot = await self.metric_snapshot_repository.get_latest_by_project(
-            saas_project_id=project_id,
-        )
-        latest_score = await self.saas_score_repository.get_latest_by_project(
-            saas_project_id=project_id,
-        )
-        generated_at = datetime.now(timezone.utc)
-        content = self._executive_content(
-            dashboard=dashboard,
-            latest_score=latest_score,
-            generated_at=generated_at,
+        project, dashboard, latest_snapshot, latest_score, generated_at = await self._gather_report_data(
+            project_id=project_id, owner_id=owner_id
         )
         return await self._create_report(
             project_id=project_id,
             owner_id=owner_id,
             title=f"Reporte ejecutivo de {project.name}",
             report_type=ReportType.EXECUTIVE,
-            content=content,
+            content=self._executive_content(dashboard=dashboard, latest_score=latest_score, generated_at=generated_at),
             generated_at=generated_at,
             metric_snapshot_id=latest_snapshot.id if latest_snapshot else None,
             score_id=latest_score.id if latest_score else None,
         )
+
+    async def _gather_report_data(self, *, project_id: UUID, owner_id: UUID) -> tuple:
+        project = await self._ensure_project_owned(project_id=project_id, owner_id=owner_id)
+        dashboard = await self.dashboard_service.get_project_dashboard(project_id=project_id, owner_id=owner_id)
+        latest_snapshot = await self.metric_snapshot_repository.get_latest_by_project(saas_project_id=project_id)
+        latest_score = await self.saas_score_repository.get_latest_by_project(saas_project_id=project_id)
+        return project, dashboard, latest_snapshot, latest_score, datetime.now(timezone.utc)
 
     async def list_reports(
         self,

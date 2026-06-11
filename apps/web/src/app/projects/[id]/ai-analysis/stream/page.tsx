@@ -4,11 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Sparkles, Activity, CheckCircle2, RotateCcw, LayoutDashboard } from "lucide-react";
+import { ArrowLeft, Sparkles, Activity, CheckCircle2, KeyRound, RotateCcw, LayoutDashboard } from "lucide-react";
 import { useCompletion } from "@ai-sdk/react";
 import { getAuthToken } from "@/lib/auth-token";
 import { API_BASE_URL } from "@/lib/api-client";
 import { getProject } from "@/features/project-dashboard/api";
+import { ByokOnboardingModal } from "@/features/ai-keys/components/byok-onboarding-modal";
 import { Streamdown } from "streamdown";
 
 export default function AiAnalysisStreamPage() {
@@ -37,6 +38,16 @@ export default function AiAnalysisStreamPage() {
   const hasStartedRef = useRef(false);
   const endRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
+  const [showByokOnboarding, setShowByokOnboarding] = useState(false);
+
+  // Detect 402 / credits exhausted
+  const is402 = !!error && (
+    error.message.includes("crédito") ||
+    error.message.includes("credit") ||
+    error.message.includes("402") ||
+    error.message.includes("PAYMENT_REQUIRED") ||
+    (error as Error & { status?: number }).status === 402
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -73,16 +84,16 @@ export default function AiAnalysisStreamPage() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-[#fafafa] relative selection:bg-black selection:text-white font-sans">
+    <div className="min-h-screen bg-background relative selection:bg-foreground selection:text-background font-sans">
       {/* Background Atmosphere */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-200/20 blur-[120px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/10 blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-rose-200/20 blur-[120px]" />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay" />
       </div>
 
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-white/40 backdrop-blur-md border-b border-black/[0.03]">
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-card/40 backdrop-blur-md border-b border-border/30">
         <Link 
           href={`/projects/${projectId}/ai-analysis`} 
           className="group flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-black transition-colors"
@@ -93,23 +104,23 @@ export default function AiAnalysisStreamPage() {
           Volver a Análisis
         </Link>
 
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white shadow-sm border border-black/5">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card shadow-sm border border-border">
           {isLoading ? (
             <>
               <div className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/60 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
               </div>
               <span className="text-xs font-medium text-zinc-600 tracking-wide uppercase">Procesando</span>
             </>
           ) : isFinished ? (
             <>
-              <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+              <CheckCircle2 className="h-3 w-3 text-status-success-fg" />
               <span className="text-xs font-medium text-zinc-600 tracking-wide uppercase">Completado</span>
             </>
           ) : error ? (
             <>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-status-danger-fg"></span>
               <span className="text-xs font-medium text-zinc-600 tracking-wide uppercase">Error</span>
             </>
           ) : (
@@ -134,10 +145,33 @@ export default function AiAnalysisStreamPage() {
 
         {/* Content Stream */}
         <div className="flex-1 relative">
-          {error && (
-            <div className="p-6 rounded-2xl bg-red-50 border border-red-100 text-red-900 mb-8 animate-in fade-in">
+          {error && !is402 && (
+            <div className="p-6 rounded-2xl bg-status-danger-bg border border-status-danger-border text-status-danger-text mb-8 animate-in fade-in">
               <h3 className="font-semibold mb-2">Se interrumpió el análisis</h3>
               <p className="text-sm opacity-80">{error.message}</p>
+            </div>
+          )}
+
+          {is402 && (
+            <div className="p-6 rounded-2xl bg-card border border-border mb-8 animate-in fade-in">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                  <KeyRound className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground mb-1">Créditos agotados</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Tus créditos del sistema se han agotado. Activa tu propia API key gratuita para continuar usando el análisis IA sin límites.
+                  </p>
+                  <button
+                    onClick={() => setShowByokOnboarding(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    Cómo obtener una API Key gratis
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
@@ -166,7 +200,7 @@ export default function AiAnalysisStreamPage() {
               
               <Link
                 href={`/projects/${projectId}`}
-                className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-white px-8 py-4 text-sm font-medium text-zinc-900 shadow-sm border border-black/5 transition-colors hover:bg-zinc-50"
+                className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-card px-8 py-4 text-sm font-medium text-foreground shadow-sm border border-border transition-colors hover:bg-muted"
               >
                 <LayoutDashboard className="h-4 w-4 text-zinc-400" />
                 Volver al dashboard
@@ -175,6 +209,8 @@ export default function AiAnalysisStreamPage() {
           )}
         </div>
       </main>
+
+      <ByokOnboardingModal isOpen={showByokOnboarding} onClose={() => setShowByokOnboarding(false)} />
     </div>
   );
 }

@@ -9,6 +9,7 @@ from fastapi import HTTPException, status
 from app.models.user import User
 from app.repositories.ai_analysis_repository import AiAnalysisRepository
 from app.repositories.credit_transaction_repository import CreditTransactionRepository
+from app.repositories.saas_project_repository import SaasProjectRepository
 from app.repositories.system_ai_key_repository import SystemAiKeyRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.admin import AdminStatsResponse, AdminUserListResponse, AdminUserRead
@@ -23,12 +24,14 @@ class AdminService:
         system_ai_key_repository: SystemAiKeyRepository,
         ai_analysis_repository: AiAnalysisRepository,
         credit_service: CreditService,
+        saas_project_repository: SaasProjectRepository,
     ) -> None:
         self.user_repository = user_repository
         self.credit_transaction_repository = credit_transaction_repository
         self.system_ai_key_repository = system_ai_key_repository
         self.ai_analysis_repository = ai_analysis_repository
         self.credit_service = credit_service
+        self.saas_project_repository = saas_project_repository
 
     async def list_users(
         self,
@@ -37,12 +40,33 @@ class AdminService:
         limit: int = 20,
         offset: int = 0,
     ) -> AdminUserListResponse:
-        items = await self.user_repository.list_all(
+        users = await self.user_repository.list_all(
             search=search, limit=limit, offset=offset
         )
         total = await self.user_repository.count_all(search=search)
+
+        items: list[AdminUserRead] = []
+        for user in users:
+            project_count = await self.saas_project_repository.count_by_owner(owner_id=user.id)
+            last_ai_activity_at = await self.credit_transaction_repository.get_last_ai_activity_at(user_id=user.id)
+            items.append(AdminUserRead(
+                id=user.id,
+                email=user.email,
+                username=user.username,
+                full_name=user.full_name,
+                role=user.role,
+                is_active=user.is_active,
+                is_verified=user.is_verified,
+                ai_credits=user.ai_credits,
+                last_login_at=user.last_login_at,
+                project_count=project_count,
+                last_ai_activity_at=last_ai_activity_at,
+                created_at=user.created_at,
+                updated_at=user.updated_at,
+            ))
+
         return AdminUserListResponse(
-            items=[AdminUserRead.model_validate(u) for u in items],
+            items=items,
             total=total,
             limit=limit,
             offset=offset,

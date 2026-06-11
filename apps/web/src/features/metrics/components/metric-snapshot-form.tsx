@@ -17,7 +17,7 @@ function FieldHelp({ text }: { text: string }) {
   return (
     <span className="group relative inline-block ml-1">
       <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/40 cursor-help inline align-middle" />
-      <span className="pointer-events-none absolute left-0 top-5 z-50 hidden w-52 rounded-xl border border-border bg-white p-3 text-xs text-muted-foreground shadow-lg group-hover:block">
+      <span className="pointer-events-none absolute left-0 top-5 z-50 hidden w-52 rounded-xl border border-border bg-card p-3 text-xs text-muted-foreground shadow-lg group-hover:block">
         {text}
       </span>
     </span>
@@ -44,14 +44,14 @@ function NumberInput({ label, help, placeholder, register, name, errors, integer
         type="number" step={integer ? "1" : "0.01"} min="0"
         placeholder={placeholder || "0"}
         className={cn(
-          "w-full rounded-2xl border bg-white px-4 py-3.5 text-base text-foreground",
+          "w-full rounded-2xl border bg-background px-4 py-3.5 text-base text-foreground",
           "placeholder:text-muted-foreground/40 outline-none transition-all",
           "focus:border-primary focus:shadow-[0_0_0_4px_rgba(79,70,229,0.08)]",
-          errors[name] ? "border-red-300" : "border-border"
+          errors[name] ? "border-status-danger-border" : "border-border"
         )}
         {...register(name, options)}
       />
-      {errors[name] && <p className="mt-1 text-xs text-red-500 font-semibold">{errors[name].message}</p>}
+      {errors[name] && <p className="mt-1 text-xs text-status-danger-fg font-semibold">{errors[name].message}</p>}
     </label>
   );
 }
@@ -64,9 +64,9 @@ function Section({
 }) {
   const colors = {
     primary: { bg: "bg-primary/5 border-primary/15", icon: "bg-primary/10 text-primary", title: "text-foreground" },
-    amber: { bg: "bg-amber-50 border-amber-200/60", icon: "bg-amber-100 text-amber-600", title: "text-amber-900" },
-    emerald: { bg: "bg-emerald-50 border-emerald-200/60", icon: "bg-emerald-100 text-emerald-600", title: "text-emerald-900" },
-    violet: { bg: "bg-violet-50 border-violet-200/60", icon: "bg-violet-100 text-violet-600", title: "text-violet-900" },
+    amber: { bg: "bg-status-warning-bg border-status-warning-border/60", icon: "bg-status-warning-bg text-status-warning-fg", title: "text-status-warning-text" },
+    emerald: { bg: "bg-status-success-bg border-status-success-border/60", icon: "bg-status-success-bg text-status-success-fg", title: "text-status-success-text" },
+    violet: { bg: "bg-accent/5 border-accent/20", icon: "bg-accent/10 text-foreground", title: "text-foreground" },
   };
   const c = colors[color];
   return (
@@ -118,12 +118,12 @@ export function MetricSnapshotForm({ projectId, projectStage = "LAUNCHED" }: { p
       <div className={cn(
         "rounded-3xl border p-5 md:p-6",
         isPlanning
-          ? "border-amber-300/60 bg-gradient-to-br from-amber-50 to-orange-50"
-          : "border-primary/20 bg-gradient-to-br from-indigo-50 to-violet-50"
+          ? "border-status-warning-border/60 bg-gradient-to-br from-status-warning-bg to-card"
+          : "border-primary/20 bg-gradient-to-br from-primary/5 to-card"
       )}>
         <div className="flex items-center gap-3 mb-2">
-          <div className={cn("rounded-2xl p-3", isPlanning ? "bg-amber-100" : "bg-primary/10")}>
-            {isPlanning ? <Lightbulb className="h-6 w-6 text-amber-600" /> : <BarChart3 className="h-6 w-6 text-primary" />}
+          <div className={cn("rounded-2xl p-3", isPlanning ? "bg-status-warning-bg" : "bg-primary/10")}>
+            {isPlanning ? <Lightbulb className="h-6 w-6 text-status-warning-fg" /> : <BarChart3 className="h-6 w-6 text-primary" />}
           </div>
           <div>
             <h2 className="text-lg font-display font-bold">
@@ -137,9 +137,9 @@ export function MetricSnapshotForm({ projectId, projectStage = "LAUNCHED" }: { p
           </div>
         </div>
         {isPlanning && (
-          <div className="mt-4 flex items-start gap-2 rounded-2xl border border-amber-300/60 bg-white/70 p-3">
-            <Info className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-            <p className="text-xs text-amber-800 leading-relaxed">
+          <div className="mt-4 flex items-start gap-2 rounded-2xl border border-status-warning-border/60 bg-card/70 p-3">
+            <Info className="h-4 w-4 text-status-warning-fg shrink-0 mt-0.5" />
+            <p className="text-xs text-status-warning-text leading-relaxed">
               Para proyectos en planeación, solo necesitas tus <strong>costos estimados</strong> y <strong>notas del periodo</strong>. El análisis de viabilidad lo hace la <strong>IA</strong> con tu propuesta de valor.
             </p>
           </div>
@@ -148,13 +148,13 @@ export function MetricSnapshotForm({ projectId, projectStage = "LAUNCHED" }: { p
 
       {/* Success state */}
       {mutation.isSuccess && (
-        <div className="flex items-center gap-3 rounded-2xl border border-emerald-300 bg-emerald-50 px-5 py-4">
-          <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+        <div className="flex items-center gap-3 rounded-2xl border border-status-success-border bg-status-success-bg px-5 py-4">
+          <CheckCircle2 className="h-5 w-5 text-status-success-fg shrink-0" />
           <div>
-            <p className="text-sm font-bold text-emerald-900">
+            <p className="text-sm font-bold text-status-success-text">
               {isPlanning ? "Estimaciones guardadas" : "Snapshot registrado exitosamente"}
             </p>
-            <p className="text-xs text-emerald-700 mt-0.5">
+            <p className="text-xs text-status-success-text mt-0.5">
               {isPlanning
                 ? "Ahora ve a 'Análisis IA' para evaluar la viabilidad de tu proyecto."
                 : "Ya puedes generar un score diagnóstico desde el dashboard."}
@@ -170,18 +170,18 @@ export function MetricSnapshotForm({ projectId, projectStage = "LAUNCHED" }: { p
           <div className="sm:col-span-2">
             <FieldLabel>Nombre del periodo</FieldLabel>
             <input
-              className="w-full rounded-2xl border border-border bg-white px-4 py-3.5 text-base outline-none transition-all focus:border-primary focus:shadow-[0_0_0_4px_rgba(79,70,229,0.08)]"
+              className="w-full rounded-2xl border border-border bg-background px-4 py-3.5 text-base outline-none transition-all focus:border-primary focus:shadow-[0_0_0_4px_var(--ring)]"
               placeholder={isPlanning ? "Ej: Junio 2026 (estimación)" : "Ej: Junio 2026"}
               {...reg("period_label")}
             />
-            {errors.period_label && <p className="mt-1 text-xs text-red-500 font-semibold">{errors.period_label.message}</p>}
+            {errors.period_label && <p className="mt-1 text-xs text-status-danger-fg font-semibold">{errors.period_label.message}</p>}
           </div>
           {!isPlanning && (
             <div className="sm:col-span-2">
               <FieldLabel help="Cuándo tomaste estas métricas">Fecha de captura</FieldLabel>
               <input
                 type="datetime-local"
-                className="w-full rounded-2xl border border-border bg-white px-4 py-3.5 text-base outline-none transition-all focus:border-primary focus:shadow-[0_0_0_4px_rgba(79,70,229,0.08)]"
+                className="w-full rounded-2xl border border-border bg-background px-4 py-3.5 text-base outline-none transition-all focus:border-primary focus:shadow-[0_0_0_4px_var(--ring)]"
                 {...reg("captured_at")}
               />
             </div>
@@ -209,7 +209,7 @@ export function MetricSnapshotForm({ projectId, projectStage = "LAUNCHED" }: { p
                 <FieldLabel help="Anotaciones sobre tu planificación financiera">Notas del periodo</FieldLabel>
                 <textarea
                   rows={3}
-                  className="w-full rounded-2xl border border-border bg-white px-4 py-3.5 text-base placeholder:text-muted-foreground/40 outline-none transition-all focus:border-primary focus:shadow-[0_0_0_4px_rgba(79,70,229,0.08)] resize-none"
+                  className="w-full rounded-2xl border border-border bg-background px-4 py-3.5 text-base placeholder:text-muted-foreground/40 outline-none transition-all focus:border-primary focus:shadow-[0_0_0_4px_var(--ring)] resize-none"
                   placeholder="Ej: Estimación inicial. Usaré Supabase gratis + Vercel..."
                   {...reg("notes")}
                 />
@@ -254,7 +254,7 @@ export function MetricSnapshotForm({ projectId, projectStage = "LAUNCHED" }: { p
             <div className="sm:col-span-2">
               <textarea
                 rows={3}
-                className="w-full rounded-2xl border border-border bg-white px-4 py-3.5 text-base placeholder:text-muted-foreground/40 outline-none transition-all focus:border-primary focus:shadow-[0_0_0_4px_rgba(79,70,229,0.08)] resize-none"
+                className="w-full rounded-2xl border border-border bg-background px-4 py-3.5 text-base placeholder:text-muted-foreground/40 outline-none transition-all focus:border-primary focus:shadow-[0_0_0_4px_var(--ring)] resize-none"
                 placeholder="Ej: Lanzamos v2.0, corrección de bug crítico, nuevo cliente enterprise..."
                 {...reg("notes")}
               />
@@ -269,8 +269,8 @@ export function MetricSnapshotForm({ projectId, projectStage = "LAUNCHED" }: { p
           className={cn(
             "w-full flex items-center justify-center gap-3 rounded-2xl py-4 text-base font-bold text-white transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg",
             isPlanning
-              ? "bg-gradient-to-r from-amber-500 to-orange-500 shadow-amber-200"
-              : "bg-gradient-to-r from-primary to-violet-600 shadow-primary/25"
+              ? "bg-gradient-to-r from-status-warning-fg to-primary shadow-status-warning-bg"
+              : "bg-primary shadow-primary/25"
           )}
         >
           {mutation.isPending ? (

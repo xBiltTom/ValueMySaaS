@@ -31,7 +31,7 @@ export function AppTopbar({ user, onMenuClick }: { user?: User; onMenuClick?: ()
         <div className="flex items-center gap-2">
           <Link
             href="/projects/new"
-            className="hidden h-10 items-center justify-center gap-2 rounded-md bg-primary px-3 text-sm font-semibold text-primary-foreground transition hover:bg-[#245448] sm:inline-flex"
+            className="hidden h-10 items-center justify-center gap-2 rounded-md bg-primary px-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 sm:inline-flex"
           >
             <Plus className="h-4 w-4 cursor-pointer" />
             Nuevo SaaS

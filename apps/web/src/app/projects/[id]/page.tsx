@@ -101,11 +101,11 @@ export default function ProjectDashboardPage() {
 
           {/* Launch success banner */}
           {launchMutation.isSuccess && (
-            <div className="flex items-center gap-4 rounded-2xl border border-emerald-300 bg-emerald-50 px-6 py-4 animate-in fade-in slide-in-from-bottom-2">
-              <Rocket className="h-6 w-6 text-emerald-600 shrink-0" />
+            <div className="flex items-center gap-4 rounded-2xl border border-status-success-border bg-status-success-bg px-6 py-4 animate-in fade-in slide-in-from-bottom-2">
+              <Rocket className="h-6 w-6 text-status-success-fg shrink-0" />
               <div>
-                <p className="font-bold text-emerald-900">¡Proyecto lanzado con éxito!</p>
-                <p className="text-sm text-emerald-700 mt-0.5">
+                <p className="font-bold text-status-success-text">¡Proyecto lanzado con éxito!</p>
+                <p className="text-sm text-status-success-text mt-0.5">
                   Ahora puedes registrar métricas reales y hacer un seguimiento completo de tu SaaS.
                 </p>
               </div>
@@ -117,15 +117,15 @@ export default function ProjectDashboardPage() {
             <div className={cn(
               "rounded-3xl border-2 border-dashed p-8 text-center space-y-4",
               isPlanning
-                ? "border-amber-200 bg-amber-50/50"
+                ? "border-status-warning-border/60 bg-status-warning-bg/50"
                 : "border-primary/20 bg-primary/5"
             )}>
               <div className={cn(
                 "mx-auto inline-flex rounded-2xl p-4",
-                isPlanning ? "bg-amber-100" : "bg-primary/10"
+                isPlanning ? "bg-status-warning-bg" : "bg-primary/10"
               )}>
                 {isPlanning
-                  ? <Sparkles className="h-8 w-8 text-amber-600" />
+                  ? <Sparkles className="h-8 w-8 text-status-warning-fg" />
                   : <Database className="h-8 w-8 text-primary" />
                 }
               </div>
@@ -146,7 +146,7 @@ export default function ProjectDashboardPage() {
                 className={cn(
                   "inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold transition-all hover:scale-105",
                   isPlanning
-                    ? "bg-amber-500 text-white hover:bg-amber-600"
+                    ? "bg-status-warning-fg text-primary-foreground hover:opacity-90"
                     : "bg-primary text-white hover:bg-primary/90"
                 )}
               >
@@ -229,16 +229,16 @@ export default function ProjectDashboardPage() {
           <div className={cn(
             "rounded-3xl border p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between",
             isPlanning
-              ? "border-amber-200/60 bg-gradient-to-r from-amber-50 to-violet-50"
-              : "border-primary/15 bg-gradient-to-r from-primary/5 to-teal-50/50"
+              ? "border-status-warning-border/60 bg-gradient-to-r from-status-warning-bg to-card"
+              : "border-primary/15 bg-gradient-to-r from-primary/5 to-card"
           )}>
             <div className="flex items-center gap-4">
               <div className={cn(
                 "rounded-2xl p-3 shrink-0",
-                isPlanning ? "bg-amber-100" : "bg-primary/10"
+                isPlanning ? "bg-status-warning-bg" : "bg-primary/10"
               )}>
                 {isPlanning
-                  ? <Sparkles className="h-5 w-5 text-amber-600" />
+                  ? <Sparkles className="h-5 w-5 text-status-warning-fg" />
                   : <TrendingUp className="h-5 w-5 text-primary" />
                 }
               </div>
@@ -258,14 +258,14 @@ export default function ProjectDashboardPage() {
                 <>
                   <button
                     onClick={handleAiAnalysisClick}
-                    className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-violet-700 transition-colors"
+                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground hover:opacity-90 transition-colors"
                   >
                     <BrainCircuit className="h-4 w-4" />
                     {latestAnalysisId ? "Ver Análisis IA" : "Análisis IA"}
                   </button>
                   <Link
                     href={`/projects/${projectId}/chat`}
-                    className="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-bold hover:bg-muted transition-colors"
+                    className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-bold hover:bg-muted transition-colors"
                   >
                     <MessageSquareText className="h-4 w-4" />
                     Tutor IA
@@ -275,14 +275,14 @@ export default function ProjectDashboardPage() {
                 <>
                   <Link
                     href={`/projects/${projectId}/score`}
-                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white hover:bg-primary/90 transition-colors"
+                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground hover:opacity-90 transition-colors"
                   >
                     <TrendingUp className="h-4 w-4" />
                     Ver diagnóstico
                   </Link>
                   <Link
                     href={`/projects/${projectId}/chat`}
-                    className="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-bold hover:bg-muted transition-colors"
+                    className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-bold hover:bg-muted transition-colors"
                   >
                     <MessageSquareText className="h-4 w-4" />
                     Chat con el SaaS

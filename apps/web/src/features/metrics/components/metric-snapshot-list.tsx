@@ -23,7 +23,7 @@ export function MetricSnapshotList({ snapshots }: { snapshots: MetricSnapshotLis
       </CardHeader>
       <CardContent className="space-y-3">
         {snapshots.items.map((snapshot) => (
-          <div key={snapshot.id} className="rounded-md border border-border bg-white p-4">
+          <div key={snapshot.id} className="rounded-md border border-border bg-card p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h3 className="font-semibold">{snapshot.period_label || "Sin periodo"}</h3>

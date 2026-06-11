@@ -6,7 +6,7 @@ Jerarquía de resolución de credenciales para el LLM:
         usar la system_ai_key activa + decrementar 1 crédito.
   3. Sin acceso: Si no tiene ninguno → HTTP 402 con mensaje amigable.
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -30,6 +30,9 @@ class LlmCredentials:
     credit_used: bool
     # ID de la system key usada (para auditoría), None si es BYOK
     system_key_id: UUID | None = None
+    # Keys de sistema adicionales a intentar en orden si la primaria falla (failover)
+    # Cada tupla: (provider, api_key_decrypted, default_model)
+    fallback_system_keys: list[tuple[AiProvider, str, str | None]] = field(default_factory=list)
 
 
 class CreditService:
@@ -93,8 +96,8 @@ class CreditService:
 
         # --- Caso 2: Créditos del sistema ---
         if user.ai_credits > 0:
-            system_key = await self.system_ai_key_repository.get_active_key()
-            if system_key is None:
+            system_keys = await self.system_ai_key_repository.get_all_active_ordered()
+            if not system_keys:
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                     detail=(
@@ -102,19 +105,30 @@ class CreditService:
                         "Contacta al administrador o usa tu propia API Key."
                     ),
                 )
+            primary_key = system_keys[0]
             try:
-                decrypted = decrypt_api_key(system_key.encrypted_api_key)
+                decrypted = decrypt_api_key(primary_key.encrypted_api_key)
             except RuntimeError as exc:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail="Error interno en la clave del sistema.",
                 ) from exc
+
+            # Construir lista de fallback con las keys restantes (ignorar las que fallen al desencriptar)
+            fallback: list[tuple[AiProvider, str, str | None]] = []
+            for sk in system_keys[1:]:
+                try:
+                    fallback.append((sk.provider, decrypt_api_key(sk.encrypted_api_key), sk.default_model))
+                except RuntimeError:
+                    pass
+
             return LlmCredentials(
-                provider=system_key.provider,
+                provider=primary_key.provider,
                 api_key=decrypted,
-                model_name=system_key.default_model,
+                model_name=primary_key.default_model,
                 credit_used=True,
-                system_key_id=system_key.id,
+                system_key_id=primary_key.id,
+                fallback_system_keys=fallback,
             )
 
         # --- Caso 3: Sin acceso ---

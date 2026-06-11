@@ -49,18 +49,18 @@ export function ProjectHeader({
   const [showAiModal, setShowAiModal] = useState(false);
 
   const planningActions = [
-    { type: 'button', onClick: () => setShowAiModal(true), icon: BrainCircuit, label: "Análisis IA", color: "text-violet-600", bg: "bg-violet-50 hover:bg-violet-100 border-violet-200" },
-    { type: 'link', href: `/projects/${project.id}/score`, icon: BarChart3, label: "Ver Score", color: "text-indigo-600", bg: "bg-indigo-50 hover:bg-indigo-100 border-indigo-200" },
-    { type: 'link', href: `/projects/${project.id}/chat`, icon: MessageSquareText, label: "Tutor IA", color: "text-sky-600", bg: "bg-sky-50 hover:bg-sky-100 border-sky-200" },
-    { type: 'link', href: `/projects/${project.id}/reports`, icon: FileText, label: "Reportes", color: "text-emerald-600", bg: "bg-emerald-50 hover:bg-emerald-100 border-emerald-200" },
+    { type: 'button', onClick: () => setShowAiModal(true), icon: BrainCircuit, label: "Análisis IA", color: "text-accent-foreground", bg: "bg-accent/10 hover:bg-accent/20 border-accent/30" },
+    { type: 'link', href: `/projects/${project.id}/score`, icon: BarChart3, label: "Ver Score", color: "text-primary", bg: "bg-primary/5 hover:bg-primary/10 border-primary/20" },
+    { type: 'link', href: `/projects/${project.id}/chat`, icon: MessageSquareText, label: "Tutor IA", color: "text-muted-foreground", bg: "bg-muted hover:bg-muted/80 border-border" },
+    { type: 'link', href: `/projects/${project.id}/reports`, icon: FileText, label: "Reportes", color: "text-status-success-text", bg: "bg-status-success-bg hover:bg-status-success-bg/80 border-status-success-border" },
   ];
 
   const launchedActions = [
     { type: 'link', href: `/projects/${project.id}/metrics`, icon: PlusCircle, label: "Métricas", color: "text-primary", bg: "bg-primary/5 hover:bg-primary/10 border-primary/20" },
-    { type: 'link', href: `/projects/${project.id}/score`, icon: BarChart3, label: "Score", color: "text-indigo-600", bg: "bg-indigo-50 hover:bg-indigo-100 border-indigo-200" },
-    { type: 'button', onClick: () => setShowAiModal(true), icon: BrainCircuit, label: "Análisis IA", color: "text-violet-600", bg: "bg-violet-50 hover:bg-violet-100 border-violet-200" },
-    { type: 'link', href: `/projects/${project.id}/reports`, icon: FileText, label: "Reportes", color: "text-emerald-600", bg: "bg-emerald-50 hover:bg-emerald-100 border-emerald-200" },
-    { type: 'link', href: `/projects/${project.id}/chat`, icon: MessageSquareText, label: "Chat", color: "text-sky-600", bg: "bg-sky-50 hover:bg-sky-100 border-sky-200" },
+    { type: 'link', href: `/projects/${project.id}/score`, icon: BarChart3, label: "Score", color: "text-primary", bg: "bg-primary/5 hover:bg-primary/10 border-primary/20" },
+    { type: 'button', onClick: () => setShowAiModal(true), icon: BrainCircuit, label: "Análisis IA", color: "text-accent-foreground", bg: "bg-accent/10 hover:bg-accent/20 border-accent/30" },
+    { type: 'link', href: `/projects/${project.id}/reports`, icon: FileText, label: "Reportes", color: "text-status-success-text", bg: "bg-status-success-bg hover:bg-status-success-bg/80 border-status-success-border" },
+    { type: 'link', href: `/projects/${project.id}/chat`, icon: MessageSquareText, label: "Chat", color: "text-muted-foreground", bg: "bg-muted hover:bg-muted/80 border-border" },
   ];
 
   const actions = isPlanning ? planningActions : launchedActions;
@@ -71,15 +71,15 @@ export function ProjectHeader({
       <div className={cn(
         "relative overflow-hidden rounded-3xl border p-6 md:p-8",
         isPlanning
-          ? "border-amber-200/60 bg-gradient-to-br from-amber-50 via-white to-violet-50"
-          : "border-primary/20 bg-gradient-to-br from-indigo-50 via-white to-teal-50"
+          ? "border-status-warning-border/60 bg-gradient-to-br from-status-warning-bg via-card to-card"
+          : "border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card"
       )}>
         {/* Ambient glow */}
         <div className={cn(
           "pointer-events-none absolute inset-0 opacity-40",
           isPlanning
-            ? "bg-[radial-gradient(ellipse_at_top_right,rgba(251,191,36,0.3),transparent_60%)]"
-            : "bg-[radial-gradient(ellipse_at_top_right,rgba(99,102,241,0.2),transparent_60%)]"
+            ? "bg-[radial-gradient(ellipse_at_top_right,var(--status-warning-fg)/20,transparent_60%)]"
+            : "bg-[radial-gradient(ellipse_at_top_right,var(--accent)/15,transparent_60%)]"
         )} />
 
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
@@ -90,7 +90,7 @@ export function ProjectHeader({
               <span className={cn(
                 "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold tracking-wide border",
                 isPlanning
-                  ? "bg-amber-100 text-amber-800 border-amber-300"
+                  ? "bg-status-warning-bg text-status-warning-text border-status-warning-border"
                   : "bg-primary/10 text-primary border-primary/20"
               )}>
                 {isPlanning
@@ -99,12 +99,12 @@ export function ProjectHeader({
                 }
               </span>
               {project.category && (
-                <span className="inline-flex items-center rounded-full bg-white/80 border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
+                <span className="inline-flex items-center rounded-full bg-card/80 border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
                   {CATEGORY_LABELS[project.category] ?? project.category}
                 </span>
               )}
               {project.business_model && (
-                <span className="inline-flex items-center rounded-full bg-white/80 border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
+                <span className="inline-flex items-center rounded-full bg-card/80 border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
                   {formatEnum(project.business_model)}
                 </span>
               )}
@@ -123,13 +123,13 @@ export function ProjectHeader({
             {/* Meta info pills */}
             <div className="mt-5 flex flex-wrap gap-3">
               {project.target_market && (
-                <div className="flex items-center gap-1.5 rounded-xl bg-white/70 border border-border/50 px-3 py-1.5 text-xs">
+                <div className="flex items-center gap-1.5 rounded-xl bg-card/70 border border-border/50 px-3 py-1.5 text-xs">
                   <Target className="h-3.5 w-3.5 text-muted-foreground" />
                   <span className="font-medium text-foreground">{project.target_market}</span>
                 </div>
               )}
               {project.value_proposition && (
-                <div className="flex items-center gap-1.5 rounded-xl bg-white/70 border border-border/50 px-3 py-1.5 text-xs max-w-xs truncate">
+                <div className="flex items-center gap-1.5 rounded-xl bg-card/70 border border-border/50 px-3 py-1.5 text-xs max-w-xs truncate">
                   <Sparkles className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                   <span className="font-medium text-foreground truncate">{project.value_proposition}</span>
                 </div>
@@ -141,25 +141,25 @@ export function ProjectHeader({
           {isPlanning ? (
             <div className="shrink-0">
               {showLaunchConfirm ? (
-                <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5 max-w-xs space-y-3 shadow-lg">
+                <div className="rounded-2xl border border-status-warning-border bg-status-warning-bg p-5 max-w-xs space-y-3 shadow-lg">
                   <div className="flex items-center gap-2">
-                    <Rocket className="h-5 w-5 text-amber-600" />
-                    <h3 className="font-semibold text-amber-900 text-sm">¿Listo para lanzar?</h3>
+                    <Rocket className="h-5 w-5 text-status-warning-fg" />
+                    <h3 className="font-semibold text-status-warning-text text-sm">¿Listo para lanzar?</h3>
                   </div>
-                  <p className="text-xs text-amber-800 leading-relaxed">
+                  <p className="text-xs text-status-warning-text leading-relaxed">
                     Cambiarás el proyecto a fase <strong>LAUNCHED</strong>. Esto activará métricas reales, cálculos financieros y análisis avanzados.
                   </p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setShowLaunchConfirm(false)}
-                      className="flex-1 rounded-xl border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-50 transition-colors"
+                      className="flex-1 rounded-xl border border-status-warning-border bg-card px-3 py-2 text-xs font-semibold text-status-warning-text hover:bg-status-warning-bg transition-colors"
                     >
                       Cancelar
                     </button>
                     <button
                       onClick={() => { onLaunchProject?.(); setShowLaunchConfirm(false); }}
                       disabled={isLaunching}
-                      className="flex-1 rounded-xl bg-amber-500 px-3 py-2 text-xs font-bold text-white hover:bg-amber-600 disabled:opacity-50 transition-colors flex items-center justify-center gap-1"
+                      className="flex-1 rounded-xl bg-status-warning-fg px-3 py-2 text-xs font-bold text-white hover:opacity-90 disabled:opacity-50 transition-colors flex items-center justify-center gap-1"
                     >
                       <Rocket className="h-3 w-3" />
                       {isLaunching ? "Lanzando..." : "¡Lanzar!"}
@@ -169,7 +169,7 @@ export function ProjectHeader({
               ) : (
                 <button
                   onClick={() => setShowLaunchConfirm(true)}
-                  className="group relative overflow-hidden rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-400 to-orange-500 px-6 py-5 shadow-lg shadow-amber-200 transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-amber-300 active:scale-[0.98]"
+                  className="group relative overflow-hidden rounded-2xl border-2 border-status-warning-border bg-gradient-to-br from-status-warning-fg to-primary px-6 py-5 shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
                 >
                   <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                   <div className="relative flex items-center gap-3">
@@ -177,7 +177,7 @@ export function ProjectHeader({
                       <Rocket className="h-5 w-5 text-white" />
                     </div>
                     <div className="text-left">
-                      <p className="text-xs font-bold uppercase tracking-wider text-amber-100">¿Tu proyecto está listo?</p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-white/70">¿Tu proyecto está listo?</p>
                       <p className="text-base font-bold text-white">Marcar como Lanzado</p>
                     </div>
                     <ArrowRight className="h-4 w-4 text-white ml-1 group-hover:translate-x-1 transition-transform" />
@@ -187,8 +187,8 @@ export function ProjectHeader({
             </div>
           ) : (
             <div className="shrink-0 flex flex-col items-end gap-2">
-              <div className="flex items-center gap-2 rounded-2xl bg-white/80 border border-primary/20 px-4 py-3">
-                <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <div className="flex items-center gap-2 rounded-2xl bg-card/80 border border-primary/20 px-4 py-3">
+                <div className="h-2.5 w-2.5 rounded-full bg-accent animate-pulse" />
                 <span className="text-sm font-semibold text-foreground">Proyecto Activo</span>
               </div>
               <Button
@@ -258,7 +258,7 @@ export function ProjectHeader({
 
       {/* Planning phase workflow steps */}
       {isPlanning && (
-        <div className="rounded-3xl border border-border/60 bg-white/60 backdrop-blur-sm p-5">
+        <div className="rounded-3xl border border-border/60 bg-card/60 backdrop-blur-sm p-5">
           <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Flujo recomendado para ideas en planeación</p>
           <div className="flex items-start gap-0 overflow-x-auto pb-1">
             {[
@@ -273,8 +273,8 @@ export function ProjectHeader({
                   <div className={cn(
                     "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold border-2",
                     item.done
-                      ? "bg-emerald-500 text-white border-emerald-500"
-                      : "bg-white text-muted-foreground border-border"
+                      ? "bg-status-success-fg text-white border-status-success-fg"
+                      : "bg-card text-muted-foreground border-border"
                   )}>
                     {item.done ? <CheckCircle2 className="h-4 w-4" /> : item.step}
                   </div>

@@ -71,7 +71,7 @@ export function ChatInputForm({
             <button
               key={question}
               type="button"
-              className="rounded-full border bg-white px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm hover:border-primary/40 hover:text-primary transition-all flex items-center gap-2"
+              className="rounded-full border bg-card px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm hover:border-primary/40 hover:text-primary transition-all flex items-center gap-2"
               onClick={() => {
                 form.setValue("message", question);
                 if (textareaRef.current) textareaRef.current.focus();
@@ -85,7 +85,7 @@ export function ChatInputForm({
       )}
 
       <form 
-        className="relative flex items-end w-full rounded-3xl bg-muted/30 border border-border/60 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] focus-within:shadow-md focus-within:border-primary/30 focus-within:bg-white transition-all overflow-hidden" 
+        className="relative flex items-end w-full rounded-3xl bg-muted/30 border border-border/60 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] focus-within:shadow-md focus-within:border-primary/30 focus-within:bg-card transition-all overflow-hidden"
         onSubmit={form.handleSubmit(onSubmit)}
       >
         <Textarea

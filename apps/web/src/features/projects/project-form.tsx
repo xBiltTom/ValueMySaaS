@@ -21,21 +21,21 @@ import { useState } from "react";
 function Label({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
     <span className="block text-sm font-bold text-foreground mb-2">
-      {children} {required && <span className="text-red-500">*</span>}
+      {children} {required && <span className="text-status-danger-fg">*</span>}
     </span>
   );
 }
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="mt-1.5 text-[12px] font-semibold text-red-500 flex items-center gap-1"><span>↑</span> {message}</p>;
+  return <p className="mt-1.5 text-[12px] font-semibold text-status-danger-fg flex items-center gap-1"><span>↑</span> {message}</p>;
 }
 
 function Tooltip({ text }: { text: string }) {
   return (
     <span className="group relative inline-block ml-1.5">
       <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/50 hover:text-muted-foreground cursor-help inline" />
-      <span className="pointer-events-none absolute left-0 top-6 z-50 hidden w-52 rounded-xl border border-border bg-white p-3 text-xs text-muted-foreground shadow-lg group-hover:block">
+      <span className="pointer-events-none absolute left-0 top-6 z-50 hidden w-52 rounded-xl border border-border bg-card p-3 text-xs text-muted-foreground shadow-lg group-hover:block">
         {text}
       </span>
     </span>
@@ -47,7 +47,7 @@ function StepIndicator({ step, label, active, done }: { step: number; label: str
     <div className={cn("flex items-center gap-2 transition-all", active ? "opacity-100" : "opacity-40")}>
       <div className={cn(
         "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold border-2 transition-all",
-        done ? "bg-emerald-500 border-emerald-500 text-white" : active ? "bg-primary border-primary text-white" : "bg-white border-border text-muted-foreground"
+        done ? "bg-status-success-fg border-status-success-fg text-white" : active ? "bg-primary border-primary text-primary-foreground" : "bg-card border-border text-muted-foreground"
       )}>
         {done ? <Check className="h-3.5 w-3.5" /> : step}
       </div>
@@ -67,8 +67,8 @@ function PremiumInput({ className, ...props }: React.InputHTMLAttributes<HTMLInp
   return (
     <input
       className={cn(
-        "w-full rounded-2xl border border-border bg-white px-4 py-3.5 text-base text-foreground placeholder:text-muted-foreground/50 outline-none transition-all",
-        "focus:border-primary focus:shadow-[0_0_0_4px_rgba(79,70,229,0.08)]",
+        "w-full rounded-2xl border border-border bg-background px-4 py-3.5 text-base text-foreground placeholder:text-muted-foreground/50 outline-none transition-all",
+        "focus:border-primary focus:shadow-[0_0_0_4px_var(--ring)]",
         className
       )}
       {...props}
@@ -80,8 +80,8 @@ function PremiumSelect({ className, ...props }: React.SelectHTMLAttributes<HTMLS
   return (
     <select
       className={cn(
-        "w-full rounded-2xl border border-border bg-white px-4 py-3.5 text-base text-foreground outline-none transition-all appearance-none cursor-pointer",
-        "focus:border-primary focus:shadow-[0_0_0_4px_rgba(79,70,229,0.08)]",
+        "w-full rounded-2xl border border-border bg-background px-4 py-3.5 text-base text-foreground outline-none transition-all appearance-none cursor-pointer",
+        "focus:border-primary focus:shadow-[0_0_0_4px_var(--ring)]",
         className
       )}
       {...props}
@@ -93,8 +93,8 @@ function PremiumTextarea({ className, ...props }: React.TextareaHTMLAttributes<H
   return (
     <textarea
       className={cn(
-        "w-full rounded-2xl border border-border bg-white px-4 py-3.5 text-base text-foreground placeholder:text-muted-foreground/50 outline-none transition-all resize-none",
-        "focus:border-primary focus:shadow-[0_0_0_4px_rgba(79,70,229,0.08)]",
+        "w-full rounded-2xl border border-border bg-background px-4 py-3.5 text-base text-foreground placeholder:text-muted-foreground/50 outline-none transition-all resize-none",
+        "focus:border-primary focus:shadow-[0_0_0_4px_var(--ring)]",
         className
       )}
       {...props}
@@ -203,15 +203,15 @@ export function ProjectForm() {
                   "group relative flex flex-col items-start rounded-3xl border-2 p-7 text-left transition-all duration-300",
                   "hover:scale-[1.02] hover:shadow-lg active:scale-[0.99]",
                   watchStage === "PLANNING" || watchStage === "IDEA"
-                    ? "border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50 shadow-lg shadow-amber-100"
-                    : "border-border bg-white hover:border-amber-300"
+                    ? "border-status-warning-border bg-gradient-to-br from-status-warning-bg to-card shadow-lg"
+                    : "border-border bg-card hover:border-status-warning-border"
                 )}
               >
-                <div className="mb-5 rounded-2xl bg-amber-100 p-3.5 text-amber-600">
+                <div className="mb-5 rounded-2xl bg-status-warning-bg p-3.5 text-status-warning-fg">
                   <Lightbulb className="h-7 w-7" />
                 </div>
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-amber-700">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-status-warning-bg px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-status-warning-text">
                     🎓 Para estudiantes
                   </span>
                 </div>
@@ -221,12 +221,12 @@ export function ProjectForm() {
                 </p>
                 <div className="mt-5 space-y-2">
                   {["Análisis cualitativo con IA", "Evaluación por pesos (viabilidad)", "Sin métricas financieras reales"].map((f) => (
-                    <div key={f} className="flex items-center gap-2 text-xs text-amber-800 font-medium">
-                      <span className="text-amber-500">✓</span> {f}
+                    <div key={f} className="flex items-center gap-2 text-xs text-status-warning-text font-medium">
+                      <span className="text-status-warning-fg">✓</span> {f}
                     </div>
                   ))}
                 </div>
-                <div className="absolute top-5 right-5 flex h-7 w-7 items-center justify-center rounded-full bg-amber-500 text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-5 right-5 flex h-7 w-7 items-center justify-center rounded-full bg-status-warning-fg text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity">
                   <ArrowRight className="h-4 w-4" />
                 </div>
               </button>
@@ -238,8 +238,8 @@ export function ProjectForm() {
                   "group relative flex flex-col items-start rounded-3xl border-2 p-7 text-left transition-all duration-300",
                   "hover:scale-[1.02] hover:shadow-lg active:scale-[0.99]",
                   watchStage === "LAUNCHED" || watchStage === "MVP" || watchStage === "GROWING"
-                    ? "border-primary bg-gradient-to-br from-indigo-50 to-violet-50 shadow-lg shadow-primary/10"
-                    : "border-border bg-white hover:border-primary/40"
+                    ? "border-primary bg-gradient-to-br from-primary/5 to-card shadow-lg shadow-primary/10"
+                    : "border-border bg-card hover:border-primary/40"
                 )}
               >
                 <div className="mb-5 rounded-2xl bg-primary/10 p-3.5 text-primary">
@@ -280,11 +280,11 @@ export function ProjectForm() {
 
             <div className={cn(
               "rounded-3xl border p-6 space-y-5",
-              isPlanning ? "border-amber-200 bg-amber-50/40" : "border-primary/15 bg-primary/5"
+              isPlanning ? "border-status-warning-border/60 bg-status-warning-bg/40" : "border-primary/15 bg-primary/5"
             )}>
               <div className="flex items-center gap-3 mb-2">
-                <div className={cn("rounded-xl p-2", isPlanning ? "bg-amber-100" : "bg-primary/10")}>
-                  <Package className={cn("h-5 w-5", isPlanning ? "text-amber-600" : "text-primary")} />
+                <div className={cn("rounded-xl p-2", isPlanning ? "bg-status-warning-bg" : "bg-primary/10")}>
+                  <Package className={cn("h-5 w-5", isPlanning ? "text-status-warning-fg" : "text-primary")} />
                 </div>
                 <p className="text-sm font-bold text-foreground">Identidad del proyecto</p>
               </div>
@@ -333,11 +333,11 @@ export function ProjectForm() {
 
             <div className={cn(
               "rounded-3xl border p-6 space-y-5",
-              isPlanning ? "border-amber-200 bg-amber-50/40" : "border-primary/15 bg-primary/5"
+              isPlanning ? "border-status-warning-border/60 bg-status-warning-bg/40" : "border-primary/15 bg-primary/5"
             )}>
               <div className="flex items-center gap-3 mb-1">
-                <div className={cn("rounded-xl p-2", isPlanning ? "bg-amber-100" : "bg-primary/10")}>
-                  <Users className={cn("h-5 w-5", isPlanning ? "text-amber-600" : "text-primary")} />
+                <div className={cn("rounded-xl p-2", isPlanning ? "bg-status-warning-bg" : "bg-primary/10")}>
+                  <Users className={cn("h-5 w-5", isPlanning ? "text-status-warning-fg" : "text-primary")} />
                 </div>
                 <p className="text-sm font-bold">Para quién es</p>
               </div>
@@ -364,15 +364,15 @@ export function ProjectForm() {
 
             <div className={cn(
               "rounded-3xl border p-6 space-y-5",
-              isPlanning ? "border-violet-200 bg-violet-50/30" : "border-primary/15 bg-primary/5"
+              isPlanning ? "border-accent/20 bg-accent/5" : "border-primary/15 bg-primary/5"
             )}>
               <div className="flex items-center gap-3 mb-1">
-                <div className={cn("rounded-xl p-2", isPlanning ? "bg-violet-100" : "bg-primary/10")}>
-                  <Brain className={cn("h-5 w-5", isPlanning ? "text-violet-600" : "text-primary")} />
+                <div className={cn("rounded-xl p-2", isPlanning ? "bg-accent/10" : "bg-primary/10")}>
+                  <Brain className={cn("h-5 w-5", isPlanning ? "text-foreground" : "text-primary")} />
                 </div>
                 <div>
                   <p className="text-sm font-bold">Tu propuesta de valor</p>
-                  {isPlanning && <p className="text-xs text-violet-600 font-medium">⚡ La IA usará esto para evaluarte</p>}
+                  {isPlanning && <p className="text-xs text-accent-foreground font-medium">⚡ La IA usará esto para evaluarte</p>}
                 </div>
               </div>
 
@@ -422,11 +422,11 @@ export function ProjectForm() {
 
             <div className={cn(
               "rounded-3xl border p-6 space-y-5",
-              isPlanning ? "border-amber-200 bg-amber-50/40" : "border-primary/15 bg-primary/5"
+              isPlanning ? "border-status-warning-border/60 bg-status-warning-bg/40" : "border-primary/15 bg-primary/5"
             )}>
               <div className="flex items-center gap-3 mb-1">
-                <div className={cn("rounded-xl p-2", isPlanning ? "bg-amber-100" : "bg-primary/10")}>
-                  <DollarSign className={cn("h-5 w-5", isPlanning ? "text-amber-600" : "text-primary")} />
+                <div className={cn("rounded-xl p-2", isPlanning ? "bg-status-warning-bg" : "bg-primary/10")}>
+                  <DollarSign className={cn("h-5 w-5", isPlanning ? "text-status-warning-fg" : "text-primary")} />
                 </div>
                 <p className="text-sm font-bold">¿Cómo cobras?</p>
               </div>
@@ -466,11 +466,11 @@ export function ProjectForm() {
               </div>
 
               {isPlanning && (
-                <div className="rounded-2xl border border-amber-300/60 bg-amber-50 p-4 flex gap-3">
-                  <Sparkles className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                <div className="rounded-2xl border border-status-warning-border/60 bg-status-warning-bg p-4 flex gap-3">
+                  <Sparkles className="h-5 w-5 text-status-warning-fg shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-bold text-amber-900">¿No sabes el precio exacto?</p>
-                    <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
+                    <p className="text-sm font-bold text-status-warning-text">¿No sabes el precio exacto?</p>
+                    <p className="text-xs text-status-warning-text mt-0.5 leading-relaxed">
                       En planeación, el precio es una estimación. La IA evaluará si tu estrategia de precios es viable para el mercado que apuntas.
                     </p>
                   </div>
@@ -479,7 +479,7 @@ export function ProjectForm() {
             </div>
 
             {/* Summary preview before submit */}
-            <div className="rounded-3xl border border-border bg-white p-5 space-y-3">
+            <div className="rounded-3xl border border-border bg-card p-5 space-y-3">
               <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Resumen de tu proyecto</p>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 {[
@@ -504,7 +504,7 @@ export function ProjectForm() {
             <button
               type="button"
               onClick={() => setStep((s) => s - 1)}
-              className="flex items-center gap-2 rounded-2xl border border-border bg-white px-6 py-3.5 text-sm font-bold text-foreground hover:bg-muted transition-colors"
+              className="flex items-center gap-2 rounded-2xl border border-border bg-card px-6 py-3.5 text-sm font-bold text-foreground hover:bg-muted transition-colors"
             >
               ← Anterior
             </button>
@@ -517,7 +517,7 @@ export function ProjectForm() {
               className={cn(
                 "flex items-center gap-2 rounded-2xl px-6 py-3.5 text-sm font-bold text-white transition-all hover:scale-105 active:scale-95",
                 isPlanning
-                  ? "bg-amber-500 hover:bg-amber-600 shadow-lg shadow-amber-200"
+                  ? "bg-status-warning-fg hover:opacity-90 shadow-lg"
                   : "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
               )}
             >
@@ -530,8 +530,8 @@ export function ProjectForm() {
               className={cn(
                 "flex items-center gap-2 rounded-2xl px-8 py-4 text-base font-bold text-white transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg",
                 isPlanning
-                  ? "bg-gradient-to-r from-amber-500 to-orange-500 shadow-amber-200"
-                  : "bg-gradient-to-r from-primary to-violet-600 shadow-primary/25"
+                  ? "bg-gradient-to-r from-status-warning-fg to-primary shadow-primary/20"
+                  : "bg-primary shadow-primary/25"
               )}
             >
               {mutation.isPending

@@ -27,7 +27,7 @@ export function AiAnalysisList({ projectId, analyses }: { projectId: string; ana
       <CardContent className="space-y-3">
         {analyses.items.map((analysis) => (
           <Link key={analysis.id} href={`/projects/${projectId}/ai-analysis/${analysis.id}`} className="block">
-            <article className="rounded-md border border-border bg-white p-4 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
+            <article className="rounded-md border border-border bg-card p-4 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h3 className="font-semibold">{analysisTypeLabel(analysis.analysis_type)}</h3>

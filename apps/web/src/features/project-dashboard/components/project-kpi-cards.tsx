@@ -31,14 +31,14 @@ function KpiCard({
     <div className={cn(
       "rounded-2xl border p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5",
       isPlanning
-        ? "border-amber-200/50 bg-white"
-        : "border-border bg-white"
+        ? "border-status-warning-border/50 bg-card"
+        : "border-border bg-card"
     )}>
       <div className={cn(
         "inline-flex rounded-xl p-2 mb-3",
-        isPlanning ? "bg-amber-100" : "bg-primary/10"
+        isPlanning ? "bg-status-warning-bg" : "bg-primary/10"
       )}>
-        <Icon className={cn("h-4 w-4", isPlanning ? "text-amber-600" : "text-primary")} />
+        <Icon className={cn("h-4 w-4", isPlanning ? "text-status-warning-fg" : "text-primary")} />
       </div>
       <p className={cn(
         "text-xl font-display font-bold tracking-tight",
@@ -64,10 +64,10 @@ export function ProjectKpiCards({
     // Planning mode: show minimal financial planning metrics
     return (
       <div className="grid grid-cols-2 gap-3 md:grid-cols-2">
-        <KpiCard icon={CircleDollarSign} label="Caja disponible" value={display(metrics.cash_available)} isPlanning accent="text-emerald-700" />
-        <KpiCard icon={Banknote} label="Costos mensuales" value={display(metrics.monthly_costs)} isPlanning accent="text-red-600" />
-        <KpiCard icon={Target} label="Score de viabilidad" value={score !== undefined && score !== null ? `${Number(score).toFixed(0)}/100` : "—"} isPlanning accent="text-amber-700" />
-        <KpiCard icon={TrendingDown} label="Burn rate estimado" value={display(metrics.burn_rate)} isPlanning accent="text-orange-600" />
+        <KpiCard icon={CircleDollarSign} label="Caja disponible" value={display(metrics.cash_available)} isPlanning accent="text-status-success-text" />
+        <KpiCard icon={Banknote} label="Costos mensuales" value={display(metrics.monthly_costs)} isPlanning accent="text-status-danger-fg" />
+        <KpiCard icon={Target} label="Score de viabilidad" value={score !== undefined && score !== null ? `${Number(score).toFixed(0)}/100` : "—"} isPlanning accent="text-status-warning-text" />
+        <KpiCard icon={TrendingDown} label="Burn rate estimado" value={display(metrics.burn_rate)} isPlanning accent="text-status-danger-fg" />
       </div>
     );
   }
@@ -78,7 +78,7 @@ export function ProjectKpiCards({
       <KpiCard icon={Banknote} label="Revenue mensual" value={display(metrics.monthly_revenue)} />
       <KpiCard icon={Users} label="Clientes pagos" value={display(metrics.paying_customers)} />
       <KpiCard icon={Activity} label="Usuarios activos" value={display(metrics.active_users)} />
-      <KpiCard icon={TrendingDown} label="Churn rate" value={metrics.churn_rate !== null && metrics.churn_rate !== undefined ? `${Number(metrics.churn_rate).toFixed(1)}%` : "—"} accent="text-red-600" />
+      <KpiCard icon={TrendingDown} label="Churn rate" value={metrics.churn_rate !== null && metrics.churn_rate !== undefined ? `${Number(metrics.churn_rate).toFixed(1)}%` : "—"} accent="text-status-danger-fg" />
       <KpiCard icon={Target} label="Score general" value={score !== undefined && score !== null ? `${Number(score).toFixed(0)}/100` : "—"} accent="text-primary" />
     </div>
   );

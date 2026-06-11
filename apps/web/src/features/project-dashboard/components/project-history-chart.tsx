@@ -10,7 +10,7 @@ type Point = { date: string; label: string | null; value: MaybeNumber };
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-xl border border-border bg-white/95 backdrop-blur-sm px-3 py-2 shadow-lg">
+    <div className="rounded-xl border border-border bg-card/95 backdrop-blur-sm px-3 py-2 shadow-lg">
       <p className="text-xs font-semibold text-muted-foreground mb-1">{label}</p>
       <p className="text-sm font-bold text-foreground">{payload[0].value ?? "—"}</p>
     </div>
@@ -37,8 +37,8 @@ export function ProjectHistoryChart({
     <div className={cn(
       "rounded-3xl border p-5 space-y-4",
       isPlanning
-        ? "border-amber-200/60 bg-gradient-to-b from-amber-50/30 to-white"
-        : "border-border bg-white"
+        ? "border-status-warning-border/60 bg-gradient-to-b from-status-warning-bg/30 to-card"
+        : "border-border bg-card"
     )}>
       <div className="flex items-center justify-between">
         <p className="text-sm font-bold text-foreground">{title}</p>

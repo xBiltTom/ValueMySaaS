@@ -8,15 +8,15 @@ import { Progress } from "@/components/ui/progress";
 
 function PlanningAnalysisRenderer({ data }: { data: any }) {
   const getScoreColor = (score: number) => {
-    if (score >= 80) return "text-green-600 bg-green-50";
-    if (score >= 50) return "text-yellow-600 bg-yellow-50";
-    return "text-red-600 bg-red-50";
+    if (score >= 80) return "text-status-success-text bg-status-success-bg";
+    if (score >= 50) return "text-status-warning-text bg-status-warning-bg";
+    return "text-status-danger-text bg-status-danger-bg";
   };
 
   const getProgressColor = (score: number) => {
-    if (score >= 80) return "bg-green-500";
-    if (score >= 50) return "bg-yellow-500";
-    return "bg-red-500";
+    if (score >= 80) return "bg-status-success-fg";
+    if (score >= 50) return "bg-status-warning-fg";
+    return "bg-status-danger-fg";
   };
 
   const scoreFields = [
@@ -42,9 +42,9 @@ function PlanningAnalysisRenderer({ data }: { data: any }) {
               {data.reasoning}
             </p>
           </div>
-          <div className="mt-6 md:mt-0 flex flex-col items-center justify-center bg-white/60 backdrop-blur-sm rounded-full h-32 w-32 border-4 border-white shadow-sm shrink-0">
+          <div className="mt-6 md:mt-0 flex flex-col items-center justify-center bg-card/60 backdrop-blur-sm rounded-full h-32 w-32 border-4 border-border shadow-sm shrink-0">
             <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Puntaje</span>
-            <span className={`text-5xl font-display font-black tracking-tighter ${data.overall_score >= 80 ? "text-green-600" : data.overall_score >= 50 ? "text-yellow-600" : "text-red-600"}`}>
+            <span className={`text-5xl font-display font-black tracking-tighter ${data.overall_score >= 80 ? "text-status-success-text" : data.overall_score >= 50 ? "text-status-warning-text" : "text-status-danger-text"}`}>
               {data.overall_score}
             </span>
           </div>

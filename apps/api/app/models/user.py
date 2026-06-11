@@ -33,6 +33,9 @@ class User(Base):
     ai_credits: Mapped[int] = mapped_column(
         Integer, nullable=False, default=5, server_default=text("5")
     )
+    last_login_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

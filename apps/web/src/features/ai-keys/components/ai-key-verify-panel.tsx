@@ -26,7 +26,7 @@ export function AiKeyVerifyPanel({ aiKey }: { aiKey: AiKey }) {
   });
 
   return (
-    <form className="mt-4 rounded-md border border-border bg-[#fffdf8] p-4" onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>
+    <form className="mt-4 rounded-md border border-border bg-card p-4" onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>
       <label className="block">
         <span className="text-sm font-semibold">Modelo para verificar</span>
         <Input className="mt-2" placeholder={providerHints[aiKey.provider]} {...form.register("model_name")} />

@@ -11,17 +11,21 @@ IMPLEMENTED (MVP, LAUNCHED, GROWING, PAUSED):
 """
 import json
 import logging
-from uuid import UUID
 from decimal import Decimal
+from uuid import UUID
 
 from fastapi import HTTPException, status
 
+from app.db.session import AsyncSessionLocal
 from app.models.ai_analysis import AiAnalysis
 from app.models.enums import AiAnalysisType, CreditReason, ProjectPhase, SaasStage
 from app.repositories.ai_analysis_repository import AiAnalysisRepository
+from app.repositories.ai_key_repository import AiProviderKeyRepository
+from app.repositories.credit_transaction_repository import CreditTransactionRepository
 from app.repositories.metric_snapshot_repository import MetricSnapshotRepository
 from app.repositories.saas_project_repository import SaasProjectRepository
 from app.repositories.saas_score_repository import SaasScoreRepository
+from app.repositories.system_ai_key_repository import SystemAiKeyRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.ai_analysis import AiAnalysisCreate, AiAnalysisListResponse, PlanningAnalysisOutput
 from app.services.ai_context_service import AiContextService
@@ -164,65 +168,24 @@ class AiAnalysisService:
         owner_id: UUID,
         payload: AiAnalysisCreate,
     ) -> AiAnalysis:
-        if payload.analysis_type == AiAnalysisType.CUSTOM and not payload.custom_question:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="custom_question es requerido para análisis de tipo CUSTOM.",
-            )
-
-        project = await self._get_owned_project(project_id=project_id, owner_id=owner_id)
-        user = await self.user_repository.get_by_id(owner_id)
-        if user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
-
-        # Determinar la fase del proyecto
-        phase = self._get_project_phase(project.stage)
-
-        # Resolver credenciales LLM (BYOK o créditos del sistema)
-        credentials = await self.credit_service.resolve_llm_credentials(
-            user=user,
-            ai_key_id=payload.ai_key_id,
+        project, phase, credentials, system_prompt, user_prompt, input_context = await self._prepare_analysis(
+            project_id=project_id, owner_id=owner_id, payload=payload
         )
 
-        # Construir el prompt según la fase
-        if phase == ProjectPhase.PLANNING:
-            system_prompt = PLANNING_SYSTEM_PROMPT
-            user_prompt = self._build_planning_prompt(project=project)
-        else:
-            system_prompt = IMPLEMENTED_SYSTEM_PROMPT
-            context = await self.ai_context_service.build_context(
-                project_id=project_id, owner_id=owner_id
-            )
-            user_prompt = self._build_implemented_prompt(
-                analysis_type=payload.analysis_type,
-                context=context,
-                custom_question=payload.custom_question,
-            )
-
-        # Llamar al LLM
         llm_response = await self.llm_client_service.generate_analysis(
             provider=credentials.provider,
             api_key=credentials.api_key,
             model_name=payload.model_name or credentials.model_name,
             system_prompt=system_prompt,
             user_prompt=user_prompt,
+            fallback_keys=credentials.fallback_system_keys,
         )
 
-        # Parsear output según la fase
-        output_json = None
-        if phase == ProjectPhase.PLANNING:
-            output_json = self._parse_planning_output(llm_response.output_text)
-        else:
-            output_json = llm_response.output_json
+        output_json = self._parse_planning_output(llm_response.output_text) if phase == ProjectPhase.PLANNING else llm_response.output_json
 
-        latest_snapshot = await self.metric_snapshot_repository.get_latest_by_project(
-            saas_project_id=project_id,
-        )
-        latest_score = await self.saas_score_repository.get_latest_by_project(
-            saas_project_id=project_id,
-        )
+        latest_snapshot = await self.metric_snapshot_repository.get_latest_by_project(saas_project_id=project_id)
+        latest_score = await self.saas_score_repository.get_latest_by_project(saas_project_id=project_id)
 
-        # Persistir el análisis
         analysis = await self.ai_analysis_repository.create(
             data={
                 "saas_project_id": project_id,
@@ -233,10 +196,7 @@ class AiAnalysisService:
                 "model_name": llm_response.model_name or payload.model_name or credentials.model_name,
                 "analysis_type": payload.analysis_type,
                 "prompt_version": PROMPT_VERSION,
-                "input_context": {
-                    "phase": phase.value,
-                    "project_stage": project.stage.value,
-                } if phase == ProjectPhase.PLANNING else (context if phase == ProjectPhase.IMPLEMENTED else None),
+                "input_context": input_context,
                 "output_text": llm_response.output_text,
                 "output_json": output_json,
                 "tokens_input": llm_response.tokens_input,
@@ -245,7 +205,6 @@ class AiAnalysisService:
             }
         )
 
-        # Consumir crédito DESPUÉS de persistir (si se usó el sistema)
         if credentials.credit_used:
             await self.credit_service.consume_credit(
                 user_id=owner_id,
@@ -263,37 +222,9 @@ class AiAnalysisService:
         owner_id: UUID,
         payload: AiAnalysisCreate,
     ):
-        if payload.analysis_type == AiAnalysisType.CUSTOM and not payload.custom_question:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="custom_question es requerido para análisis de tipo CUSTOM.",
-            )
-
-        project = await self._get_owned_project(project_id=project_id, owner_id=owner_id)
-        user = await self.user_repository.get_by_id(owner_id)
-        if user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
-
-        phase = self._get_project_phase(project.stage)
-
-        credentials = await self.credit_service.resolve_llm_credentials(
-            user=user,
-            ai_key_id=payload.ai_key_id,
+        project, phase, credentials, system_prompt, user_prompt, input_context = await self._prepare_analysis(
+            project_id=project_id, owner_id=owner_id, payload=payload
         )
-
-        if phase == ProjectPhase.PLANNING:
-            system_prompt = PLANNING_SYSTEM_PROMPT
-            user_prompt = self._build_planning_prompt(project=project)
-        else:
-            system_prompt = IMPLEMENTED_SYSTEM_PROMPT
-            context = await self.ai_context_service.build_context(
-                project_id=project_id, owner_id=owner_id
-            )
-            user_prompt = self._build_implemented_prompt(
-                analysis_type=payload.analysis_type,
-                context=context,
-                custom_question=payload.custom_question,
-            )
 
         resolved_model, chunk_generator = await self.llm_client_service.stream_analysis(
             provider=credentials.provider,
@@ -301,6 +232,7 @@ class AiAnalysisService:
             model_name=payload.model_name or credentials.model_name,
             system_prompt=system_prompt,
             user_prompt=user_prompt,
+            fallback_keys=credentials.fallback_system_keys,
         )
 
         async def event_generator():
@@ -313,27 +245,16 @@ class AiAnalysisService:
                 logger.error(f"Error in stream_analysis generation: {e}")
                 yield f"\n[Error de generación: {str(e)}]"
                 return
-                
-            # Guardar en DB con una sesión nueva para evitar 'Instance is not persistent'
-            from app.db.session import AsyncSessionLocal
-            from app.repositories.ai_analysis_repository import AiAnalysisRepository
-            from app.repositories.metric_snapshot_repository import MetricSnapshotRepository
-            from app.repositories.saas_score_repository import SaasScoreRepository
-            
+
+            # New session required: FastAPI closes the request session before the generator finishes.
             try:
                 async with AsyncSessionLocal() as session:
-                    ai_repo = AiAnalysisRepository(session)
-                    metric_repo = MetricSnapshotRepository(session)
-                    score_repo = SaasScoreRepository(session)
-                    
-                    latest_snapshot = await metric_repo.get_latest_by_project(saas_project_id=project_id)
-                    latest_score = await score_repo.get_latest_by_project(saas_project_id=project_id)
+                    latest_snapshot = await MetricSnapshotRepository(session).get_latest_by_project(saas_project_id=project_id)
+                    latest_score = await SaasScoreRepository(session).get_latest_by_project(saas_project_id=project_id)
 
-                    output_json = None
-                    if phase == ProjectPhase.PLANNING:
-                        output_json = self._parse_planning_output(full_text)
+                    output_json = self._parse_planning_output(full_text) if phase == ProjectPhase.PLANNING else None
 
-                    analysis = await ai_repo.create(
+                    analysis = await AiAnalysisRepository(session).create(
                         data={
                             "saas_project_id": project_id,
                             "metric_snapshot_id": latest_snapshot.id if latest_snapshot else None,
@@ -343,10 +264,7 @@ class AiAnalysisService:
                             "model_name": resolved_model,
                             "analysis_type": payload.analysis_type,
                             "prompt_version": PROMPT_VERSION,
-                            "input_context": {
-                                "phase": phase.value,
-                                "project_stage": project.stage.value,
-                            } if phase == ProjectPhase.PLANNING else (context if phase == ProjectPhase.IMPLEMENTED else None),
+                            "input_context": input_context,
                             "output_text": full_text,
                             "output_json": output_json,
                             "tokens_input": 0,
@@ -357,17 +275,11 @@ class AiAnalysisService:
                     await session.commit()
 
                     if credentials.credit_used:
-                        from app.services.credit_service import CreditService
-                        from app.repositories.user_repository import UserRepository
-                        from app.repositories.ai_key_repository import AiProviderKeyRepository
-                        from app.repositories.system_ai_key_repository import SystemAiKeyRepository
-                        from app.repositories.credit_transaction_repository import CreditTransactionRepository
-                        
                         credit_svc = CreditService(
                             user_repository=UserRepository(session),
                             ai_key_repository=AiProviderKeyRepository(session),
                             system_ai_key_repository=SystemAiKeyRepository(session),
-                            credit_transaction_repository=CreditTransactionRepository(session)
+                            credit_transaction_repository=CreditTransactionRepository(session),
                         )
                         await credit_svc.consume_credit(
                             user_id=owner_id,
@@ -423,6 +335,48 @@ class AiAnalysisService:
     # -----------------------------------------------------------------------
     # Helpers privados
     # -----------------------------------------------------------------------
+
+    async def _prepare_analysis(
+        self,
+        *,
+        project_id: UUID,
+        owner_id: UUID,
+        payload: AiAnalysisCreate,
+    ) -> tuple:
+        """Validates, loads context, determines phase, resolves credentials, builds prompts.
+
+        Returns (project, phase, credentials, system_prompt, user_prompt, input_context).
+        Shared setup extracted from generate_analysis and stream_analysis.
+        """
+        if payload.analysis_type == AiAnalysisType.CUSTOM and not payload.custom_question:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="custom_question es requerido para análisis de tipo CUSTOM.",
+            )
+
+        project = await self._get_owned_project(project_id=project_id, owner_id=owner_id)
+        user = await self.user_repository.get_by_id(owner_id)
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
+
+        phase = self._get_project_phase(project.stage)
+        credentials = await self.credit_service.resolve_llm_credentials(user=user, ai_key_id=payload.ai_key_id)
+
+        if phase == ProjectPhase.PLANNING:
+            system_prompt = PLANNING_SYSTEM_PROMPT
+            user_prompt = self._build_planning_prompt(project=project)
+            input_context: dict | None = {"phase": phase.value, "project_stage": project.stage.value}
+        else:
+            system_prompt = IMPLEMENTED_SYSTEM_PROMPT
+            context = await self.ai_context_service.build_context(project_id=project_id, owner_id=owner_id)
+            user_prompt = self._build_implemented_prompt(
+                analysis_type=payload.analysis_type,
+                context=context,
+                custom_question=payload.custom_question,
+            )
+            input_context = context
+
+        return project, phase, credentials, system_prompt, user_prompt, input_context
 
     async def _get_owned_project(self, *, project_id: UUID, owner_id: UUID):
         project = await self.saas_project_repository.get_by_id_for_owner(

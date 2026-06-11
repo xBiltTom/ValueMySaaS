@@ -26,6 +26,9 @@ class AdminUserRead(BaseModel):
     is_active: bool
     is_verified: bool
     ai_credits: int
+    last_login_at: datetime | None = None
+    project_count: int = 0
+    last_ai_activity_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 

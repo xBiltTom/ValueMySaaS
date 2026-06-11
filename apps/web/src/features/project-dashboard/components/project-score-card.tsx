@@ -55,11 +55,11 @@ export function ProjectScoreCard({
       <div className={cn(
         "rounded-3xl border p-6 flex flex-col items-center justify-center text-center gap-4 min-h-[200px]",
         isPlanning
-          ? "border-dashed border-amber-300/70 bg-amber-50/50"
+          ? "border-dashed border-status-warning-border/70 bg-status-warning-bg/50"
           : "border-dashed border-primary/30 bg-primary/5"
       )}>
-        <div className={cn("rounded-2xl p-4", isPlanning ? "bg-amber-100" : "bg-primary/10")}>
-          <Gauge className={cn("h-8 w-8", isPlanning ? "text-amber-600" : "text-primary")} />
+        <div className={cn("rounded-2xl p-4", isPlanning ? "bg-status-warning-bg" : "bg-primary/10")}>
+          <Gauge className={cn("h-8 w-8", isPlanning ? "text-status-warning-fg" : "text-primary")} />
         </div>
         <div>
           <h2 className="text-lg font-bold">Sin diagnóstico aún</h2>
@@ -72,7 +72,7 @@ export function ProjectScoreCard({
         {isPlanning && onAiAnalysis ? (
           <button
             onClick={onAiAnalysis}
-            className="flex items-center gap-2 rounded-xl bg-white border border-border px-4 py-2.5 text-sm font-bold text-foreground hover:bg-muted transition-colors"
+            className="flex items-center gap-2 rounded-xl bg-card border border-border px-4 py-2.5 text-sm font-bold text-foreground hover:bg-muted transition-colors"
           >
             <Sparkles className="h-4 w-4 text-amber-500" />
             Analizar con IA
@@ -81,9 +81,9 @@ export function ProjectScoreCard({
         ) : (
           <Link
             href={isPlanning ? `/projects/${projectId}/ai-analysis` : `/projects/${projectId}/score`}
-            className="flex items-center gap-2 rounded-xl bg-white border border-border px-4 py-2.5 text-sm font-bold text-foreground hover:bg-muted transition-colors"
+            className="flex items-center gap-2 rounded-xl bg-card border border-border px-4 py-2.5 text-sm font-bold text-foreground hover:bg-muted transition-colors"
           >
-            {isPlanning ? <Sparkles className="h-4 w-4 text-amber-500" /> : <Gauge className="h-4 w-4 text-primary" />}
+            {isPlanning ? <Sparkles className="h-4 w-4 text-status-warning-fg" /> : <Gauge className="h-4 w-4 text-primary" />}
             {isPlanning ? "Analizar con IA" : "Generar score"}
             <ArrowRight className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
           </Link>
@@ -96,17 +96,17 @@ export function ProjectScoreCard({
   const level = formatEnum(score.sustainability_level);
   const rec = formatEnum(score.decision_recommendation);
 
-  const levelColor = percent >= 75 ? "text-emerald-700 bg-emerald-100" : percent >= 50 ? "text-amber-700 bg-amber-100" : "text-red-700 bg-red-100";
+  const levelColor = percent >= 75 ? "text-status-success-text bg-status-success-bg" : percent >= 50 ? "text-status-warning-text bg-status-warning-bg" : "text-status-danger-text bg-status-danger-bg";
 
   return (
     <div className={cn(
       "rounded-3xl border p-6 space-y-4",
       isPlanning
-        ? "border-amber-200/60 bg-gradient-to-b from-amber-50/50 to-white"
-        : "border-primary/15 bg-gradient-to-b from-primary/5 to-white"
+        ? "border-status-warning-border/60 bg-gradient-to-b from-status-warning-bg/50 to-card"
+        : "border-primary/15 bg-gradient-to-b from-primary/5 to-card"
     )}>
       <div className="flex items-center gap-2">
-        <Gauge className={cn("h-4 w-4", isPlanning ? "text-amber-600" : "text-primary")} />
+        <Gauge className={cn("h-4 w-4", isPlanning ? "text-status-warning-fg" : "text-primary")} />
         <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
           {isPlanning ? "Score de Viabilidad" : "Score Heurístico"}
         </p>

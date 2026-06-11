@@ -289,7 +289,7 @@ export type SaasReportListResponse = {
   offset: number;
 };
 
-export type AiProvider = "OPENAI" | "GEMINI" | "ANTHROPIC" | "OPENROUTER" | "OTHER";
+export type AiProvider = "OPENAI" | "GEMINI" | "ANTHROPIC" | "OPENROUTER" | "GROQ" | "NVIDIA" | "OTHER";
 
 export type AiKey = {
   id: string;

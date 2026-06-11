@@ -87,6 +87,10 @@ class AiProvider(str, enum.Enum):
     GEMINI = "GEMINI"
     ANTHROPIC = "ANTHROPIC"
     OPENROUTER = "OPENROUTER"
+    # groq/model-name  (e.g. groq/llama-3-70b-versatile, groq/mixtral-8x7b-32768)
+    GROQ = "GROQ"
+    # nvidia_nim/org/model-name  (e.g. nvidia_nim/meta/llama-3.1-70b-instruct)
+    NVIDIA = "NVIDIA"
     OTHER = "OTHER"
 
 

@@ -67,8 +67,8 @@ export default function ProjectsPage() {
                 </div>
                 
                 <div className="mt-6 flex flex-wrap gap-2">
-                  <Badge variant="outline" className="bg-card text-xs font-semibold border-border">{formatEnum(project.category)}</Badge>
-                  <Badge variant="outline" className="bg-card text-xs font-semibold border-border">{formatEnum(project.business_model)}</Badge>
+                  <Badge className="bg-card text-xs font-semibold border-border">{formatEnum(project.category)}</Badge>
+                  <Badge className="bg-card text-xs font-semibold border-border">{formatEnum(project.business_model)}</Badge>
                 </div>
                 
                 <div className="mt-6 flex items-center justify-between border-t border-border pt-5 text-sm">

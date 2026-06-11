@@ -91,7 +91,7 @@ export function PortfolioDashboard({ data }: { data: PortfolioDashboardResponse 
                   <h3 className="font-bold text-foreground">{project.name}</h3>
                   <p className="text-sm font-medium text-muted-foreground mt-1">{formatEnum(project.category)} · {formatEnum(project.stage)}</p>
                 </div>
-                <Badge variant="outline" className="border-border text-muted-foreground">{formatDate(project.created_at)}</Badge>
+                <Badge className="border-border text-muted-foreground">{formatDate(project.created_at)}</Badge>
               </div>
             ))}
           </CardContent>

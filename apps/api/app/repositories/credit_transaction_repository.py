@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import select, func
@@ -61,6 +62,20 @@ class CreditTransactionRepository:
             .where(CreditTransaction.user_id == user_id)
         )
         return result.scalar_one()
+
+    async def get_last_ai_activity_at(self, *, user_id: UUID) -> datetime | None:
+        """Fecha de la última llamada a IA (análisis o chat) del usuario."""
+        result = await self.db.execute(
+            select(func.max(CreditTransaction.created_at))
+            .where(
+                CreditTransaction.user_id == user_id,
+                CreditTransaction.reason.in_([
+                    CreditReason.AI_ANALYSIS,
+                    CreditReason.CHAT_MESSAGE,
+                ]),
+            )
+        )
+        return result.scalar_one_or_none()
 
     async def sum_consumed_today(self) -> int:
         """Total de créditos consumidos hoy (útil para estadísticas del admin)."""

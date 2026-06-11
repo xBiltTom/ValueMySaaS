@@ -272,6 +272,7 @@ def get_admin_service(
         system_ai_key_repository=SystemAiKeyRepository(db),
         ai_analysis_repository=AiAnalysisRepository(db),
         credit_service=credit_service,
+        saas_project_repository=SaasProjectRepository(db),
     )
 
 

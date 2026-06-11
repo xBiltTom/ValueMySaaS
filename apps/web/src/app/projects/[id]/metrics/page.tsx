@@ -40,7 +40,7 @@ export default function ProjectMetricsPage() {
       <div className="mb-6">
         <Link
           href={`/projects/${projectId}`}
-          className="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted transition-colors"
+          className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted transition-colors"
         >
           <ArrowLeft className="h-4 w-4" /> Volver al dashboard
         </Link>
@@ -50,18 +50,18 @@ export default function ProjectMetricsPage() {
       <div className={cn(
         "rounded-3xl border p-6 md:p-8 mb-8",
         isPlanning
-          ? "border-amber-200/60 bg-gradient-to-br from-amber-50 via-white to-orange-50"
-          : "border-primary/15 bg-gradient-to-br from-indigo-50 via-white to-violet-50"
+          ? "border-status-warning-border/60 bg-gradient-to-br from-status-warning-bg via-card to-card"
+          : "border-primary/15 bg-gradient-to-br from-primary/5 via-card to-card"
       )}>
         <div className="flex items-start gap-4">
-          <div className={cn("rounded-2xl p-4 shrink-0", isPlanning ? "bg-amber-100" : "bg-primary/10")}>
+          <div className={cn("rounded-2xl p-4 shrink-0", isPlanning ? "bg-status-warning-bg" : "bg-primary/10")}>
             {isPlanning
-              ? <Lightbulb className="h-7 w-7 text-amber-600" />
+              ? <Lightbulb className="h-7 w-7 text-status-warning-fg" />
               : <BarChart3 className="h-7 w-7 text-primary" />
             }
           </div>
           <div>
-            <p className={cn("text-xs font-bold uppercase tracking-widest mb-1", isPlanning ? "text-amber-600" : "text-primary")}>
+            <p className={cn("text-xs font-bold uppercase tracking-widest mb-1", isPlanning ? "text-status-warning-text" : "text-primary")}>
               {isPlanning ? "Estimaciones · Planeación" : "Métricas · En marcha"}
             </p>
             <h1 className="font-display text-3xl md:text-4xl font-bold">
@@ -76,9 +76,9 @@ export default function ProjectMetricsPage() {
         </div>
 
         {isPlanning && (
-          <div className="mt-5 flex items-start gap-2 rounded-2xl border border-amber-300/60 bg-white/70 px-4 py-3">
-            <Info className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-            <p className="text-xs text-amber-800 leading-relaxed">
+          <div className="mt-5 flex items-start gap-2 rounded-2xl border border-status-warning-border/60 bg-status-warning-bg/70 px-4 py-3">
+            <Info className="h-4 w-4 text-status-warning-fg shrink-0 mt-0.5" />
+            <p className="text-xs text-status-warning-text leading-relaxed">
               <strong>¿Por qué solo costos?</strong> En planeación, los proyectos aún no tienen usuarios ni ingresos reales.
               El análisis de IA evalúa tu idea usando tu propuesta de valor, mercado objetivo y modelo de negocio.
               Cuando lances el proyecto, tendrás acceso a métricas completas como MRR, churn rate y más.

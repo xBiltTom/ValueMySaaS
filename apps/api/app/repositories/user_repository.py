@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from uuid import UUID
 
 from sqlalchemy import select, update
@@ -62,6 +63,15 @@ class UserRepository:
         )
         row = result.fetchone()
         return row is not None
+
+    async def update_last_login_at(self, *, user_id: UUID) -> None:
+        """Registra la fecha del último login exitoso."""
+        await self.db.execute(
+            update(User)
+            .where(User.id == user_id)
+            .values(last_login_at=datetime.now(timezone.utc))
+        )
+        await self.db.flush()
 
     async def increment_credits(self, *, user_id: UUID, delta: int) -> User:
         """Suma `delta` créditos al usuario. Usado por el admin."""

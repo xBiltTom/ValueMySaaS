@@ -128,7 +128,7 @@ export default function ConversationPage() {
 
   return (
     <DashboardShell>
-      <div className="flex h-[calc(100vh-100px)] -mx-4 md:-mx-7 -my-6 bg-white overflow-hidden rounded-xl border border-border shadow-sm">
+      <div className="flex h-[calc(100vh-100px)] -mx-4 md:-mx-7 -my-6 bg-card overflow-hidden rounded-xl border border-border shadow-sm">
         
         {/* Left Sidebar for Conversations */}
         <div className="hidden md:block">
@@ -136,9 +136,9 @@ export default function ConversationPage() {
         </div>
 
         {/* Main Chat Area */}
-        <main className="flex-1 flex flex-col relative bg-[#f9fafb]">
+        <main className="flex-1 flex flex-col relative bg-background">
           {/* Topbar: Model Selector */}
-          <header className="h-14 border-b bg-white/80 backdrop-blur-md flex items-center px-6 justify-between shrink-0 sticky top-0 z-10">
+          <header className="h-14 border-b bg-card/80 backdrop-blur-md flex items-center px-6 justify-between shrink-0 sticky top-0 z-10">
             <h2 className="font-semibold text-foreground truncate max-w-[200px]">
               {conversationQuery.data?.title || "Nueva conversación"}
             </h2>
@@ -169,7 +169,7 @@ export default function ConversationPage() {
             />
             {isChatLoading && messages[messages.length - 1]?.role === "user" && (
               <div className="flex justify-start mt-6 mb-4">
-                <div className="bg-white border border-border rounded-2xl p-4 shadow-sm text-sm text-primary flex items-center gap-3">
+                <div className="bg-card border border-border rounded-2xl p-4 shadow-sm text-sm text-primary flex items-center gap-3">
                   <span className="relative flex h-3 w-3">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
@@ -186,7 +186,7 @@ export default function ConversationPage() {
           </div>
 
           {/* Bottom Input Form */}
-          <div className="absolute bottom-0 w-full bg-gradient-to-t from-[#f9fafb] via-[#f9fafb] to-transparent pt-12 pb-6 px-4 md:px-8">
+          <div className="absolute bottom-0 w-full bg-gradient-to-t from-background via-background to-transparent pt-12 pb-6 px-4 md:px-8">
             <ChatInputForm 
               projectId={projectId} 
               conversationId={conversationId} 

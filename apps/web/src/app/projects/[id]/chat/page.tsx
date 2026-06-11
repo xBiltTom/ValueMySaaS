@@ -34,7 +34,7 @@ export default function ProjectChatPage() {
 
   return (
     <DashboardShell>
-      <div className="flex h-[calc(100vh-100px)] -mx-4 md:-mx-7 -my-6 bg-white overflow-hidden rounded-xl border border-border shadow-sm">
+      <div className="flex h-[calc(100vh-100px)] -mx-4 md:-mx-7 -my-6 bg-card overflow-hidden rounded-xl border border-border shadow-sm">
         
         {/* Left Sidebar for Conversations */}
         <div className="hidden md:block">
@@ -42,7 +42,7 @@ export default function ProjectChatPage() {
         </div>
 
         {/* Main Chat Area */}
-        <main className="flex-1 flex flex-col relative bg-[#f9fafb] items-center justify-center p-6">
+        <main className="flex-1 flex flex-col relative bg-background items-center justify-center p-6">
           <div className="max-w-md w-full">
             <div className="flex flex-col items-center text-center mb-8">
               <div className="h-16 w-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4">

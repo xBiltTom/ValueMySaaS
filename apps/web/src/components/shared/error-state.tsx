@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 
 export function ErrorState({ title = "Algo salio mal", message }: { title?: string; message: string }) {
   return (
-    <Card className="border-destructive/25 bg-white p-5">
+    <Card className="border-destructive/25 bg-status-danger-bg p-5">
       <div className="flex gap-3">
         <AlertTriangle className="mt-0.5 h-5 w-5 text-destructive" />
         <div>

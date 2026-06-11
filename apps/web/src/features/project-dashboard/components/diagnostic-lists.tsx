@@ -23,9 +23,9 @@ export function DiagnosticList({
   const [expanded, setExpanded] = useState(true);
 
   const Icon = variant === "alert" ? AlertTriangle : variant === "strength" ? CheckCircle2 : Lightbulb;
-  const iconColor = variant === "alert" ? "text-red-500" : variant === "strength" ? "text-emerald-500" : "text-amber-500";
-  const bgColor = variant === "alert" ? "bg-red-50 border-red-200" : variant === "strength" ? "bg-emerald-50 border-emerald-200" : "bg-amber-50 border-amber-200";
-  const headerColor = variant === "alert" ? "text-red-700" : variant === "strength" ? "text-emerald-700" : "text-amber-700";
+  const iconColor = variant === "alert" ? "text-status-danger-fg" : variant === "strength" ? "text-status-success-fg" : "text-status-warning-fg";
+  const bgColor = variant === "alert" ? "bg-status-danger-bg border-status-danger-border" : variant === "strength" ? "bg-status-success-bg border-status-success-border" : "bg-status-warning-bg border-status-warning-border";
+  const headerColor = variant === "alert" ? "text-status-danger-text" : variant === "strength" ? "text-status-success-text" : "text-status-warning-text";
 
   return (
     <div className={cn(
@@ -68,9 +68,9 @@ export function DiagnosticList({
                   key={`${title}-${index}`}
                   className={cn(
                     "rounded-2xl border p-4 transition-all hover:shadow-sm",
-                    variant === "alert" ? "border-red-100 bg-red-50/50" :
-                    variant === "strength" ? "border-emerald-100 bg-emerald-50/50" :
-                    "border-amber-100 bg-amber-50/50"
+                    variant === "alert" ? "border-status-danger-border/60 bg-status-danger-bg/50" :
+                    variant === "strength" ? "border-status-success-border/60 bg-status-success-bg/50" :
+                    "border-status-warning-border/60 bg-status-warning-bg/50"
                   )}
                 >
                   <div className="flex items-start gap-3">
@@ -79,12 +79,12 @@ export function DiagnosticList({
                       <div className="flex flex-wrap items-center gap-2 mb-1">
                         <h3 className="text-sm font-bold text-foreground">{title_}</h3>
                         {priority && (
-                          <span className="rounded-full bg-white border border-border px-2 py-0.5 text-[10px] font-semibold text-muted-foreground uppercase">
+                          <span className="rounded-full bg-card border border-border px-2 py-0.5 text-[10px] font-semibold text-muted-foreground uppercase">
                             {priority}
                           </span>
                         )}
                         {severity && (
-                          <span className="rounded-full bg-red-100 border border-red-200 px-2 py-0.5 text-[10px] font-bold text-red-700 uppercase">
+                          <span className="rounded-full bg-status-danger-bg border border-status-danger-border px-2 py-0.5 text-[10px] font-bold text-status-danger-text uppercase">
                             {severity}
                           </span>
                         )}

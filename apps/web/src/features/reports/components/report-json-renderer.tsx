@@ -8,7 +8,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function PrimitiveRow({ name, value }: { name: string; value: unknown }) {
   return (
-    <div className="flex flex-col gap-1 rounded-md border border-border bg-white p-3 sm:flex-row sm:items-start sm:justify-between">
+    <div className="flex flex-col gap-1 rounded-md border border-border bg-card p-3 sm:flex-row sm:items-start sm:justify-between">
       <span className="text-sm font-semibold text-muted-foreground">{humanizeKey(name)}</span>
       <span className="max-w-2xl text-sm leading-6 text-foreground">{displayValue(value)}</span>
     </div>
@@ -22,7 +22,7 @@ function ArrayRenderer({ name, value }: { name: string; value: unknown[] }) {
 
   if (value.every((item) => !isRecord(item) && !Array.isArray(item))) {
     return (
-      <div className="rounded-md border border-border bg-white p-4">
+      <div className="rounded-md border border-border bg-card p-4">
         <h4 className="font-semibold">{humanizeKey(name)}</h4>
         <ul className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
           {value.map((item, index) => (
@@ -57,7 +57,7 @@ function ObjectRenderer({ value, compact = false }: { value: Record<string, unkn
         if (Array.isArray(nested)) return <ArrayRenderer key={key} name={key} value={nested} />;
         if (isRecord(nested)) {
           return (
-            <div key={key} className="rounded-md border border-border bg-[#fffdf8] p-4">
+            <div key={key} className="rounded-md border border-border bg-card p-4">
               <h4 className="mb-3 font-semibold">{humanizeKey(key)}</h4>
               <ObjectRenderer value={nested} compact />
             </div>

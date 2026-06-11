@@ -56,7 +56,7 @@ export function MetricCalculationPanel({ calculation, projectStage = "LAUNCHED" 
         {metrics.map(([key, metric]) => {
           const dictionaryData = metricDictionary[key] || { label: formatEnum(key), tooltip: "" };
           return (
-            <div key={key} className="relative rounded-2xl border border-primary/10 bg-white/60 p-5 backdrop-blur-md transition-all hover:bg-white hover:shadow-lg hover:-translate-y-1">
+            <div key={key} className="relative rounded-2xl border border-primary/10 bg-card/60 p-5 backdrop-blur-md transition-all hover:bg-card hover:shadow-lg hover:-translate-y-1">
               <div className="flex items-start justify-between gap-3 mb-2">
                 <div>
                   <h3 className="font-semibold text-foreground">{dictionaryData.label}</h3>

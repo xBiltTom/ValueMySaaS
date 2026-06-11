@@ -26,7 +26,7 @@ export function ReportList({ projectId, reports }: { projectId: string; reports:
       <CardContent className="grid gap-3 md:grid-cols-2">
         {reports.items.map((report) => (
           <Link key={report.id} href={`/projects/${projectId}/reports/${report.id}`} className="block">
-            <article className="h-full rounded-md border border-border bg-white p-4 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
+            <article className="h-full rounded-md border border-border bg-card p-4 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="font-semibold">{report.title}</h3>

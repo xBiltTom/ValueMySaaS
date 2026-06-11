@@ -39,7 +39,7 @@ export function AiKeyCard({ aiKey }: { aiKey: AiKey }) {
   };
 
   return (
-    <Card className={cn("p-6 rounded-3xl transition-all duration-300", aiKey.is_active ? "glass-card border-primary/20 shadow-[0_8px_30px_rgb(79,70,229,0.06)] scale-[1.01]" : "bg-white/50 border-border opacity-70 hover:opacity-100")}>
+    <Card className={cn("p-6 rounded-3xl transition-all duration-300", aiKey.is_active ? "glass-card border-primary/20 shadow-[0_8px_30px_rgb(79,70,229,0.06)] scale-[1.01]" : "bg-card/50 border-border opacity-70 hover:opacity-100")}>
       <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-start">
         <div>
           <div className="flex flex-wrap gap-2 items-center">

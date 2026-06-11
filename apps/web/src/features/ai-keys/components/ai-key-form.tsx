@@ -89,7 +89,7 @@ export function AiKeyForm() {
               <p className="mt-1.5 text-[13px] font-medium text-destructive">{form.formState.errors.api_key.message}</p>
             ) : null}
           </label>
-          <p className="rounded-xl border border-border bg-white/50 p-4 text-sm leading-relaxed text-muted-foreground">
+          <p className="rounded-xl border border-border bg-card/50 p-4 text-sm leading-relaxed text-muted-foreground">
             Modelo sugerido para verificar después: <strong>{providerHints[provider]}</strong>
           </p>
           <div className="pt-2">

@@ -30,7 +30,7 @@ export function ConversationList({ projectId, conversations }: { projectId: stri
       <div className="p-4 border-b">
         <Link 
           href={`/projects/${projectId}/chat`}
-          className="inline-flex w-full justify-start items-center gap-2 bg-white shadow-sm hover:border-primary/40 hover:text-primary hover:bg-white transition-all rounded-xl h-11 font-medium border border-input px-4 text-sm"
+          className="inline-flex w-full justify-start items-center gap-2 bg-card shadow-sm hover:border-primary/40 hover:text-primary hover:bg-muted transition-all rounded-xl h-11 font-medium border border-input px-4 text-sm"
         >
           <Plus className="h-4 w-4" />
           Nueva conversación

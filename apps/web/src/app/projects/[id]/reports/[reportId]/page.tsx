@@ -35,7 +35,7 @@ export default function ReportDetailPage() {
             {projectQuery.data?.name || "Proyecto"}
           </p>
         </div>
-        <Link href={`/projects/${projectId}`} className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-semibold hover:bg-white">
+        <Link href={`/projects/${projectId}`} className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-semibold hover:bg-muted">
           <LayoutDashboard className="h-4 w-4" />
           Dashboard del proyecto
         </Link>

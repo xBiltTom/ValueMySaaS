@@ -34,6 +34,18 @@ class SystemAiKeyRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_all_active_ordered(self) -> list[SystemAiKey]:
+        """Devuelve todas las keys activas ordenadas por prioridad ASC para failover."""
+        result = await self.db.execute(
+            select(SystemAiKey)
+            .where(
+                SystemAiKey.is_active.is_(True),
+                SystemAiKey.deleted_at.is_(None),
+            )
+            .order_by(SystemAiKey.priority.asc())
+        )
+        return list(result.scalars().all())
+
     async def get_by_id(self, *, key_id: UUID) -> SystemAiKey | None:
         result = await self.db.execute(
             select(SystemAiKey).where(

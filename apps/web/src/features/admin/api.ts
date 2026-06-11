@@ -12,19 +12,25 @@ export interface AdminStats {
 export interface UserAdminSchema {
   id: string;
   email: string;
+  username: string | null;
   role: string;
   ai_credits: number;
+  last_login_at: string | null;
+  project_count: number;
+  last_ai_activity_at: string | null;
   created_at: string;
 }
 
 export interface SystemAiKey {
   id: string;
   provider: string;
+  label: string;
+  key_last_four: string | null;
+  default_model: string | null;
   priority: number;
   is_active: boolean;
-  total_uses: number;
-  last_used_at: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 export async function getAdminStats(): Promise<AdminStats> {
@@ -37,8 +43,8 @@ export async function getAdminUsers(): Promise<{ items: UserAdminSchema[] }> {
   return data;
 }
 
-export async function grantCredits(userId: string, amount: number, description: string): Promise<void> {
-  await apiClient.post(`/api/v1/admin/users/${userId}/credits`, { amount, description });
+export async function grantCredits(userId: string, delta: number, description: string): Promise<void> {
+  await apiClient.post(`/api/v1/admin/users/${userId}/credits`, { delta, description });
 }
 
 export async function getSystemKeys(): Promise<{ items: SystemAiKey[] }> {
@@ -46,11 +52,19 @@ export async function getSystemKeys(): Promise<{ items: SystemAiKey[] }> {
   return data;
 }
 
-export async function createSystemKey(provider: string, apiKey: string, priority: number): Promise<SystemAiKey> {
+export async function createSystemKey(
+  provider: string,
+  apiKey: string,
+  priority: number,
+  label: string,
+  defaultModel: string | null,
+): Promise<SystemAiKey> {
   const { data } = await apiClient.post<SystemAiKey>("/api/v1/admin/system-keys", {
     provider,
     api_key: apiKey,
     priority,
+    label: label || provider,
+    default_model: defaultModel || null,
   });
   return data;
 }

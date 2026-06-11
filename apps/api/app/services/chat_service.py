@@ -15,10 +15,14 @@ from uuid import UUID
 
 from fastapi import HTTPException, status
 
+from app.db.session import AsyncSessionLocal
 from app.models.enums import ChatRole, ConversationStatus, CreditReason
+from app.repositories.ai_key_repository import AiProviderKeyRepository
 from app.repositories.chat_message_repository import ChatMessageRepository
 from app.repositories.conversation_repository import ConversationRepository
+from app.repositories.credit_transaction_repository import CreditTransactionRepository
 from app.repositories.saas_project_repository import SaasProjectRepository
+from app.repositories.system_ai_key_repository import SystemAiKeyRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.chat_message import ChatMessageListResponse, SendChatMessageRequest, SendChatMessageResponse
 from app.services.ai_context_service import AiContextService
@@ -101,8 +105,6 @@ class ChatService:
         owner_id: UUID,
         payload: SendChatMessageRequest,
     ) -> SendChatMessageResponse:
-        from app.repositories.user_repository import UserRepository
-
         conversation = await self._get_owned_conversation(
             project_id=project_id,
             conversation_id=conversation_id,
@@ -170,6 +172,7 @@ class ChatService:
             model_name=payload.model_name or credentials.model_name,
             system_prompt=CHAT_SYSTEM_PROMPT,
             user_prompt=user_prompt,
+            fallback_keys=credentials.fallback_system_keys,
         )
 
         # Guardar la respuesta del asistente
@@ -226,9 +229,6 @@ class ChatService:
         owner_id: UUID,
         payload: SendChatMessageRequest,
     ):
-        from app.repositories.user_repository import UserRepository
-        import json
-
         conversation = await self._get_owned_conversation(
             project_id=project_id,
             conversation_id=conversation_id,
@@ -287,6 +287,7 @@ class ChatService:
             model_name=payload.model_name or credentials.model_name,
             system_prompt=CHAT_SYSTEM_PROMPT,
             user_prompt=user_prompt,
+            fallback_keys=credentials.fallback_system_keys,
         )
 
         async def event_generator():
@@ -300,17 +301,12 @@ class ChatService:
                 yield f"\n[Error de generación: {str(e)}]\n"
                 return
 
-            # Guardar historial en una nueva sesión para evitar errores de 
-            # 'Instance is not persistent' cuando FastAPI cierra la sesión principal al hacer streaming.
-            from app.db.session import AsyncSessionLocal
-            from app.repositories.chat_message_repository import ChatMessageRepository
-            from app.repositories.conversation_repository import ConversationRepository
-            
+            # New session required: FastAPI closes the request session before the generator finishes.
             try:
                 async with AsyncSessionLocal() as session:
                     chat_repo = ChatMessageRepository(session)
                     conv_repo = ConversationRepository(session)
-                    
+
                     await chat_repo.create(
                         data={
                             "conversation_id": conversation.id,
@@ -343,17 +339,11 @@ class ChatService:
                     await session.commit()
 
                     if credentials.credit_used:
-                        from app.services.credit_service import CreditService
-                        from app.repositories.user_repository import UserRepository
-                        from app.repositories.ai_key_repository import AiProviderKeyRepository
-                        from app.repositories.system_ai_key_repository import SystemAiKeyRepository
-                        from app.repositories.credit_transaction_repository import CreditTransactionRepository
-                        
                         credit_svc = CreditService(
                             user_repository=UserRepository(session),
                             ai_key_repository=AiProviderKeyRepository(session),
                             system_ai_key_repository=SystemAiKeyRepository(session),
-                            credit_transaction_repository=CreditTransactionRepository(session)
+                            credit_transaction_repository=CreditTransactionRepository(session),
                         )
                         await credit_svc.consume_credit(
                             user_id=owner_id,
@@ -444,6 +434,7 @@ class ChatService:
                 model_name=credentials.model_name,
                 system_prompt=SUMMARY_SYSTEM_PROMPT,
                 user_prompt=conversation_text,
+                fallback_keys=credentials.fallback_system_keys,
             )
             return response.output_text.strip() or None
         except Exception as exc:

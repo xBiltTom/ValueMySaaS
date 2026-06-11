@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BrainCircuit, Sparkles } from "lucide-react";
+import { BrainCircuit, Coins, Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,9 +12,11 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { listAiKeys, listAiKeyModels } from "@/features/ai-keys/api";
 import { useQuery } from "@tanstack/react-query";
+import { useCurrentUser } from "@/features/auth/use-auth";
 import { AiKey } from "@/features/ai-keys/types";
 import { providerHints, providerLabels, providerModels } from "@/features/ai-keys/constants";
 import { maskedKey } from "@/features/ai-keys/utils";
+import { ByokOnboardingModal } from "@/features/ai-keys/components/byok-onboarding-modal";
 import { analysisDescriptions, analysisLabels, analysisTypes } from "@/features/ai-analyses/constants";
 import { aiAnalysisSchema, AiAnalysisFormValues } from "@/features/ai-analyses/schemas";
 
@@ -30,10 +32,13 @@ export function AiAnalysisModal({
   projectStage: string;
 }) {
   const router = useRouter();
-  
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
   const keysQuery = useQuery({ queryKey: ["ai-keys"], queryFn: listAiKeys, enabled: isOpen });
+  const { data: currentUser } = useCurrentUser();
   const activeKeys = keysQuery.data?.items.filter((key) => key.is_active) ?? [];
-  
+
+  const hasCredits = (currentUser?.ai_credits ?? 0) > 0;
   const firstKey = activeKeys[0];
   const isPlanning = projectStage === "PLANNING" || projectStage === "IDEA";
 
@@ -80,22 +85,28 @@ export function AiAnalysisModal({
     return null; // Or a simple loading spinner dialog
   }
 
-  if (!activeKeys.length && keysQuery.isSuccess) {
+  // No BYOK keys and no credits → show BYOK onboarding
+  if (!activeKeys.length && keysQuery.isSuccess && !hasCredits) {
     return (
-      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Sin configuración de IA</DialogTitle>
-            <DialogDescription>
-              Necesitas configurar al menos una API Key (BYOK) en tu cuenta para poder generar diagnósticos.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end gap-3 mt-4">
-            <Button variant="secondary" onClick={onClose}>Cerrar</Button>
-            <Button onClick={() => router.push("/settings/ai-keys")}>Configurar Keys</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <>
+        <Dialog open={isOpen && !showOnboarding} onOpenChange={(open) => !open && onClose()}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Créditos agotados</DialogTitle>
+              <DialogDescription>
+                No tienes créditos disponibles ni una API Key configurada. Activa tu propia key gratuita en minutos.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-3 mt-4">
+              <Button variant="ghost" onClick={onClose}>Cerrar</Button>
+              <Button onClick={() => setShowOnboarding(true)} className="bg-primary text-primary-foreground hover:opacity-90">
+                Cómo obtener una key gratis
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+        <ByokOnboardingModal isOpen={showOnboarding} onClose={() => { setShowOnboarding(false); onClose(); }} />
+      </>
     );
   }
 
@@ -104,7 +115,7 @@ export function AiAnalysisModal({
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-violet-100 p-2.5 text-violet-600">
+            <div className="rounded-xl bg-primary/10 p-2.5 text-primary">
               <BrainCircuit className="h-5 w-5" />
             </div>
             <div>
@@ -145,15 +156,20 @@ export function AiAnalysisModal({
                 {...form.register("custom_question")}
               />
               {form.formState.errors.custom_question && (
-                <p className="mt-1 text-xs text-red-500 font-medium">{form.formState.errors.custom_question.message}</p>
+                <p className="mt-1 text-xs text-status-danger-fg font-medium">{form.formState.errors.custom_question.message}</p>
               )}
             </label>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
-              <span className="text-sm font-semibold mb-1.5 block">API Key (BYOK)</span>
-              <Select className="w-full rounded-xl border border-border px-3 py-2.5 focus:ring-2 focus:ring-violet-500/20" {...form.register("ai_key_id")}>
+              <span className="text-sm font-semibold mb-1.5 block">API Key</span>
+              <Select className="w-full rounded-xl border border-border px-3 py-2.5 focus:ring-2 focus:ring-primary/20" {...form.register("ai_key_id")}>
+                {hasCredits && (
+                  <option value="">
+                    Créditos del sistema ({currentUser?.ai_credits ?? 0} restantes)
+                  </option>
+                )}
                 {activeKeys.map((key) => (
                   <option key={key.id} value={key.id}>
                     {providerLabels[key.provider]} ({maskedKey(key.key_last_four)})
@@ -164,7 +180,7 @@ export function AiAnalysisModal({
             <label className="block">
               <span className="text-sm font-semibold mb-1.5 block">Modelo (opcional)</span>
               {dynamicModelsQuery.isLoading ? (
-                <div className="w-full h-[42px] px-3 flex items-center bg-white border border-border rounded-xl text-sm text-muted-foreground">
+                <div className="w-full h-[42px] px-3 flex items-center bg-background border border-border rounded-xl text-sm text-muted-foreground">
                   Cargando modelos...
                 </div>
               ) : selectedKey && (dynamicModelsQuery.data?.items?.length || providerModels[selectedKey.provider]?.length > 0) ? (
@@ -188,7 +204,7 @@ export function AiAnalysisModal({
             <Button type="button" variant="ghost" onClick={onClose} className="rounded-xl">
               Cancelar
             </Button>
-            <Button type="submit" className="rounded-xl bg-violet-600 hover:bg-violet-700 text-white shadow-md shadow-violet-200">
+            <Button type="submit" className="rounded-xl bg-primary hover:opacity-90 text-primary-foreground shadow-md">
               <Sparkles className="h-4 w-4 mr-2" />
               Iniciar análisis
             </Button>

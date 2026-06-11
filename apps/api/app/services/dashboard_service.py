@@ -211,10 +211,10 @@ class DashboardService:
 
     def _projects_by_category(self, projects: list[SaasProject]) -> dict[str, int]:
         counts: dict[str, int] = {}
-        for category in SaasCategory:
-            count = sum(1 for project in projects if project.category == category)
-            if count:
-                counts[category.value] = count
+        for project in projects:
+            key = self._enum_value(project.category)
+            if key:
+                counts[key] = counts.get(key, 0) + 1
         return counts
 
     def _score_project_summary(
