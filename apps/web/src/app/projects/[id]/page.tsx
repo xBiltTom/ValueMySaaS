@@ -19,7 +19,7 @@ import { ProjectKpiCards } from "@/features/project-dashboard/components/project
 import { ProjectHistoryChart } from "@/features/project-dashboard/components/project-history-chart";
 import { DiagnosticList } from "@/features/project-dashboard/components/diagnostic-lists";
 import { generateLatestScore } from "@/features/scoring/api";
-import { updateProject } from "@/features/projects/api";
+import { updateProject, deleteProject } from "@/features/projects/api";
 import { AiAnalysisModal } from "@/features/ai-analyses/components/ai-analysis-modal";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -66,6 +66,14 @@ export default function ProjectDashboardPage() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteProject(projectId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["projects"] });
+      router.push("/projects");
+    },
+  });
+
   const project = projectQuery.data;
   const dashboard = dashboardQuery.data;
   const isPlanning = project?.stage === "PLANNING" || project?.stage === "IDEA";
@@ -97,6 +105,8 @@ export default function ProjectDashboardPage() {
             isGenerating={scoreMutation.isPending}
             onLaunchProject={() => launchMutation.mutate()}
             isLaunching={launchMutation.isPending}
+            onDeleteProject={() => deleteMutation.mutate()}
+            isDeleting={deleteMutation.isPending}
           />
 
           {/* Launch success banner */}

@@ -17,3 +17,8 @@ export async function updateProject(projectId: string, payload: Partial<CreateSa
   const { data } = await apiClient.patch<SaasProject>(`/saas-projects/${projectId}`, payload);
   return data;
 }
+
+export async function deleteProject(projectId: string) {
+  const { data } = await apiClient.delete(`/saas-projects/${projectId}`);
+  return data;
+}

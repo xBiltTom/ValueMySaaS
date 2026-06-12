@@ -5,10 +5,17 @@ import { useState } from "react";
 import {
   Rocket, BarChart3, BrainCircuit, MessageSquareText,
   FileText, PlusCircle, Sparkles, ArrowRight, ChevronRight,
-  Zap, TrendingUp, Shield, Target, CheckCircle2, Clock
+  Zap, TrendingUp, Shield, Target, CheckCircle2, Clock, Trash2
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { formatEnum } from "@/lib/utils";
 import { SaasProject } from "@/features/project-dashboard/types";
@@ -36,14 +43,19 @@ export function ProjectHeader({
   isGenerating,
   onLaunchProject,
   isLaunching,
+  onDeleteProject,
+  isDeleting,
 }: {
   project: SaasProject;
   onGenerateScore?: () => void;
   isGenerating?: boolean;
   onLaunchProject?: () => void;
   isLaunching?: boolean;
+  onDeleteProject?: () => void;
+  isDeleting?: boolean;
 }) {
   const [showLaunchConfirm, setShowLaunchConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const isPlanning = project.stage === "PLANNING" || project.stage === "IDEA";
 
   const [showAiModal, setShowAiModal] = useState(false);
@@ -109,10 +121,19 @@ export function ProjectHeader({
                 </span>
               )}
             </div>
-
-            <h1 className="font-display text-3xl font-bold text-foreground md:text-4xl leading-tight">
-              {project.name}
-            </h1>
+            
+            <div className="flex items-center gap-4">
+              <h1 className="font-display text-3xl font-bold text-foreground md:text-4xl leading-tight">
+                {project.name}
+              </h1>
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="rounded-full p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                title="Eliminar proyecto"
+              >
+                <Trash2 className="h-5 w-5" />
+              </button>
+            </div>
 
             {project.description && (
               <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
@@ -291,12 +312,40 @@ export function ProjectHeader({
           </div>
         </div>
       )}
-      <AiAnalysisModal 
-        isOpen={showAiModal} 
-        onClose={() => setShowAiModal(false)} 
-        projectId={project.id} 
-        projectStage={project.stage} 
-      />
+      {project && (
+        <AiAnalysisModal 
+          isOpen={showAiModal} 
+          onClose={() => setShowAiModal(false)} 
+          projectId={project.id} 
+          projectStage={project.stage} 
+        />
+      )}
+
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Eliminar proyecto</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar permanentemente el proyecto <strong>{project.name}</strong>?
+              Esta acción no se puede deshacer e incluirá la eliminación de todos sus análisis, historiales y reportes.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 flex justify-end gap-3">
+            <Button variant="ghost" onClick={() => setShowDeleteConfirm(false)} disabled={isDeleting}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                onDeleteProject?.();
+              }}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Eliminando..." : "Eliminar proyecto"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
