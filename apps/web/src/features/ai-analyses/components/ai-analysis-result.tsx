@@ -5,84 +5,119 @@ import { AiAnalysis } from "@/features/ai-analyses/types";
 import { getAnalysisText } from "@/features/ai-analyses/utils";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 function PlanningAnalysisRenderer({ data }: { data: any }) {
   const getScoreColor = (score: number) => {
-    if (score >= 80) return "text-status-success-text bg-status-success-bg";
-    if (score >= 50) return "text-status-warning-text bg-status-warning-bg";
-    return "text-status-danger-text bg-status-danger-bg";
+    if (score >= 80) return "text-emerald-500";
+    if (score >= 50) return "text-amber-500";
+    return "text-destructive";
   };
 
   const getProgressColor = (score: number) => {
-    if (score >= 80) return "bg-status-success-fg";
-    if (score >= 50) return "bg-status-warning-fg";
-    return "bg-status-danger-fg";
+    if (score >= 80) return "bg-emerald-500";
+    if (score >= 50) return "bg-amber-500";
+    return "bg-destructive";
   };
 
   const scoreFields = [
-    { key: "problem_clarity_score", label: "Claridad del Problema (30%)" },
-    { key: "value_proposition_score", label: "Propuesta de Valor (25%)" },
-    { key: "market_understanding_score", label: "Entendimiento de Mercado (20%)" },
-    { key: "business_model_score", label: "Modelo de Negocio (15%)" },
-    { key: "pricing_feasibility_score", label: "Estrategia de Precios (10%)" },
+    { key: "problem_clarity_score", label: "CLARIDAD DEL PROBLEMA", weight: "30%" },
+    { key: "value_proposition_score", label: "PROPUESTA DE VALOR", weight: "25%" },
+    { key: "market_understanding_score", label: "ENTENDIMIENTO DE MERCADO", weight: "20%" },
+    { key: "business_model_score", label: "MODELO DE NEGOCIO", weight: "15%" },
+    { key: "pricing_feasibility_score", label: "ESTRATEGIA DE PRECIOS", weight: "10%" },
   ];
 
   return (
     <div className="space-y-6">
       {/* Veredicto y Score General */}
-      <Card className="glass shadow-xl border-none overflow-hidden relative">
-        <div className="absolute top-0 left-0 w-full h-1 bg-primary" />
-        <div className="p-8 md:flex md:items-center justify-between gap-6">
-          <div className="space-y-3 flex-1">
-            <h2 className="font-display text-4xl font-bold text-foreground">
-              {data.verdict === "BUILD" ? "¡Construye esto! 🚀" : 
-               data.verdict === "VALIDATE_MORE" ? "Valida un poco más 🔍" : "Pivota la idea 💡"}
+      <div className="relative overflow-hidden rounded-[24px] border border-border/60 bg-card/40 backdrop-blur-md shadow-sm">
+        <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.02)_50%)] bg-[length:100%_4px] pointer-events-none opacity-50" />
+        
+        <div className="relative z-10 p-8 md:flex md:items-center justify-between gap-8">
+          <div className="space-y-4 flex-1">
+            <div className="inline-flex items-center gap-2 rounded-[8px] bg-background/50 border border-border/40 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              <span>OUTPUT_VERDICT</span>
+              <span className="h-2 w-px bg-border/50"></span>
+              <span className={cn(
+                data.verdict === "BUILD" ? "text-emerald-500" :
+                data.verdict === "VALIDATE_MORE" ? "text-amber-500" : "text-destructive"
+              )}>
+                {data.verdict}
+              </span>
+            </div>
+            <h2 className="font-display text-4xl font-black text-foreground uppercase tracking-tight leading-none">
+              {data.verdict === "BUILD" ? "¡Construye esto!" : 
+               data.verdict === "VALIDATE_MORE" ? "Valida un poco más" : "Pivota la idea"}
             </h2>
-            <p className="text-muted-foreground leading-relaxed text-sm md:text-base">
+            <p className="text-[13px] font-mono leading-relaxed text-muted-foreground">
               {data.reasoning}
             </p>
           </div>
-          <div className="mt-6 md:mt-0 flex flex-col items-center justify-center bg-card/60 backdrop-blur-sm rounded-full h-32 w-32 border-4 border-border shadow-sm shrink-0">
-            <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Puntaje</span>
-            <span className={`text-5xl font-display font-black tracking-tighter ${data.overall_score >= 80 ? "text-status-success-text" : data.overall_score >= 50 ? "text-status-warning-text" : "text-status-danger-text"}`}>
+          
+          <div className="mt-8 md:mt-0 flex flex-col items-center justify-center bg-background/80 rounded-[20px] p-6 border border-border/40 shadow-inner shrink-0 min-w-[160px]">
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">SYS_SCORE</span>
+            <span className={cn(
+              "text-6xl font-mono font-black tracking-tighter leading-none",
+              getScoreColor(data.overall_score)
+            )}>
               {data.overall_score}
             </span>
           </div>
         </div>
-      </Card>
+      </div>
 
       {/* Barras de progreso de los pilares */}
       <div className="grid gap-4 md:grid-cols-2">
-        {scoreFields.map(({ key, label }) => {
+        {scoreFields.map(({ key, label, weight }) => {
           const score = data[key];
           if (score === undefined) return null;
           return (
-            <Card key={key} className="glass p-5 shadow-sm border-white/40">
-              <div className="flex justify-between items-end mb-2">
-                <span className="font-semibold text-sm">{label}</span>
-                <span className={`text-lg font-bold px-2 py-0.5 rounded-md ${getScoreColor(score)}`}>
-                  {score}/100
+            <div key={key} className="relative overflow-hidden rounded-[16px] border border-border/40 bg-card/40 backdrop-blur-md p-5 shadow-sm group">
+              <div className="flex justify-between items-end mb-3">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">W:{weight}</span>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-foreground">{label}</h3>
+                </div>
+                <span className={cn("text-xl font-mono font-bold leading-none", getScoreColor(score))}>
+                  {score}<span className="text-xs text-muted-foreground/50">/100</span>
                 </span>
               </div>
-              <Progress value={score} className="h-2 bg-muted overflow-hidden" indicatorClassName={getProgressColor(score)} />
-            </Card>
+              <div className="flex gap-0.5 h-2">
+                {Array.from({ length: 20 }).map((_, i) => (
+                  <div 
+                    key={i} 
+                    className={cn(
+                      "flex-1 transition-all duration-500 rounded-sm",
+                      i * 5 < score ? getProgressColor(score) : "bg-muted/50",
+                      i * 5 < score ? "opacity-100" : "opacity-30"
+                    )}
+                  />
+                ))}
+              </div>
+            </div>
           );
         })}
       </div>
 
       {/* Siguientes Pasos (si existen) */}
       {data.next_steps && data.next_steps.length > 0 && (
-        <Card className="glass p-6 shadow-sm border-white/40">
-          <h3 className="font-display text-xl font-bold mb-4">Próximos Pasos Recomendados</h3>
+        <div className="relative overflow-hidden rounded-[20px] border border-border/60 bg-card/40 backdrop-blur-md p-6 shadow-sm">
+          <h3 className="text-xs font-black uppercase tracking-widest text-foreground mb-5 flex items-center gap-2">
+            <span className="h-2 w-2 bg-primary"></span>
+            Próximos Pasos Recomendados
+          </h3>
           <ul className="space-y-3">
             {data.next_steps.map((step: string, i: number) => (
-              <li key={i} className="flex gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent text-sm font-bold">{i + 1}</span>
-                <span className="text-muted-foreground text-sm leading-6">{step}</span>
+              <li key={i} className="flex gap-4 items-start group">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[6px] bg-background border border-border/40 text-muted-foreground text-[10px] font-mono font-bold group-hover:border-primary/50 group-hover:text-primary transition-colors">
+                  0{i + 1}
+                </span>
+                <span className="text-[12px] font-mono text-muted-foreground leading-relaxed pt-0.5">{step}</span>
               </li>
             ))}
           </ul>
-        </Card>
+        </div>
       )}
     </div>
   );
@@ -94,9 +129,9 @@ export function AiAnalysisResult({ analysis }: { analysis: AiAnalysis }) {
 
   if (!text && !json) {
     return (
-      <Card className="glass p-5">
-        <p className="text-sm text-muted-foreground">El análisis no tiene resultado disponible.</p>
-      </Card>
+      <div className="relative overflow-hidden rounded-[20px] border border-border/60 bg-card/40 backdrop-blur-md p-6 shadow-sm">
+        <p className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">Log analysis is empty or unavailable.</p>
+      </div>
     );
   }
 
@@ -105,11 +140,12 @@ export function AiAnalysisResult({ analysis }: { analysis: AiAnalysis }) {
   return (
     <div className="space-y-6">
       {text && (
-        <Card className="glass p-6 shadow-sm">
-          <div className="prose prose-neutral max-w-none prose-headings:font-display prose-headings:text-foreground prose-p:leading-7 prose-li:leading-7">
+        <div className="relative overflow-hidden rounded-[24px] border border-border/60 bg-card/40 backdrop-blur-xl p-6 shadow-sm">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none" />
+          <div className="relative z-10 prose prose-neutral dark:prose-invert max-w-none prose-headings:font-display prose-headings:font-black prose-headings:uppercase prose-headings:tracking-wider prose-p:leading-relaxed prose-p:font-medium prose-p:text-[13px] prose-li:leading-relaxed prose-li:text-[13px] prose-strong:text-accent">
             <ReactMarkdown>{text}</ReactMarkdown>
           </div>
-        </Card>
+        </div>
       )}
 
       {isPlanningReport && (
@@ -117,7 +153,9 @@ export function AiAnalysisResult({ analysis }: { analysis: AiAnalysis }) {
       )}
 
       {json && !isPlanningReport && !text && (
-        <ReportJsonRenderer content={json} />
+        <div className="relative overflow-hidden rounded-[24px] border border-border/60 bg-card/40 backdrop-blur-xl p-6 shadow-sm">
+          <ReportJsonRenderer content={json} />
+        </div>
       )}
     </div>
   );

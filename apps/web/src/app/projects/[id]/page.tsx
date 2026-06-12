@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BrainCircuit, Database, MessageSquareText, PlusCircle,
-  Rocket, Sparkles, TrendingUp
+  Rocket, Sparkles, TrendingUp, Terminal
 } from "lucide-react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ErrorState } from "@/components/shared/error-state";
