@@ -335,7 +335,7 @@ export function ProjectHeader({
               Cancelar
             </Button>
             <Button
-              variant="destructive"
+              variant="danger"
               onClick={() => {
                 onDeleteProject?.();
               }}

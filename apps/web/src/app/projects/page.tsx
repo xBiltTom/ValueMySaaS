@@ -1,21 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
-import { DollarSign, FolderPlus, Plus, TrendingUp } from "lucide-react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { DollarSign, FolderPlus, Plus, TrendingUp, Trash2 } from "lucide-react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingState } from "@/components/shared/loading-state";
 import { getApiErrorMessage } from "@/lib/api-client";
 import { formatCurrency, formatEnum } from "@/lib/utils";
-import { listProjects } from "@/features/projects/api";
+import { listProjects, deleteProject } from "@/features/projects/api";
 
 export default function ProjectsPage() {
+  const queryClient = useQueryClient();
+  const [deleteConfirm, setDeleteConfirm] = useState<{id: string, name: string} | null>(null);
+
   const projectsQuery = useQuery({
     queryKey: ["projects"],
     queryFn: listProjects,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteProject(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["projects"] });
+      setDeleteConfirm(null);
+    },
   });
 
   return (
@@ -75,9 +89,22 @@ export default function ProjectsPage() {
                       {project.description || "Sin descripción registrada."}
                     </p>
                   </div>
-                  <Badge className="shrink-0 border-primary/20 bg-primary/10 text-[10px] font-bold uppercase tracking-wider text-primary">
-                    {formatEnum(project.stage)}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-2 shrink-0">
+                    <Badge className="shrink-0 border-primary/20 bg-primary/10 text-[10px] font-bold uppercase tracking-wider text-primary">
+                      {formatEnum(project.stage)}
+                    </Badge>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setDeleteConfirm({ id: project.id, name: project.name });
+                      }}
+                      className="rounded-full p-1.5 text-muted-foreground/40 hover:bg-destructive/10 hover:text-destructive transition-colors"
+                      title="Eliminar proyecto"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="mt-5 flex flex-wrap gap-2">
@@ -102,6 +129,30 @@ export default function ProjectsPage() {
         </div>
       ) : null}
       </div>
+
+      <Dialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Eliminar proyecto</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar permanentemente el proyecto <strong>{deleteConfirm?.name}</strong>?
+              Esta acción no se puede deshacer e incluirá la eliminación de todos sus análisis, historiales y reportes.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 flex justify-end gap-3">
+            <Button variant="ghost" onClick={() => setDeleteConfirm(null)} disabled={deleteMutation.isPending}>
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => deleteConfirm && deleteMutation.mutate(deleteConfirm.id)}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Eliminando..." : "Eliminar proyecto"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardShell>
   );
 }
