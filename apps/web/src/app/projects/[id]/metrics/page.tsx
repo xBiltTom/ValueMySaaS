@@ -40,45 +40,52 @@ export default function ProjectMetricsPage() {
       <div className="mb-6">
         <Link
           href={`/projects/${projectId}`}
-          className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted transition-colors"
+          className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors bg-background/50 border border-border/40 px-3 py-1.5 rounded-[8px]"
         >
-          <ArrowLeft className="h-4 w-4" /> Volver al dashboard
+          <ArrowLeft className="h-3 w-3" />
+          Volver a dashboard
         </Link>
       </div>
 
       {/* Page header */}
       <div className={cn(
-        "rounded-3xl border p-6 md:p-8 mb-8",
-        isPlanning
-          ? "border-status-warning-border/60 bg-gradient-to-br from-status-warning-bg via-card to-card"
-          : "border-primary/15 bg-gradient-to-br from-primary/5 via-card to-card"
+        "relative overflow-hidden rounded-[24px] border border-border/60 bg-card/40 backdrop-blur-xl p-6 md:p-8 mb-8 shadow-sm",
+        isPlanning ? "border-t-4 border-t-status-warning-fg" : "border-t-4 border-t-primary"
       )}>
-        <div className="flex items-start gap-4">
-          <div className={cn("rounded-2xl p-4 shrink-0", isPlanning ? "bg-status-warning-bg" : "bg-primary/10")}>
+        {/* Background scanline effect */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none" />
+        <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.02)_50%)] bg-[length:100%_4px] pointer-events-none" />
+
+        <div className="relative z-10 flex items-start gap-4">
+          <div className={cn(
+            "flex h-12 w-12 items-center justify-center rounded-[12px] shadow-inner shrink-0",
+            isPlanning ? "bg-status-warning-bg border border-status-warning-fg/30" : "bg-primary/10 border border-primary/30"
+          )}>
             {isPlanning
-              ? <Lightbulb className="h-7 w-7 text-status-warning-fg" />
-              : <BarChart3 className="h-7 w-7 text-primary" />
+              ? <Lightbulb className="h-6 w-6 text-status-warning-fg" />
+              : <BarChart3 className="h-6 w-6 text-primary" />
             }
           </div>
-          <div>
-            <p className={cn("text-xs font-bold uppercase tracking-widest mb-1", isPlanning ? "text-status-warning-text" : "text-primary")}>
-              {isPlanning ? "Estimaciones · Planeación" : "Métricas · En marcha"}
+          <div className="flex-1">
+            <p className={cn("text-[10px] font-black uppercase tracking-widest flex items-center gap-2", isPlanning ? "text-status-warning-text" : "text-primary")}>
+              <span className={cn("h-2 w-2 rounded-full animate-pulse", isPlanning ? "bg-status-warning-fg" : "bg-primary")}></span>
+              {isPlanning ? "SYS_MODE: PLANNING_ESTIMATES" : "SYS_MODE: LIVE_METRICS"}
             </p>
-            <h1 className="font-display text-3xl md:text-4xl font-bold">
-              {project?.name || "Cargando..."}
+            <h1 className="mt-3 font-display text-4xl font-black uppercase tracking-tight text-foreground">
+              {project?.name || "CARGANDO_DATOS..."}
             </h1>
-            <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-2xl">
+            <p className="mt-2 text-[12px] font-mono text-muted-foreground uppercase leading-relaxed max-w-2xl">
               {isPlanning
-                ? "Registra tus costos estimados. La evaluación de viabilidad la hace la IA en base a tu propuesta de valor, no en base a números reales."
-                : "Registra snapshots de métricas reales para alimentar el score diagnóstico, gráficos históricos y análisis de IA."}
+                ? "> Registra tus costos estimados. La evaluación de viabilidad la hace la IA en base a tu propuesta de valor, no en base a números reales."
+                : "> Registra snapshots de métricas reales para alimentar el score diagnóstico, gráficos históricos y análisis de IA."}
             </p>
           </div>
         </div>
 
         {isPlanning && (
-          <div className="mt-5 flex items-start gap-2 rounded-2xl border border-status-warning-border/60 bg-status-warning-bg/70 px-4 py-3">
+          <div className="relative z-10 mt-6 flex items-start gap-3 rounded-[12px] border border-status-warning-border/60 bg-status-warning-bg/70 px-4 py-3 shadow-inner">
             <Info className="h-4 w-4 text-status-warning-fg shrink-0 mt-0.5" />
-            <p className="text-xs text-status-warning-text leading-relaxed">
+            <p className="text-[11px] font-mono text-status-warning-text leading-relaxed uppercase">
               <strong>¿Por qué solo costos?</strong> En planeación, los proyectos aún no tienen usuarios ni ingresos reales.
               El análisis de IA evalúa tu idea usando tu propuesta de valor, mercado objetivo y modelo de negocio.
               Cuando lances el proyecto, tendrás acceso a métricas completas como MRR, churn rate y más.
