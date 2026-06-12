@@ -14,8 +14,8 @@ function toPercent(value: MaybeNumber) {
 
 function ScoreGauge({ score, isPlanning }: { score: number; isPlanning: boolean }) {
   const percent = toPercent(score);
-  const color = percent >= 75 ? "#10b981" : percent >= 50 ? "#f59e0b" : "#ef4444";
-  const trackColor = percent >= 75 ? "rgba(16,185,129,0.15)" : percent >= 50 ? "rgba(245,158,11,0.15)" : "rgba(239,68,68,0.15)";
+  const color = percent >= 75 ? "#22C55E" : percent >= 50 ? "#F59E0B" : "#EF4444";
+  const trackColor = percent >= 75 ? "rgba(34,197,94,0.15)" : percent >= 50 ? "rgba(245,158,11,0.15)" : "rgba(239,68,68,0.15)";
 
   return (
     <div className="relative flex items-center justify-center">

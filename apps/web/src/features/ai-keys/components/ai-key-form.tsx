@@ -38,7 +38,7 @@ export function AiKeyForm() {
   });
 
   return (
-    <Card className="glass-card rounded-3xl">
+    <Card className="rounded-3xl">
       <CardHeader className="px-6 md:px-8 pt-6 md:pt-8 pb-4">
         <CardTitle className="text-2xl font-display">Registrar API Key</CardTitle>
         <CardDescription className="text-base mt-2">La clave solo se usa para enviarla al backend y cifrarla. No se guarda en localStorage.</CardDescription>

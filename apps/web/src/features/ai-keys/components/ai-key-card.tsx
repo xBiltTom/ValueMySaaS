@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 
 export function AiKeyCard({ aiKey }: { aiKey: AiKey }) {
   const [showVerify, setShowVerify] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const queryClient = useQueryClient();
   const updateMutation = useMutation({
     mutationFn: () => updateAiKey(aiKey.id, { is_active: !aiKey.is_active }),
@@ -33,13 +34,17 @@ export function AiKeyCard({ aiKey }: { aiKey: AiKey }) {
   });
 
   const onDelete = () => {
-    if (window.confirm("¿Eliminar esta API Key? Esta acción no mostrará ni recuperará la clave.")) {
-      deleteMutation.mutate();
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      setTimeout(() => setConfirmDelete(false), 5000);
+      return;
     }
+    setConfirmDelete(false);
+    deleteMutation.mutate();
   };
 
   return (
-    <Card className={cn("p-6 rounded-3xl transition-all duration-300", aiKey.is_active ? "glass-card border-primary/20 shadow-[0_8px_30px_rgb(79,70,229,0.06)] scale-[1.01]" : "bg-card/50 border-border opacity-70 hover:opacity-100")}>
+    <Card className={cn("p-6 rounded-3xl transition-all duration-300", aiKey.is_active ? "border-primary/25 bg-primary/5 shadow-md" : "border-border opacity-70 hover:opacity-100")}>
       <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-start">
         <div>
           <div className="flex flex-wrap gap-2 items-center">
@@ -55,17 +60,29 @@ export function AiKeyCard({ aiKey }: { aiKey: AiKey }) {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" className="h-10 rounded-xl" onClick={() => setShowVerify((value) => !value)}>
+          <Button variant="secondary" className="rounded-xl" onClick={() => setShowVerify((value) => !value)}>
             Verificar
           </Button>
-          <Button variant="ghost" className="h-10 rounded-xl" onClick={() => updateMutation.mutate()} disabled={updateMutation.isPending}>
+          <Button variant="ghost" className="rounded-xl" onClick={() => updateMutation.mutate()} disabled={updateMutation.isPending}>
             {aiKey.is_active ? <PowerOff className="h-4 w-4 mr-2" /> : <Power className="h-4 w-4 mr-2" />}
             {aiKey.is_active ? "Desactivar" : "Activar"}
           </Button>
-          <Button variant="danger" className="h-10 rounded-xl" onClick={onDelete} disabled={deleteMutation.isPending}>
-            <Trash2 className="h-4 w-4 mr-2" />
-            Eliminar
-          </Button>
+          {confirmDelete ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-destructive">¿Confirmar?</span>
+              <Button variant="danger" className="h-9 rounded-xl px-3 text-xs" onClick={onDelete} disabled={deleteMutation.isPending}>
+                Sí, eliminar
+              </Button>
+              <Button variant="ghost" className="h-9 rounded-xl px-3 text-xs" onClick={() => setConfirmDelete(false)}>
+                Cancelar
+              </Button>
+            </div>
+          ) : (
+            <Button variant="danger" className="rounded-xl" onClick={onDelete} disabled={deleteMutation.isPending}>
+              <Trash2 className="h-4 w-4 mr-2" />
+              Eliminar
+            </Button>
+          )}
         </div>
       </div>
       {updateMutation.isError ? (

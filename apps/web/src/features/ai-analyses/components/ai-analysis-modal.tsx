@@ -135,7 +135,7 @@ export function AiAnalysisModal({
           {!isPlanning && (
             <label className="block">
               <span className="text-sm font-semibold mb-1.5 block">Tipo de análisis</span>
-              <Select className="w-full rounded-xl border border-border px-3 py-2.5 focus:ring-2 focus:ring-violet-500/20" {...form.register("analysis_type")}>
+              <Select className="w-full rounded-xl border border-border px-3 py-2.5 focus:ring-2 focus:ring-primary/20" {...form.register("analysis_type")}>
                 {analysisTypes.map((type) => (
                   <option key={type} value={type}>
                     {analysisLabels[type]}
@@ -150,7 +150,7 @@ export function AiAnalysisModal({
             <label className="block">
               <span className="text-sm font-semibold mb-1.5 block">Tu pregunta</span>
               <Textarea
-                className="w-full rounded-xl border border-border px-3 py-2.5 focus:ring-2 focus:ring-violet-500/20 resize-none"
+                className="w-full rounded-xl border border-border px-3 py-2.5 focus:ring-2 focus:ring-primary/20 resize-none"
                 placeholder="Ej: ¿Qué riesgos debería priorizar antes de invertir en adquisición?"
                 rows={3}
                 {...form.register("custom_question")}
@@ -184,7 +184,7 @@ export function AiAnalysisModal({
                   Cargando modelos...
                 </div>
               ) : selectedKey && (dynamicModelsQuery.data?.items?.length || providerModels[selectedKey.provider]?.length > 0) ? (
-                <Select className="w-full rounded-xl border border-border px-3 py-2.5 focus:ring-2 focus:ring-violet-500/20" {...form.register("model_name")}>
+                <Select className="w-full rounded-xl border border-border px-3 py-2.5 focus:ring-2 focus:ring-primary/20" {...form.register("model_name")}>
                   <option value="">-- Autoselección --</option>
                   {((dynamicModelsQuery.data?.items?.length ? dynamicModelsQuery.data.items : null) || providerModels[selectedKey.provider]).map((model) => (
                     <option key={model.id} value={model.id}>{model.name}</option>
@@ -192,7 +192,7 @@ export function AiAnalysisModal({
                 </Select>
               ) : (
                 <Input
-                  className="w-full rounded-xl border border-border px-3 py-2.5 focus:ring-2 focus:ring-violet-500/20"
+                  className="w-full rounded-xl border border-border px-3 py-2.5 focus:ring-2 focus:ring-primary/20"
                   placeholder={selectedKey ? providerHints[selectedKey.provider] : ""}
                   {...form.register("model_name")}
                 />

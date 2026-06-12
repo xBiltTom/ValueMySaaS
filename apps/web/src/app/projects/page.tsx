@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { FolderPlus, Plus, TrendingUp, DollarSign } from "lucide-react";
+import { DollarSign, FolderPlus, Plus, TrendingUp } from "lucide-react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -20,23 +20,31 @@ export default function ProjectsPage() {
 
   return (
     <DashboardShell>
-      <div className="mb-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+      <div className="animate-page-in">
+      <div className="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/50 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-foreground mb-3">
-            <div className="h-1.5 w-1.5 rounded-full bg-accent"></div>
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            <div className="h-1.5 w-1.5 rounded-full bg-accent" />
             Inventario
           </div>
-          <h1 className="font-display text-4xl font-bold tracking-tight md:text-5xl">Proyectos SaaS</h1>
+          <h1 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-5xl">
+            Proyectos SaaS
+          </h1>
         </div>
-        <Link href="/projects/new" className="btn-premium inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-bold text-primary-foreground shadow-[0_0_15px_var(--ring)]">
-          <Plus className="h-5 w-5" />
+        <Link
+          href="/projects/new"
+          className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-bold text-primary-foreground shadow-sm transition hover:opacity-90 active:scale-95"
+        >
+          <Plus className="h-4 w-4" />
           Nuevo proyecto
         </Link>
       </div>
 
       {projectsQuery.isLoading ? <LoadingState /> : null}
-      {projectsQuery.isError ? <ErrorState message={getApiErrorMessage(projectsQuery.error)} /> : null}
-      
+      {projectsQuery.isError ? (
+        <ErrorState message={getApiErrorMessage(projectsQuery.error)} />
+      ) : null}
+
       {projectsQuery.data && projectsQuery.data.items.length === 0 ? (
         <div className="mt-8">
           <EmptyState
@@ -48,37 +56,43 @@ export default function ProjectsPage() {
           />
         </div>
       ) : null}
-      
+
       {projectsQuery.data && projectsQuery.data.items.length > 0 ? (
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {projectsQuery.data.items.map((project) => (
-            <Link key={project.id} href={`/projects/${project.id}`} className="block group">
-              <div className="bento-card h-full p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_40px_-10px_rgba(204,255,0,0.15)] hover:border-primary/50">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {projectsQuery.data.items.map((project, index) => (
+            <Link
+              key={project.id}
+              href={`/projects/${project.id}`}
+              className={`group block animate-card-${Math.min(index + 1, 4) as 1 | 2 | 3 | 4}`}
+            >
+              <div className="bento-card h-full p-6">
                 <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <h2 className="font-display text-xl font-bold text-foreground group-hover:text-primary transition-colors">{project.name}</h2>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="font-display text-xl font-bold text-foreground transition-colors group-hover:text-primary">
+                      {project.name}
+                    </h2>
                     <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
                       {project.description || "Sin descripción registrada."}
                     </p>
                   </div>
-                  <Badge className="bg-primary/10 text-primary border-primary/20 shrink-0 uppercase tracking-wider text-[10px] font-bold">
+                  <Badge className="shrink-0 border-primary/20 bg-primary/10 text-[10px] font-bold uppercase tracking-wider text-primary">
                     {formatEnum(project.stage)}
                   </Badge>
                 </div>
-                
-                <div className="mt-6 flex flex-wrap gap-2">
-                  <Badge className="bg-card text-xs font-semibold border-border">{formatEnum(project.category)}</Badge>
-                  <Badge className="bg-card text-xs font-semibold border-border">{formatEnum(project.business_model)}</Badge>
+
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <Badge>{formatEnum(project.category)}</Badge>
+                  <Badge>{formatEnum(project.business_model)}</Badge>
                 </div>
-                
-                <div className="mt-6 flex items-center justify-between border-t border-border pt-5 text-sm">
-                  <div className="flex items-center text-foreground font-bold font-display text-lg">
-                    <DollarSign className="h-4 w-4 text-accent mr-1" />
+
+                <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-sm">
+                  <div className="flex items-center gap-1 font-display text-lg font-bold text-foreground">
+                    <DollarSign className="h-4 w-4 text-accent" />
                     {formatCurrency(project.current_price, project.currency)}
-                    <span className="text-xs text-muted-foreground ml-1 font-sans font-normal">/mo</span>
+                    <span className="ml-1 text-xs font-normal text-muted-foreground font-sans">/mo</span>
                   </div>
-                  <div className="flex items-center text-muted-foreground text-xs font-semibold">
-                    <TrendingUp className="h-3 w-3 mr-1" />
+                  <div className="flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+                    <TrendingUp className="h-3 w-3" />
                     {project.target_market || "Mercado Global"}
                   </div>
                 </div>
@@ -87,6 +101,7 @@ export default function ProjectsPage() {
           ))}
         </div>
       ) : null}
+      </div>
     </DashboardShell>
   );
 }

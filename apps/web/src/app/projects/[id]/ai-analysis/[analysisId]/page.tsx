@@ -41,13 +41,13 @@ export default function AiAnalysisDetailPage() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <button
             onClick={() => setShowAiModal(true)}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90 active:scale-95"
           >
-            <BrainCircuit className="h-4 w-4" />
+            <BrainCircuit aria-hidden="true" className="h-4 w-4" />
             Generar otro análisis
           </button>
-          <Link href={`/projects/${projectId}`} className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-semibold hover:bg-muted">
-            <LayoutDashboard className="h-4 w-4" />
+          <Link href={`/projects/${projectId}`} className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-border bg-card px-5 text-sm font-semibold transition hover:bg-muted active:scale-95">
+            <LayoutDashboard aria-hidden="true" className="h-4 w-4" />
             Dashboard
           </Link>
         </div>

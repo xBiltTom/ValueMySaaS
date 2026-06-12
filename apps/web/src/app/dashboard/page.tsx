@@ -18,19 +18,22 @@ export default function DashboardPage() {
 
   return (
     <DashboardShell>
-      <div className="mb-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-        <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/50 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-foreground mb-3">
-            <div className="h-1.5 w-1.5 rounded-full bg-accent"></div>
-            Portafolio
-          </div>
-          <h1 className="font-display text-4xl font-bold tracking-tight md:text-5xl">Dashboard de Sostenibilidad</h1>
+      <div className="animate-page-in">
+      <div className="mb-8">
+        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          <div className="h-1.5 w-1.5 rounded-full bg-accent" />
+          Portafolio
         </div>
+        <h1 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-5xl">
+          Dashboard de Sostenibilidad
+        </h1>
       </div>
 
       {dashboardQuery.isLoading ? <LoadingState /> : null}
-      {dashboardQuery.isError ? <ErrorState message={getApiErrorMessage(dashboardQuery.error)} /> : null}
-      
+      {dashboardQuery.isError ? (
+        <ErrorState message={getApiErrorMessage(dashboardQuery.error)} />
+      ) : null}
+
       {dashboardQuery.data && dashboardQuery.data.total_projects === 0 ? (
         <div className="mt-8">
           <EmptyState
@@ -42,10 +45,11 @@ export default function DashboardPage() {
           />
         </div>
       ) : null}
-      
+
       {dashboardQuery.data && dashboardQuery.data.total_projects > 0 ? (
         <PortfolioDashboard data={dashboardQuery.data} />
       ) : null}
+      </div>
     </DashboardShell>
   );
 }

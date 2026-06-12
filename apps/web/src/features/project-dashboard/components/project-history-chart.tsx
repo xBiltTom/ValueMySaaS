@@ -60,9 +60,9 @@ export function ProjectHistoryChart({
                 tickLine={false}
                 axisLine={false}
                 fontSize={10}
-                tick={{ fill: "#a1a1aa" }}
+                tick={{ fill: "#94A3B8" }}
               />
-              <YAxis tickLine={false} axisLine={false} fontSize={10} tick={{ fill: "#a1a1aa" }} />
+              <YAxis tickLine={false} axisLine={false} fontSize={10} tick={{ fill: "#94A3B8" }} />
               <Tooltip content={<CustomTooltip />} />
               <Area
                 type="monotone"

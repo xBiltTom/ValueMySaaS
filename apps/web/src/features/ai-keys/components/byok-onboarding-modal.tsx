@@ -173,7 +173,7 @@ export function ByokOnboardingModal({ isOpen, onClose }: ByokOnboardingModalProp
         <div className="px-7 pb-7 flex flex-col sm:flex-row items-center gap-3 border-t border-border pt-5">
           <Button
             onClick={handleGoToSettings}
-            className="w-full sm:w-auto bg-primary hover:opacity-90 text-primary-foreground rounded-xl h-11 font-semibold gap-2"
+            className="w-full sm:w-auto bg-primary hover:opacity-90 text-primary-foreground rounded-xl font-semibold gap-2"
           >
             <Sparkles className="h-4 w-4" />
             Ir a Configuración → IA
@@ -182,7 +182,7 @@ export function ByokOnboardingModal({ isOpen, onClose }: ByokOnboardingModalProp
           <Button
             variant="ghost"
             onClick={onClose}
-            className="w-full sm:w-auto rounded-xl h-11 text-muted-foreground"
+            className="w-full sm:w-auto rounded-xl text-muted-foreground"
           >
             Cerrar
           </Button>

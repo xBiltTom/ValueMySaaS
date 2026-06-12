@@ -30,11 +30,13 @@ export function DiagnosticList({
   return (
     <div className={cn(
       "rounded-3xl border overflow-hidden transition-all",
-      isPlanning ? "border-amber-200/60" : "border-border"
+      isPlanning ? "border-status-warning-border/60" : "border-border"
     )}>
       {/* Header */}
       <button
         onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+        aria-label={`${expanded ? "Colapsar" : "Expandir"} ${title}`}
         className="flex w-full items-center justify-between p-5 hover:bg-muted/30 transition-colors"
       >
         <div className="flex items-center gap-3">

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Syne } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "sonner";
 import { QueryProvider } from "@/lib/query-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 
@@ -38,6 +39,12 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <QueryProvider>{children}</QueryProvider>
+          <Toaster
+            position="bottom-right"
+            offset={80}
+            richColors
+            toastOptions={{ className: "font-sans text-sm rounded-xl" }}
+          />
         </ThemeProvider>
       </body>
     </html>
