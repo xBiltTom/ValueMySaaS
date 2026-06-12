@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { 
   ArrowRight, Lightbulb, Rocket, Sparkles, HelpCircle,
-  Package, Users, Globe, Brain, DollarSign, Check
+  Package, Users, Globe, Brain, DollarSign, Check, TerminalSquare
 } from "lucide-react";
 import { ErrorState } from "@/components/shared/error-state";
 import { getApiErrorMessage } from "@/lib/api-client";
@@ -20,22 +20,22 @@ import { useState } from "react";
 
 function Label({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
-    <span className="block text-sm font-bold text-foreground mb-2">
-      {children} {required && <span className="text-status-danger-fg">*</span>}
+    <span className="block text-[11px] md:text-[12px] font-black uppercase tracking-widest text-foreground mb-3 font-mono">
+      &gt; {children} {required && <span className="text-primary">*</span>}
     </span>
   );
 }
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="mt-1.5 text-[12px] font-semibold text-status-danger-fg flex items-center gap-1"><span>↑</span> {message}</p>;
+  return <p className="mt-2 text-[10px] md:text-[11px] font-black tracking-widest uppercase text-destructive flex items-center gap-1 font-mono"><span>ERR:</span> {message}</p>;
 }
 
 function Tooltip({ text }: { text: string }) {
   return (
-    <span className="group relative inline-block ml-1.5">
-      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/50 hover:text-muted-foreground cursor-help inline" />
-      <span className="pointer-events-none absolute left-0 top-6 z-50 hidden w-52 rounded-xl border border-border bg-card p-3 text-xs text-muted-foreground shadow-lg group-hover:block">
+    <span className="group relative inline-block ml-1.5 align-middle">
+      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/50 hover:text-primary cursor-help inline" />
+      <span className="pointer-events-none absolute left-0 top-6 z-50 hidden w-56 rounded-[8px] border-2 border-border/60 bg-card p-3 text-[10px] font-mono uppercase text-muted-foreground shadow-[4px_4px_0_rgba(0,0,0,0.2)] group-hover:block">
         {text}
       </span>
     </span>
@@ -44,31 +44,36 @@ function Tooltip({ text }: { text: string }) {
 
 function StepIndicator({ step, label, active, done }: { step: number; label: string; active: boolean; done: boolean }) {
   return (
-    <div className={cn("flex items-center gap-2 transition-all", active ? "opacity-100" : "opacity-40")}>
-      <div className={cn(
-        "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold border-2 transition-all",
-        done ? "bg-status-success-fg border-status-success-fg text-white" : active ? "bg-primary border-primary text-primary-foreground" : "bg-card border-border text-muted-foreground"
-      )}>
-        {done ? <Check className="h-3.5 w-3.5" /> : step}
+    <div className={cn("flex flex-col gap-1 transition-all", active ? "opacity-100" : "opacity-40")}>
+      <div className="flex items-center gap-2">
+        <div className={cn(
+          "flex h-6 w-6 shrink-0 items-center justify-center rounded-[4px] text-[10px] font-black border-2 transition-all font-mono",
+          done ? "bg-primary border-primary text-primary-foreground" : active ? "bg-primary/20 border-primary text-primary" : "bg-card border-border/60 text-muted-foreground"
+        )}>
+          {done ? <Check className="h-3.5 w-3.5" /> : step}
+        </div>
+        <span className={cn("text-[10px] font-black uppercase tracking-widest font-mono hidden sm:block", active ? "text-primary" : "text-muted-foreground")}>
+          {label}
+        </span>
       </div>
-      <span className={cn("text-xs font-semibold hidden sm:block", active ? "text-foreground" : "text-muted-foreground")}>{label}</span>
+      {active && <div className="h-0.5 w-full bg-primary mt-1" />}
     </div>
   );
 }
 
 const STEPS = [
-  { label: "Tipo de proyecto" },
-  { label: "Tu idea" },
-  { label: "Propuesta de valor" },
-  { label: "Modelo de negocio" },
+  { label: "Fase" },
+  { label: "Identidad" },
+  { label: "Propuesta" },
+  { label: "Modelo" },
 ];
 
-function PremiumInput({ className, ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
+function BrutalistInput({ className, ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       className={cn(
-        "w-full rounded-2xl border border-border bg-background px-4 py-3.5 text-base text-foreground placeholder:text-muted-foreground/50 outline-none transition-all",
-        "focus:border-primary focus:shadow-[0_0_0_4px_var(--ring)]",
+        "w-full rounded-[8px] border-2 border-border/60 bg-background/50 backdrop-blur-sm px-4 py-3.5 text-[13px] font-mono text-foreground placeholder:text-muted-foreground/50 outline-none transition-all",
+        "focus:border-primary focus:shadow-[4px_4px_0_rgba(var(--primary),0.2)] hover:border-primary/50",
         className
       )}
       {...props}
@@ -76,12 +81,12 @@ function PremiumInput({ className, ...props }: React.InputHTMLAttributes<HTMLInp
   );
 }
 
-function PremiumSelect({ className, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
+function BrutalistSelect({ className, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
       className={cn(
-        "w-full rounded-2xl border border-border bg-background px-4 py-3.5 text-base text-foreground outline-none transition-all appearance-none cursor-pointer",
-        "focus:border-primary focus:shadow-[0_0_0_4px_var(--ring)]",
+        "w-full rounded-[8px] border-2 border-border/60 bg-background/50 backdrop-blur-sm px-4 py-3.5 text-[13px] font-mono text-foreground outline-none transition-all appearance-none cursor-pointer",
+        "focus:border-primary focus:shadow-[4px_4px_0_rgba(var(--primary),0.2)] hover:border-primary/50",
         className
       )}
       {...props}
@@ -89,12 +94,12 @@ function PremiumSelect({ className, ...props }: React.SelectHTMLAttributes<HTMLS
   );
 }
 
-function PremiumTextarea({ className, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+function BrutalistTextarea({ className, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <textarea
       className={cn(
-        "w-full rounded-2xl border border-border bg-background px-4 py-3.5 text-base text-foreground placeholder:text-muted-foreground/50 outline-none transition-all resize-none",
-        "focus:border-primary focus:shadow-[0_0_0_4px_var(--ring)]",
+        "w-full rounded-[8px] border-2 border-border/60 bg-background/50 backdrop-blur-sm px-4 py-3.5 text-[13px] font-mono leading-relaxed text-foreground placeholder:text-muted-foreground/50 outline-none transition-all resize-none",
+        "focus:border-primary focus:shadow-[4px_4px_0_rgba(var(--primary),0.2)] hover:border-primary/50",
         className
       )}
       {...props}
@@ -103,18 +108,18 @@ function PremiumTextarea({ className, ...props }: React.TextareaHTMLAttributes<H
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-  EDTECH: "📚 EdTech — Educación", FINTECH: "💳 FinTech — Finanzas",
-  HEALTHTECH: "🏥 HealthTech — Salud", PRODUCTIVITY: "⚡ Productividad",
+  EDTECH: "📚 EdTech", FINTECH: "💳 FinTech",
+  HEALTHTECH: "🏥 HealthTech", PRODUCTIVITY: "⚡ Productividad",
   MARKETING: "📣 Marketing", ECOMMERCE: "🛍 E-commerce",
-  AI: "🤖 Inteligencia Artificial", DEVELOPER_TOOLS: "🛠 Dev Tools",
+  AI: "🤖 IA", DEVELOPER_TOOLS: "🛠 Dev Tools",
   OTHER: "📦 Otro",
 };
 
 const BM_LABELS: Record<string, string> = {
-  B2B: "B2B — Le vendes a empresas", B2C: "B2C — Le vendes a personas",
-  B2B2C: "B2B2C — Empresas y personas", FREEMIUM: "Freemium — Gratis con plan premium",
-  SUBSCRIPTION: "Suscripción mensual/anual", ONE_TIME: "Pago único",
-  OTHER: "Otro modelo",
+  B2B: "B2B — Ventas a empresas", B2C: "B2C — Ventas a personas",
+  B2B2C: "B2B2C — Mixto", FREEMIUM: "Freemium",
+  SUBSCRIPTION: "Suscripción", ONE_TIME: "Pago único",
+  OTHER: "Otro",
 };
 
 export function ProjectForm() {
@@ -138,10 +143,9 @@ export function ProjectForm() {
   const watchBusinessModel = form.watch("business_model");
   const isPlanning = watchStage === "PLANNING" || watchStage === "IDEA";
 
-  let priceLabel = "Precio mensual estimado";
-  if (watchBusinessModel === "FREEMIUM") priceLabel = "Precio del plan premium";
-  if (watchBusinessModel === "ONE_TIME") priceLabel = "Precio único de compra";
-  if (watchBusinessModel === "B2B" || watchBusinessModel === "B2B2C") priceLabel = "Ticket promedio estimado";
+  let priceLabel = "TICKET PROM./MENSUAL";
+  if (watchBusinessModel === "FREEMIUM") priceLabel = "PRECIO PREMIUM";
+  if (watchBusinessModel === "ONE_TIME") priceLabel = "PRECIO ÚNICO";
 
   const mutation = useMutation({
     mutationFn: createProject,
@@ -156,7 +160,6 @@ export function ProjectForm() {
   });
 
   const nextStep = async () => {
-    // Validate current step fields before advancing
     let fieldsToValidate: (keyof CreateProjectFormValues)[] = [];
     if (step === 1) fieldsToValidate = ["name", "category", "description"];
     if (step === 2) fieldsToValidate = ["target_audience", "target_market", "main_problem", "value_proposition"];
@@ -169,15 +172,12 @@ export function ProjectForm() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-3xl">
       {/* Step progress bar */}
-      <div className="flex items-center justify-between mb-10 px-1">
+      <div className="flex items-center justify-between mb-10 border-b-2 border-border/60 pb-4">
         {STEPS.map((s, i) => (
-          <div key={i} className="flex items-center gap-0 flex-1">
+          <div key={i} className="flex-1 flex justify-center">
             <StepIndicator step={i + 1} label={s.label} active={i === step} done={i < step} />
-            {i < STEPS.length - 1 && (
-              <div className="flex-1 mx-2 h-px bg-border hidden sm:block" />
-            )}
           </div>
         ))}
       </div>
@@ -187,48 +187,45 @@ export function ProjectForm() {
       <form onSubmit={onSubmit}>
         {/* Step 0: Tipo de proyecto */}
         {step === 0 && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="text-center space-y-2 pb-2">
-              <p className="text-xs font-bold uppercase tracking-widest text-primary">Paso 1 de 4</p>
-              <h2 className="text-2xl md:text-3xl font-display font-bold">¿En qué fase está tu proyecto?</h2>
-              <p className="text-muted-foreground text-sm max-w-md mx-auto">
-                Esto define cómo analizaremos y evaluaremos tu SaaS.
+          <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="space-y-2 border-l-4 border-primary pl-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary font-mono">STEP 01/04</p>
+              <h2 className="text-2xl md:text-3xl font-display font-black uppercase tracking-tight text-foreground">ESTADO DE OPERACIÓN</h2>
+              <p className="text-muted-foreground text-[11px] font-mono uppercase max-w-lg">
+                &gt; Define la etapa actual para parametrizar el algoritmo de análisis.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <button
                 type="button"
                 onClick={() => { form.setValue("stage", "PLANNING"); setStep(1); }}
                 className={cn(
-                  "group relative flex flex-col items-start rounded-3xl border-2 p-7 text-left transition-all duration-300",
-                  "hover:scale-[1.02] hover:shadow-lg active:scale-[0.99]",
+                  "group relative flex flex-col items-start rounded-[12px] border-2 p-6 text-left transition-all duration-200 overflow-hidden",
                   watchStage === "PLANNING" || watchStage === "IDEA"
-                    ? "border-status-warning-border bg-gradient-to-br from-status-warning-bg to-card shadow-lg"
-                    : "border-border bg-card hover:border-status-warning-border"
+                    ? "border-primary bg-primary/5 shadow-[8px_8px_0_rgba(var(--primary),0.3)] -translate-y-1 -translate-x-1"
+                    : "border-border/60 bg-card hover:border-primary/50 hover:shadow-[4px_4px_0_rgba(0,0,0,0.2)] hover:-translate-y-0.5 hover:-translate-x-0.5"
                 )}
               >
-                <div className="mb-5 rounded-2xl bg-status-warning-bg p-3.5 text-status-warning-fg">
-                  <Lightbulb className="h-7 w-7" />
+                <div className="absolute top-0 right-0 p-3 opacity-10">
+                  <Lightbulb className="h-24 w-24" />
                 </div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-status-warning-bg px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-status-warning-text">
-                    🎓 Para estudiantes
-                  </span>
+                <div className="mb-6 h-12 w-12 rounded-[8px] bg-primary/20 flex items-center justify-center text-primary border-2 border-primary/30">
+                  <Lightbulb className="h-6 w-6" />
                 </div>
-                <h3 className="text-xl font-display font-bold text-foreground">En Planeación</h3>
-                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                  Tengo una idea. Estoy validando el problema, el mercado o el modelo de negocio. Aún no he lanzado.
+                <div className="inline-block border border-primary/30 bg-primary/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-primary mb-3">
+                  FASE DE DISEÑO
+                </div>
+                <h3 className="text-xl font-display font-black uppercase text-foreground">EN PLANEACIÓN</h3>
+                <p className="mt-2 text-[12px] font-mono text-muted-foreground uppercase leading-relaxed h-16">
+                  &gt; Idea en validación. Buscando product-market fit. Sin lanzamiento oficial.
                 </p>
-                <div className="mt-5 space-y-2">
-                  {["Análisis cualitativo con IA", "Evaluación por pesos (viabilidad)", "Sin métricas financieras reales"].map((f) => (
-                    <div key={f} className="flex items-center gap-2 text-xs text-status-warning-text font-medium">
-                      <span className="text-status-warning-fg">✓</span> {f}
+                <div className="mt-4 space-y-2 w-full border-t border-dashed border-border/60 pt-4">
+                  {["Análisis cualitativo IA", "Evaluación de viabilidad", "Sin métricas reales"].map((f) => (
+                    <div key={f} className="flex items-center gap-2 text-[10px] text-foreground font-mono uppercase">
+                      <Check className="h-3 w-3 text-primary" /> {f}
                     </div>
                   ))}
-                </div>
-                <div className="absolute top-5 right-5 flex h-7 w-7 items-center justify-center rounded-full bg-status-warning-fg text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                  <ArrowRight className="h-4 w-4" />
                 </div>
               </button>
 
@@ -236,34 +233,31 @@ export function ProjectForm() {
                 type="button"
                 onClick={() => { form.setValue("stage", "LAUNCHED"); setStep(1); }}
                 className={cn(
-                  "group relative flex flex-col items-start rounded-3xl border-2 p-7 text-left transition-all duration-300",
-                  "hover:scale-[1.02] hover:shadow-lg active:scale-[0.99]",
+                  "group relative flex flex-col items-start rounded-[12px] border-2 p-6 text-left transition-all duration-200 overflow-hidden",
                   watchStage === "LAUNCHED" || watchStage === "MVP" || watchStage === "GROWING"
-                    ? "border-primary bg-gradient-to-br from-primary/5 to-card shadow-lg shadow-primary/10"
-                    : "border-border bg-card hover:border-primary/40"
+                    ? "border-primary bg-primary/5 shadow-[8px_8px_0_rgba(var(--primary),0.3)] -translate-y-1 -translate-x-1"
+                    : "border-border/60 bg-card hover:border-primary/50 hover:shadow-[4px_4px_0_rgba(0,0,0,0.2)] hover:-translate-y-0.5 hover:-translate-x-0.5"
                 )}
               >
-                <div className="mb-5 rounded-2xl bg-primary/10 p-3.5 text-primary">
-                  <Rocket className="h-7 w-7" />
+                <div className="absolute top-0 right-0 p-3 opacity-10">
+                  <Rocket className="h-24 w-24" />
                 </div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">
-                    📊 Con datos reales
-                  </span>
+                <div className="mb-6 h-12 w-12 rounded-[8px] bg-primary/20 flex items-center justify-center text-primary border-2 border-primary/30">
+                  <Rocket className="h-6 w-6" />
                 </div>
-                <h3 className="text-xl font-display font-bold text-foreground">Ya está en Marcha</h3>
-                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                  Tengo usuarios, ingresos o al menos un MVP funcionando. Quiero medir KPIs y salud financiera.
+                <div className="inline-block border border-primary/30 bg-primary/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-primary mb-3">
+                  FASE OPERATIVA
+                </div>
+                <h3 className="text-xl font-display font-black uppercase text-foreground">EN MARCHA</h3>
+                <p className="mt-2 text-[12px] font-mono text-muted-foreground uppercase leading-relaxed h-16">
+                  &gt; MVP funcional o producto maduro. Generando tracción o ingresos.
                 </p>
-                <div className="mt-5 space-y-2">
-                  {["Score financiero automatizado", "Dashboard con métricas reales", "Análisis de retención y crecimiento"].map((f) => (
-                    <div key={f} className="flex items-center gap-2 text-xs text-primary font-medium">
-                      <span className="text-primary">✓</span> {f}
+                <div className="mt-4 space-y-2 w-full border-t border-dashed border-border/60 pt-4">
+                  {["Score financiero", "Dashboards reales", "Análisis de retención"].map((f) => (
+                    <div key={f} className="flex items-center gap-2 text-[10px] text-foreground font-mono uppercase">
+                      <Check className="h-3 w-3 text-primary" /> {f}
                     </div>
                   ))}
-                </div>
-                <div className="absolute top-5 right-5 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                  <ArrowRight className="h-4 w-4" />
                 </div>
               </button>
             </div>
@@ -273,45 +267,46 @@ export function ProjectForm() {
         {/* Step 1: Identidad */}
         {step === 1 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="text-center space-y-2 pb-2">
-              <p className="text-xs font-bold uppercase tracking-widest text-primary">Paso 2 de 4</p>
-              <h2 className="text-2xl md:text-3xl font-display font-bold">Tu SaaS, con nombre y categoría</h2>
-              <p className="text-muted-foreground text-sm">Cuéntanos en qué área opera tu proyecto.</p>
+            <div className="space-y-2 border-l-4 border-primary pl-4 mb-8">
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary font-mono">STEP 02/04</p>
+              <h2 className="text-2xl md:text-3xl font-display font-black uppercase tracking-tight text-foreground">REGISTRO DE ENTIDAD</h2>
+              <p className="text-muted-foreground text-[11px] font-mono uppercase">
+                &gt; Identificadores clave del proyecto.
+              </p>
             </div>
 
-            <div className={cn(
-              "rounded-3xl border p-6 space-y-5",
-              isPlanning ? "border-status-warning-border/60 bg-status-warning-bg/40" : "border-primary/15 bg-primary/5"
-            )}>
-              <div className="flex items-center gap-3 mb-2">
-                <div className={cn("rounded-xl p-2", isPlanning ? "bg-status-warning-bg" : "bg-primary/10")}>
-                  <Package className={cn("h-5 w-5", isPlanning ? "text-status-warning-fg" : "text-primary")} />
+            <div className="rounded-[12px] border-2 border-border/60 bg-card p-6 md:p-8 space-y-6 shadow-[4px_4px_0_rgba(0,0,0,0.1)]">
+              <div className="flex items-center gap-3 mb-6 border-b-2 border-border/60 pb-4">
+                <div className="h-8 w-8 bg-primary/20 border-2 border-primary/50 text-primary flex items-center justify-center rounded-[4px]">
+                  <Package className="h-4 w-4" />
                 </div>
-                <p className="text-sm font-bold text-foreground">Identidad del proyecto</p>
+                <p className="text-[13px] font-black uppercase tracking-widest font-mono">METADATA BÁSICA</p>
               </div>
 
-              <div>
-                <Label required>¿Cómo se llama tu SaaS?</Label>
-                <PremiumInput placeholder="Ej: StudyFlow, ConnectPE, TaskAI..." {...form.register("name")} />
-                <FieldError message={form.formState.errors.name?.message} />
-              </div>
+              <div className="space-y-5">
+                <div>
+                  <Label required>NOMBRE DEL SAAS</Label>
+                  <BrutalistInput placeholder="EJ: SYSTEM_CORE_AI" {...form.register("name")} />
+                  <FieldError message={form.formState.errors.name?.message} />
+                </div>
 
-              <div>
-                <Label required>¿En qué categoría cae?</Label>
-                <PremiumSelect {...form.register("category")}>
-                  {categories.map((item) => (
-                    <option key={item} value={item}>{CATEGORY_LABELS[item] ?? formatEnum(item)}</option>
-                  ))}
-                </PremiumSelect>
-              </div>
+                <div>
+                  <Label required>SECTOR (CATEGORÍA)</Label>
+                  <BrutalistSelect {...form.register("category")}>
+                    {categories.map((item) => (
+                      <option key={item} value={item}>{CATEGORY_LABELS[item] ?? formatEnum(item)}</option>
+                    ))}
+                  </BrutalistSelect>
+                </div>
 
-              <div>
-                <Label>Descripción en una oración</Label>
-                <PremiumTextarea
-                  rows={2}
-                  placeholder="Ej: Una plataforma que conecta proveedores con tiendas locales usando IA..."
-                  {...form.register("description")}
-                />
+                <div>
+                  <Label>SINOPSIS / ONE-LINER</Label>
+                  <BrutalistTextarea
+                    rows={2}
+                    placeholder="EJ: PLATAFORMA QUE CONECTA X CON Y MEDIANTE Z..."
+                    {...form.register("description")}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -319,216 +314,196 @@ export function ProjectForm() {
 
         {/* Step 2: Propuesta de valor */}
         {step === 2 && (
-          <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="text-center space-y-2 pb-2">
-              <p className="text-xs font-bold uppercase tracking-widest text-primary">Paso 3 de 4</p>
-              <h2 className="text-2xl md:text-3xl font-display font-bold">
-                {isPlanning ? "¿Qué problema resuelves?" : "Tu mercado y propuesta"}
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="space-y-2 border-l-4 border-primary pl-4 mb-8">
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary font-mono">STEP 03/04</p>
+              <h2 className="text-2xl md:text-3xl font-display font-black uppercase tracking-tight text-foreground">
+                VECTORES DE VALOR
               </h2>
-              <p className="text-muted-foreground text-sm max-w-md mx-auto">
-                {isPlanning
-                  ? "Esta información alimentará directamente el análisis de IA. Entre más detallado, mejor."
-                  : "Define claramente tu mercado para análisis más precisos."}
+              <p className="text-muted-foreground text-[11px] font-mono uppercase">
+                &gt; Inputs directos para el modelo de análisis.
               </p>
             </div>
 
-            <div className={cn(
-              "rounded-3xl border p-6 space-y-5",
-              isPlanning ? "border-status-warning-border/60 bg-status-warning-bg/40" : "border-primary/15 bg-primary/5"
-            )}>
-              <div className="flex items-center gap-3 mb-1">
-                <div className={cn("rounded-xl p-2", isPlanning ? "bg-status-warning-bg" : "bg-primary/10")}>
-                  <Users className={cn("h-5 w-5", isPlanning ? "text-status-warning-fg" : "text-primary")} />
+            <div className="rounded-[12px] border-2 border-border/60 bg-card p-6 md:p-8 space-y-6 shadow-[4px_4px_0_rgba(0,0,0,0.1)]">
+              <div className="flex items-center gap-3 mb-2 border-b-2 border-border/60 pb-4">
+                <div className="h-8 w-8 bg-primary/20 border-2 border-primary/50 text-primary flex items-center justify-center rounded-[4px]">
+                  <Users className="h-4 w-4" />
                 </div>
-                <p className="text-sm font-bold">Para quién es</p>
+                <p className="text-[13px] font-black uppercase tracking-widest font-mono">MERCADO OBJETIVO</p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <Label required>
-                    ¿Quién es tu usuario final?
-                    <Tooltip text="Ej: 'Estudiantes universitarios que trabajan y estudian'" />
+                    USUARIO FINAL
+                    <Tooltip text="QUIÉN USA LA PLATAFORMA. EJ: DESARROLLADORES" />
                   </Label>
-                  <PremiumInput placeholder="Ej: Dueños de bodegas en Lima" {...form.register("target_audience")} />
+                  <BrutalistInput placeholder="EJ: DEVS FRONTEND" {...form.register("target_audience")} />
                   <FieldError message={form.formState.errors.target_audience?.message} />
                 </div>
                 <div>
                   <Label required>
-                    ¿En qué mercado operas?
-                    <Tooltip text="Ej: 'Sector retail LATAM', 'Universidades de Perú'" />
+                    MERCADO / TAM
+                    <Tooltip text="DÓNDE OPERA. EJ: RETAIL LATAM" />
                   </Label>
-                  <PremiumInput placeholder="Ej: Comercio informal peruano" {...form.register("target_market")} />
+                  <BrutalistInput placeholder="EJ: SECTOR TECH LATAM" {...form.register("target_market")} />
                   <FieldError message={form.formState.errors.target_market?.message} />
                 </div>
               </div>
             </div>
 
-            <div className={cn(
-              "rounded-3xl border p-6 space-y-5",
-              isPlanning ? "border-accent/20 bg-accent/5" : "border-primary/15 bg-primary/5"
-            )}>
-              <div className="flex items-center gap-3 mb-1">
-                <div className={cn("rounded-xl p-2", isPlanning ? "bg-accent/10" : "bg-primary/10")}>
-                  <Brain className={cn("h-5 w-5", isPlanning ? "text-foreground" : "text-primary")} />
+            <div className="rounded-[12px] border-2 border-border/60 bg-card p-6 md:p-8 space-y-6 shadow-[4px_4px_0_rgba(0,0,0,0.1)]">
+              <div className="flex items-center gap-3 mb-2 border-b-2 border-border/60 pb-4">
+                <div className="h-8 w-8 bg-primary/20 border-2 border-primary/50 text-primary flex items-center justify-center rounded-[4px]">
+                  <Brain className="h-4 w-4" />
                 </div>
-                <div>
-                  <p className="text-sm font-bold">Tu propuesta de valor</p>
-                  {isPlanning && <p className="text-xs text-accent-foreground font-medium">⚡ La IA usará esto para evaluarte</p>}
+                <div className="flex-1">
+                  <p className="text-[13px] font-black uppercase tracking-widest font-mono">NÚCLEO DE SOLUCIÓN</p>
                 </div>
               </div>
-              
+
               {isPlanning && (
-                <div className="rounded-xl border border-muted-foreground/20 bg-card p-3 mb-4">
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    <span className="font-bold">Flexibilidad:</span> Si aún no tienes clara alguna de las respuestas, <span className="font-semibold text-foreground">puedes dejar el campo vacío</span>. Sin embargo, ten en cuenta que la IA no podrá evaluar esa dimensión y <span className="text-status-warning-text font-medium">el análisis de viabilidad será mucho menos preciso</span>.
+                <div className="rounded-[8px] border-2 border-primary/50 bg-primary/10 p-4 mb-4">
+                  <p className="text-[11px] font-mono uppercase text-foreground leading-relaxed">
+                    &gt; <span className="font-black text-primary">NOTA DE SISTEMA:</span> PUEDES OMITIR CAMPOS SI NO TIENES DATOS, PERO REDUCIRÁ LA PRECISIÓN DEL MOTOR DE IA.
                   </p>
                 </div>
               )}
 
-              <div>
-                <Label required>
-                  ¿Qué problema resuelves?
-                  <Tooltip text="Describe el dolor real que sufre tu usuario. Ej: 'No pueden encontrar proveedores confiables'" />
-                </Label>
-                <PremiumTextarea
-                  rows={3}
-                  placeholder={isPlanning
-                    ? "Ej: Los dueños de tiendas pierden tiempo buscando proveedores en grupos de WhatsApp..."
-                    : "Ej: Las pymes gastan hasta 4 horas semanales gestionando inventarios manualmente..."}
-                  {...form.register("main_problem")}
-                />
-                <FieldError message={form.formState.errors.main_problem?.message} />
-              </div>
+              <div className="space-y-6">
+                <div>
+                  <Label required>
+                    PROBLEMA DETECTADO
+                  </Label>
+                  <BrutalistTextarea
+                    rows={3}
+                    placeholder="EJ: PÉRDIDA DE TIEMPO EN TAREAS MANUALES..."
+                    {...form.register("main_problem")}
+                  />
+                  <FieldError message={form.formState.errors.main_problem?.message} />
+                </div>
 
-              <div>
-                <Label required>
-                  ¿Cuál es tu solución?
-                  <Tooltip text="Describe en qué se diferencia tu producto de lo que ya existe" />
-                </Label>
-                <PremiumTextarea
-                  rows={3}
-                  placeholder={isPlanning
-                    ? "Ej: Una red social B2B donde proveedores publican catálogos y tiendas hacen pedidos directos..."
-                    : "Ej: Sistema de inventario con alertas automáticas e integración con Mercado Libre..."}
-                  {...form.register("value_proposition")}
-                />
-                <FieldError message={form.formState.errors.value_proposition?.message} />
-              </div>
+                <div>
+                  <Label required>
+                    PROPUESTA DE SOLUCIÓN
+                  </Label>
+                  <BrutalistTextarea
+                    rows={3}
+                    placeholder="EJ: SISTEMA AUTOMATIZADO CON IA PARA REDUCIR TIEMPOS..."
+                    {...form.register("value_proposition")}
+                  />
+                  <FieldError message={form.formState.errors.value_proposition?.message} />
+                </div>
 
-              {isPlanning && (
-                <>
-                  <div>
-                    <Label>
-                      ¿Quiénes son tus competidores?
-                      <Tooltip text="Ej: Startups similares, Excel, WhatsApp, o alternativas gratuitas." />
-                    </Label>
-                    <PremiumTextarea
-                      rows={2}
-                      placeholder="Ej: Actualmente usan Excel y grupos de WhatsApp..."
-                      {...form.register("competitors")}
-                    />
-                    <FieldError message={form.formState.errors.competitors?.message} />
+                {isPlanning && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t-2 border-border/60">
+                    <div>
+                      <Label>
+                        COMPETENCIA (WIP)
+                      </Label>
+                      <BrutalistTextarea
+                        rows={3}
+                        placeholder="EJ: EXCEL, SISTEMAS LEGACY..."
+                        {...form.register("competitors")}
+                      />
+                      <FieldError message={form.formState.errors.competitors?.message} />
+                    </div>
+                    <div>
+                      <Label>
+                        ESTRATEGIA GTM
+                      </Label>
+                      <BrutalistTextarea
+                        rows={3}
+                        placeholder="EJ: OUTBOUND SALES, ADS..."
+                        {...form.register("acquisition_strategy")}
+                      />
+                      <FieldError message={form.formState.errors.acquisition_strategy?.message} />
+                    </div>
                   </div>
-                  <div>
-                    <Label>
-                      Estrategia de adquisición (Go-to-Market)
-                      <Tooltip text="¿Cómo piensas conseguir a tus primeros 10-100 clientes reales?" />
-                    </Label>
-                    <PremiumTextarea
-                      rows={2}
-                      placeholder="Ej: Contactaré bodegas por Facebook y haré visitas presenciales..."
-                      {...form.register("acquisition_strategy")}
-                    />
-                    <FieldError message={form.formState.errors.acquisition_strategy?.message} />
-                  </div>
-                </>
-              )}
+                )}
+              </div>
             </div>
           </div>
         )}
 
         {/* Step 3: Modelo de negocio */}
         {step === 3 && (
-          <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="text-center space-y-2 pb-2">
-              <p className="text-xs font-bold uppercase tracking-widest text-primary">Paso 4 de 4</p>
-              <h2 className="text-2xl md:text-3xl font-display font-bold">Modelo de ingresos</h2>
-              <p className="text-muted-foreground text-sm">
-                {isPlanning ? "Define cómo planeas monetizar. Puedes cambiarlo después." : "¿Cómo gana dinero tu SaaS?"}
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="space-y-2 border-l-4 border-primary pl-4 mb-8">
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary font-mono">STEP 04/04</p>
+              <h2 className="text-2xl md:text-3xl font-display font-black uppercase tracking-tight text-foreground">PARAMETRIZACIÓN FINANCIERA</h2>
+              <p className="text-muted-foreground text-[11px] font-mono uppercase">
+                &gt; Vías de monetización.
               </p>
             </div>
 
-            <div className={cn(
-              "rounded-3xl border p-6 space-y-5",
-              isPlanning ? "border-status-warning-border/60 bg-status-warning-bg/40" : "border-primary/15 bg-primary/5"
-            )}>
-              <div className="flex items-center gap-3 mb-1">
-                <div className={cn("rounded-xl p-2", isPlanning ? "bg-status-warning-bg" : "bg-primary/10")}>
-                  <DollarSign className={cn("h-5 w-5", isPlanning ? "text-status-warning-fg" : "text-primary")} />
+            <div className="rounded-[12px] border-2 border-border/60 bg-card p-6 md:p-8 space-y-6 shadow-[4px_4px_0_rgba(0,0,0,0.1)]">
+              <div className="flex items-center gap-3 mb-2 border-b-2 border-border/60 pb-4">
+                <div className="h-8 w-8 bg-primary/20 border-2 border-primary/50 text-primary flex items-center justify-center rounded-[4px]">
+                  <DollarSign className="h-4 w-4" />
                 </div>
-                <p className="text-sm font-bold">¿Cómo cobras?</p>
+                <p className="text-[13px] font-black uppercase tracking-widest font-mono">ESTRUCTURA DE INGRESOS</p>
               </div>
 
-              <div>
-                <Label>Modelo de ingresos</Label>
-                <PremiumSelect {...form.register("business_model")}>
-                  {businessModels.map((item) => (
-                    <option key={item} value={item}>{BM_LABELS[item] ?? formatEnum(item)}</option>
-                  ))}
-                </PremiumSelect>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-6">
                 <div>
-                  <Label>
-                    {priceLabel}
-                    <Tooltip text="Si aún no tienes precio fijo, pon tu estimación más realista" />
-                  </Label>
-                  <PremiumInput
-                    type="number" step="0.01" min="0"
-                    placeholder={isPlanning ? "0.00 (estimado)" : "0.00"}
-                    {...form.register("current_price", { valueAsNumber: true })}
-                  />
-                  <FieldError message={form.formState.errors.current_price?.message} />
+                  <Label>ARQUITECTURA DE NEGOCIO</Label>
+                  <BrutalistSelect {...form.register("business_model")}>
+                    {businessModels.map((item) => (
+                      <option key={item} value={item}>{BM_LABELS[item] ?? formatEnum(item)}</option>
+                    ))}
+                  </BrutalistSelect>
                 </div>
-                <div>
-                  <Label>Moneda</Label>
-                  <PremiumSelect {...form.register("currency")}>
-                    <option value="USD">🇺🇸 USD ($)</option>
-                    <option value="PEN">🇵🇪 PEN (S/)</option>
-                    <option value="MXN">🇲🇽 MXN ($)</option>
-                    <option value="COP">🇨🇴 COP ($)</option>
-                    <option value="EUR">🇪🇺 EUR (€)</option>
-                  </PremiumSelect>
-                </div>
-              </div>
 
-              {isPlanning && (
-                <div className="rounded-2xl border border-status-warning-border/60 bg-status-warning-bg p-4 flex gap-3">
-                  <Sparkles className="h-5 w-5 text-status-warning-fg shrink-0 mt-0.5" />
+                <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <p className="text-sm font-bold text-status-warning-text">¿No sabes el precio exacto?</p>
-                    <p className="text-xs text-status-warning-text mt-0.5 leading-relaxed">
-                      En planeación, el precio es una estimación. Puedes dejarlo en 0, pero la IA <span className="font-bold">no podrá evaluar la viabilidad de tu estrategia de precios</span> para el mercado al que apuntas.
-                    </p>
+                    <Label>{priceLabel}</Label>
+                    <BrutalistInput
+                      type="number" step="0.01" min="0"
+                      placeholder={isPlanning ? "0.00 (EST)" : "0.00"}
+                      {...form.register("current_price", { valueAsNumber: true })}
+                    />
+                    <FieldError message={form.formState.errors.current_price?.message} />
+                  </div>
+                  <div>
+                    <Label>DIVISA</Label>
+                    <BrutalistSelect {...form.register("currency")}>
+                      <option value="USD">USD</option>
+                      <option value="PEN">PEN</option>
+                      <option value="MXN">MXN</option>
+                      <option value="COP">COP</option>
+                      <option value="EUR">EUR</option>
+                    </BrutalistSelect>
                   </div>
                 </div>
-              )}
+
+                {isPlanning && (
+                  <div className="rounded-[8px] border-2 border-primary/50 bg-primary/10 p-4">
+                    <p className="text-[11px] font-mono uppercase text-foreground leading-relaxed">
+                      &gt; SI DEJAS EL PRECIO EN 0, LA IA NO EVALUARÁ LA VIABILIDAD FINANCIERA EN ESTA ETAPA.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Summary preview before submit */}
-            <div className="rounded-3xl border border-border bg-card p-5 space-y-3">
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Resumen de tu proyecto</p>
-              <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="rounded-[12px] border-2 border-border/60 bg-card p-6 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                <TerminalSquare className="h-20 w-20" />
+              </div>
+              <p className="text-[11px] font-black uppercase tracking-widest text-primary font-mono mb-4">/SYS/SUMMARY</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {[
-                  { k: "Nombre", v: form.watch("name") || "—" },
-                  { k: "Fase", v: isPlanning ? "Planeación" : "En marcha" },
-                  { k: "Categoría", v: CATEGORY_LABELS[form.watch("category")]?.split("—")[0]?.trim() || "—" },
-                  { k: "Modelo", v: BM_LABELS[form.watch("business_model")]?.split("—")[0]?.trim() || "—" },
+                  { k: "NÚCLEO", v: form.watch("name") || "N/A" },
+                  { k: "FASE", v: isPlanning ? "DISEÑO" : "PROD" },
+                  { k: "TIPO", v: form.watch("category") || "N/A" },
+                  { k: "MODELO", v: form.watch("business_model") || "N/A" },
                 ].map(({ k, v }) => (
-                  <div key={k} className="rounded-xl bg-muted/50 px-3 py-2">
-                    <p className="text-xs text-muted-foreground">{k}</p>
-                    <p className="font-semibold text-foreground truncate">{v}</p>
+                  <div key={k} className="border-l-2 border-primary/30 pl-3">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground font-mono">{k}</p>
+                    <p className="text-[11px] font-mono font-bold text-foreground truncate mt-1">{v}</p>
                   </div>
                 ))}
               </div>
@@ -537,14 +512,14 @@ export function ProjectForm() {
         )}
 
         {/* Navigation buttons */}
-        <div className="flex items-center justify-between pt-8 pb-4">
+        <div className="flex items-center justify-between pt-10 pb-4">
           {step > 0 ? (
             <button
               type="button"
               onClick={() => setStep((s) => s - 1)}
-              className="flex items-center gap-2 rounded-2xl border border-border bg-card px-6 py-3.5 text-sm font-bold text-foreground hover:bg-muted transition-colors"
+              className="flex items-center gap-2 rounded-[8px] border-2 border-border/60 bg-card px-6 py-3 text-[12px] font-black uppercase tracking-widest text-foreground hover:bg-muted transition-all active:translate-y-0.5 shadow-[4px_4px_0_rgba(0,0,0,0.1)] hover:shadow-[2px_2px_0_rgba(0,0,0,0.1)] font-mono"
             >
-              ← Anterior
+              &lt; VOLVER
             </button>
           ) : <div />}
 
@@ -553,28 +528,27 @@ export function ProjectForm() {
               type="button"
               onClick={step === 0 ? () => setStep(1) : nextStep}
               className={cn(
-                "flex items-center gap-2 rounded-2xl px-6 py-3.5 text-sm font-bold text-white transition-all hover:scale-105 active:scale-95",
-                isPlanning
-                  ? "bg-status-warning-fg hover:opacity-90 shadow-lg"
-                  : "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
+                "flex items-center gap-2 rounded-[8px] border-2 border-primary bg-primary px-8 py-3 text-[12px] font-black uppercase tracking-widest text-primary-foreground transition-all hover:bg-primary/90 active:translate-y-0.5 shadow-[4px_4px_0_rgba(var(--primary),0.3)] hover:shadow-[2px_2px_0_rgba(var(--primary),0.3)] font-mono",
               )}
             >
-              Siguiente <ArrowRight className="h-4 w-4" />
+              AVANZAR &gt;
             </button>
           ) : (
             <button
               type="submit"
               disabled={mutation.isPending}
               className={cn(
-                "flex items-center gap-2 rounded-2xl px-8 py-4 text-base font-bold text-white transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg",
-                isPlanning
-                  ? "bg-gradient-to-r from-status-warning-fg to-primary shadow-primary/20"
-                  : "bg-primary shadow-primary/25"
+                "group relative flex items-center gap-2 rounded-[8px] border-2 border-primary bg-primary px-10 py-4 text-[13px] font-black uppercase tracking-widest text-primary-foreground transition-all hover:bg-primary/90 active:translate-y-0.5 shadow-[6px_6px_0_rgba(var(--primary),0.4)] hover:shadow-[3px_3px_0_rgba(var(--primary),0.4)] disabled:opacity-50 disabled:cursor-not-allowed font-mono overflow-hidden",
               )}
             >
-              {mutation.isPending
-                ? "Guardando..."
-                : <><Sparkles className="h-5 w-5" /> {isPlanning ? "Crear proyecto y analizar" : "Crear proyecto"}</>}
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+              {mutation.isPending ? (
+                <span className="relative z-10 flex items-center gap-2">EJECUTANDO...</span>
+              ) : (
+                <span className="relative z-10 flex items-center gap-2">
+                  <TerminalSquare className="h-4 w-4" /> INICIALIZAR SAAS
+                </span>
+              )}
             </button>
           )}
         </div>
