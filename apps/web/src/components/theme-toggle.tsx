@@ -5,7 +5,25 @@ import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 
 export function ThemeToggle() {
+  const [mounted, setMounted] = React.useState(false);
   const { resolvedTheme, setTheme } = useTheme();
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <button
+        className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-95 opacity-50 cursor-default"
+        aria-label="Cargando tema"
+        disabled
+      >
+        <span className="h-4 w-4" />
+      </button>
+    );
+  }
+
   const isDark = resolvedTheme === "dark";
 
   return (

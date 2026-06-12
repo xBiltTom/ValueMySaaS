@@ -1,16 +1,26 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { FileSearch, TerminalSquare, ArrowRight, Trash2 } from "lucide-react";
-import { formatDateTime, formatEnum } from "@/lib/formatters";
+import { TerminalSquare, ArrowRight, Trash2 } from "lucide-react";
+import { formatDateTime } from "@/lib/formatters";
 import { SaasReportListResponse } from "@/features/reports/types";
-import { reportTypeLabel } from "@/features/reports/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteReport } from "@/features/reports/api";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export function ReportList({ projectId, reports }: { projectId: string; reports: SaasReportListResponse }) {
   const queryClient = useQueryClient();
+  const [reportToDelete, setReportToDelete] = useState<string | null>(null);
 
   const deleteMutation = useMutation({
     mutationFn: (reportId: string) => deleteReport(projectId, reportId),
@@ -76,11 +86,9 @@ export function ReportList({ projectId, reports }: { projectId: string; reports:
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (confirm("¿Estás seguro de eliminar este reporte?")) {
-                  deleteMutation.mutate(report.id);
-                }
+                setReportToDelete(report.id);
               }}
-              disabled={deleteMutation.isPending}
+              disabled={deleteMutation.isPending && reportToDelete === report.id}
               className="absolute top-3 right-3 z-20 p-2 rounded-lg bg-background/80 border border-border/40 text-muted-foreground hover:text-status-danger-fg hover:border-status-danger-border hover:bg-status-danger-bg/20 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 backdrop-blur-md"
               title="Eliminar reporte"
             >
@@ -89,6 +97,34 @@ export function ReportList({ projectId, reports }: { projectId: string; reports:
           </div>
         ))}
       </div>
+
+      <Dialog open={!!reportToDelete} onOpenChange={(open) => !open && setReportToDelete(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="font-display uppercase tracking-tight">¿Eliminar este reporte?</DialogTitle>
+            <DialogDescription className="font-mono text-xs uppercase leading-relaxed mt-2">
+              Esta acción no se puede deshacer. El reporte será eliminado permanentemente del proyecto.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-6 flex gap-2 sm:gap-0">
+            <Button variant="secondary" onClick={() => setReportToDelete(null)}>
+              Cancelar
+            </Button>
+            <Button 
+              variant="danger" 
+              onClick={() => {
+                if (reportToDelete) {
+                  deleteMutation.mutate(reportToDelete);
+                  setReportToDelete(null);
+                }
+              }}
+              className="bg-status-danger-bg border border-status-danger-border text-status-danger-fg hover:bg-status-danger-bg/80"
+            >
+              Eliminar Definitivamente
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

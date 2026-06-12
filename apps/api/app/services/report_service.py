@@ -50,7 +50,7 @@ class ReportService:
         return await self._create_report(
             project_id=project_id,
             owner_id=owner_id,
-            title=f"Reporte ejecutivo de {project.name}",
+            title=f"Análisis General de {project.name}",
             report_type=ReportType.EXECUTIVE,
             content=self._executive_content(project=project, dashboard=dashboard, latest_score=latest_score, generated_at=generated_at),
             generated_at=generated_at,
@@ -180,16 +180,14 @@ class ReportService:
         }
 
     def _executive_content(self, *, project, dashboard, latest_score, generated_at: datetime) -> dict:
-        is_planning = project.stage.value in ["IDEA", "PLANNING"]
-        
-        if is_planning:
+        if project.stage == ProjectStage.PLANNING:
             return {
                 "kind": "EXECUTIVE",
                 "generated_at": generated_at.isoformat(),
                 "phase": "PLANNING",
                 "summary": {
-                    "title": "Análisis Ejecutivo de Viabilidad",
-                    "message": "Evaluación detallada de la idea de negocio y plan de ejecución.",
+                    "title": "Análisis General",
+                    "message": "Evaluación del modelo de negocio, encaje de mercado y viabilidad estratégica.",
                 },
                 "market_fit": {
                     "audience": project.target_audience,
@@ -216,7 +214,7 @@ class ReportService:
             "generated_at": generated_at.isoformat(),
             "phase": "IMPLEMENTED",
             "summary": {
-                "title": "Reporte Ejecutivo y Análisis de Sostenibilidad",
+                "title": "Análisis General del Proyecto",
                 "message": self._summary_message(latest_score),
             },
             "kpis": dashboard_data.get("metric_cards", []),
