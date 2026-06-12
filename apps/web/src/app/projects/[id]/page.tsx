@@ -125,43 +125,44 @@ export default function ProjectDashboardPage() {
           {/* No snapshot yet */}
           {!dashboard.latest_snapshot && (
             <div className={cn(
-              "rounded-3xl border-2 border-dashed p-8 text-center space-y-4",
+              "relative overflow-hidden rounded-[24px] border p-10 text-center space-y-5",
               isPlanning
-                ? "border-status-warning-border/60 bg-status-warning-bg/50"
-                : "border-primary/20 bg-primary/5"
+                ? "border-status-warning-fg/30 bg-status-warning-bg/10"
+                : "border-primary/30 bg-primary/5"
             )}>
+              <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:30px_30px] pointer-events-none" />
               <div className={cn(
-                "mx-auto inline-flex rounded-2xl p-4",
-                isPlanning ? "bg-status-warning-bg" : "bg-primary/10"
+                "mx-auto inline-flex rounded-[16px] p-5 shadow-inner border",
+                isPlanning ? "bg-status-warning-bg border-status-warning-fg/20" : "bg-card border-primary/20"
               )}>
                 {isPlanning
-                  ? <Sparkles className="h-8 w-8 text-status-warning-fg" />
-                  : <Database className="h-8 w-8 text-primary" />
+                  ? <Sparkles className="h-10 w-10 text-status-warning-fg" />
+                  : <Database className="h-10 w-10 text-primary animate-pulse" />
                 }
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-foreground">
+              <div className="relative z-10">
+                <h3 className="text-xl font-black font-mono tracking-widest text-foreground uppercase">
                   {isPlanning
-                    ? "Aún no hay datos registrados"
-                    : "Sin snapshots de métricas"}
+                    ? "SYS_ERR: Datos No Registrados"
+                    : "SYS_ERR: Snapshot Missing"}
                 </h3>
-                <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
+                <p className="text-xs font-mono text-muted-foreground mt-3 max-w-md mx-auto uppercase leading-relaxed">
                   {isPlanning
-                    ? "Registra tus primeras estimaciones (caja disponible, costos proyectados) para comenzar el análisis de viabilidad."
-                    : "Registra un corte de métricas para activar cálculos, score y el dashboard histórico."}
+                    ? "> Registra tus primeras estimaciones (caja disponible, costos proyectados) para inicializar el análisis de viabilidad."
+                    : "> Registra un corte de métricas para activar cálculos, scores y compilar el historial completo del sistema."}
                 </p>
               </div>
               <Link
                 href={`/projects/${projectId}/metrics`}
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold transition-all hover:scale-105",
+                  "relative z-10 inline-flex items-center gap-2 rounded-[12px] px-6 py-4 text-[11px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95",
                   isPlanning
-                    ? "bg-status-warning-fg text-primary-foreground hover:opacity-90"
-                    : "bg-primary text-white hover:bg-primary/90"
+                    ? "bg-status-warning-fg text-background shadow-[0_0_20px_rgba(245,158,11,0.2)]"
+                    : "bg-primary text-primary-foreground shadow-[0_0_20px_rgba(var(--primary),0.2)]"
                 )}
               >
-                <PlusCircle className="h-4 w-4" />
-                {isPlanning ? "Registrar estimaciones" : "Registrar métricas"}
+                <Terminal className="h-4 w-4" />
+                {isPlanning ? "Ingresar Estimaciones" : "Inject_Data"}
               </Link>
             </div>
           )}
@@ -237,45 +238,47 @@ export default function ProjectDashboardPage() {
 
           {/* Bottom CTA strip */}
           <div className={cn(
-            "rounded-3xl border p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between",
-            isPlanning
-              ? "border-status-warning-border/60 bg-gradient-to-r from-status-warning-bg to-card"
-              : "border-primary/15 bg-gradient-to-r from-primary/5 to-card"
+            "relative overflow-hidden rounded-[20px] border border-border/60 bg-card/40 backdrop-blur-xl p-6 md:p-8 flex flex-col lg:flex-row lg:items-center gap-6 justify-between shadow-sm",
+            isPlanning ? "border-t-4 border-t-status-warning-fg" : "border-t-4 border-t-primary"
           )}>
-            <div className="flex items-center gap-4">
+            {/* Background pattern */}
+            <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '16px 16px' }}></div>
+            
+            <div className="relative z-10 flex items-start gap-4">
               <div className={cn(
-                "rounded-2xl p-3 shrink-0",
-                isPlanning ? "bg-status-warning-bg" : "bg-primary/10"
+                "flex h-12 w-12 items-center justify-center rounded-[12px] shadow-inner shrink-0",
+                isPlanning ? "bg-status-warning-bg border border-status-warning-fg/30" : "bg-primary/10 border border-primary/30"
               )}>
                 {isPlanning
-                  ? <Sparkles className="h-5 w-5 text-status-warning-fg" />
-                  : <TrendingUp className="h-5 w-5 text-primary" />
+                  ? <Sparkles className="h-6 w-6 text-status-warning-fg" />
+                  : <TrendingUp className="h-6 w-6 text-primary" />
                 }
               </div>
               <div>
-                <p className="font-bold text-foreground">
+                <p className="text-sm font-black uppercase tracking-wider text-foreground">
                   {isPlanning ? "Valida tu idea antes de invertir" : "¿Qué hacer ahora?"}
                 </p>
-                <p className="text-sm text-muted-foreground mt-0.5">
+                <p className="text-[11px] font-mono text-muted-foreground mt-1.5 uppercase leading-relaxed max-w-xl">
                   {isPlanning
-                    ? "Usa el análisis IA para evaluar tu propuesta de valor, modelo de negocio y estrategia de precios."
-                    : "Revisa tu diagnóstico, genera un reporte o conversa con el tutor inteligente."}
+                    ? "> Usa el análisis IA para evaluar tu propuesta de valor, modelo de negocio y estrategia de precios."
+                    : "> Revisa tu diagnóstico, genera un reporte o conversa con el tutor inteligente."}
                 </p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2 shrink-0">
+            
+            <div className="relative z-10 flex flex-col sm:flex-row gap-3 shrink-0 lg:w-auto w-full">
               {isPlanning ? (
                 <>
                   <button
                     onClick={handleAiAnalysisClick}
-                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground hover:opacity-90 transition-colors"
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-[12px] bg-status-warning-fg px-5 py-3 text-[11px] font-black uppercase tracking-widest text-background shadow-[0_0_20px_rgba(245,158,11,0.2)] hover:scale-[1.02] active:scale-95 transition-all"
                   >
                     <BrainCircuit className="h-4 w-4" />
                     {latestAnalysisId ? "Ver Análisis IA" : "Análisis IA"}
                   </button>
                   <Link
                     href={`/projects/${projectId}/chat`}
-                    className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-bold hover:bg-muted transition-colors"
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-[12px] border border-border/40 bg-background/50 px-5 py-3 text-[11px] font-black uppercase tracking-widest text-foreground hover:bg-card transition-colors"
                   >
                     <MessageSquareText className="h-4 w-4" />
                     Tutor IA
@@ -285,14 +288,14 @@ export default function ProjectDashboardPage() {
                 <>
                   <Link
                     href={`/projects/${projectId}/score`}
-                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground hover:opacity-90 transition-colors"
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-[12px] bg-primary px-5 py-3 text-[11px] font-black uppercase tracking-widest text-primary-foreground shadow-[0_0_20px_rgba(var(--primary),0.2)] hover:scale-[1.02] active:scale-95 transition-all"
                   >
                     <TrendingUp className="h-4 w-4" />
                     Ver diagnóstico
                   </Link>
                   <Link
                     href={`/projects/${projectId}/chat`}
-                    className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-bold hover:bg-muted transition-colors"
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-[12px] border border-border/40 bg-background/50 px-5 py-3 text-[11px] font-black uppercase tracking-widest text-foreground hover:bg-card transition-colors"
                   >
                     <MessageSquareText className="h-4 w-4" />
                     Chat con el SaaS

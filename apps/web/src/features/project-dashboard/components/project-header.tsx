@@ -5,7 +5,7 @@ import { useState } from "react";
 import {
   Rocket, BarChart3, BrainCircuit, MessageSquareText,
   FileText, PlusCircle, Sparkles, ArrowRight, ChevronRight,
-  Zap, TrendingUp, Shield, Target, CheckCircle2, Clock, Trash2
+  Zap, TrendingUp, Shield, Target, CheckCircle2, Clock, Trash2, Terminal
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -61,98 +61,91 @@ export function ProjectHeader({
   const [showAiModal, setShowAiModal] = useState(false);
 
   const planningActions = [
-    { type: 'button', onClick: () => setShowAiModal(true), icon: BrainCircuit, label: "Análisis IA", color: "text-accent-foreground", bg: "bg-accent/10 hover:bg-accent/20 border-accent/30" },
-    { type: 'link', href: `/projects/${project.id}/score`, icon: BarChart3, label: "Ver Score", color: "text-primary", bg: "bg-primary/5 hover:bg-primary/10 border-primary/20" },
-    { type: 'link', href: `/projects/${project.id}/chat`, icon: MessageSquareText, label: "Tutor IA", color: "text-muted-foreground", bg: "bg-muted hover:bg-muted/80 border-border" },
-    { type: 'link', href: `/projects/${project.id}/reports`, icon: FileText, label: "Reportes", color: "text-status-success-text", bg: "bg-status-success-bg hover:bg-status-success-bg/80 border-status-success-border" },
+    { type: 'button', onClick: () => setShowAiModal(true), icon: BrainCircuit, title: "Diagnóstico IA", desc: "Evalúa viabilidad", color: "text-accent" },
+    { type: 'link', href: `/projects/${project.id}/score`, icon: BarChart3, title: "Ver Score", desc: "Resultados del test", color: "text-primary" },
+    { type: 'link', href: `/projects/${project.id}/chat`, icon: MessageSquareText, title: "Tutor IA", desc: "Asesoría experta", color: "text-muted-foreground" },
+    { type: 'link', href: `/projects/${project.id}/reports`, icon: FileText, title: "Reportes", desc: "Exporta datos", color: "text-status-success-fg" },
   ];
 
   const launchedActions = [
-    { type: 'link', href: `/projects/${project.id}/metrics`, icon: PlusCircle, label: "Métricas", color: "text-primary", bg: "bg-primary/5 hover:bg-primary/10 border-primary/20" },
-    { type: 'link', href: `/projects/${project.id}/score`, icon: BarChart3, label: "Score", color: "text-primary", bg: "bg-primary/5 hover:bg-primary/10 border-primary/20" },
-    { type: 'button', onClick: () => setShowAiModal(true), icon: BrainCircuit, label: "Análisis IA", color: "text-accent-foreground", bg: "bg-accent/10 hover:bg-accent/20 border-accent/30" },
-    { type: 'link', href: `/projects/${project.id}/reports`, icon: FileText, label: "Reportes", color: "text-status-success-text", bg: "bg-status-success-bg hover:bg-status-success-bg/80 border-status-success-border" },
-    { type: 'link', href: `/projects/${project.id}/chat`, icon: MessageSquareText, label: "Chat", color: "text-muted-foreground", bg: "bg-muted hover:bg-muted/80 border-border" },
+    { type: 'link', href: `/projects/${project.id}/metrics`, icon: PlusCircle, title: "Data Input", desc: "Ingresa métricas", color: "text-primary" },
+    { type: 'link', href: `/projects/${project.id}/score`, icon: BarChart3, title: "Heurística", desc: "Score del sistema", color: "text-primary" },
+    { type: 'button', onClick: () => setShowAiModal(true), icon: BrainCircuit, title: "Análisis IA", desc: "Revisión profunda", color: "text-accent" },
+    { type: 'link', href: `/projects/${project.id}/reports`, icon: FileText, title: "Reportes", desc: "Informes listos", color: "text-status-success-fg" },
+    { type: 'link', href: `/projects/${project.id}/chat`, icon: MessageSquareText, title: "Chat", desc: "Habla con tu SaaS", color: "text-muted-foreground" },
   ];
 
   const actions = isPlanning ? planningActions : launchedActions;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Hero header card */}
       <div className={cn(
-        "relative overflow-hidden rounded-3xl border p-6 md:p-8",
-        isPlanning
-          ? "border-status-warning-border/60 bg-gradient-to-br from-status-warning-bg via-card to-card"
-          : "border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card"
+        "relative overflow-hidden rounded-[24px] border border-border/60 bg-card/40 backdrop-blur-xl p-6 md:p-8 shadow-2xl transition-all",
+        isPlanning ? "border-t-4 border-t-status-warning-fg" : "border-t-4 border-t-primary"
       )}>
-        {/* Ambient glow */}
-        <div className={cn(
-          "pointer-events-none absolute inset-0 opacity-40",
-          isPlanning
-            ? "bg-[radial-gradient(ellipse_at_top_right,var(--status-warning-fg)/20,transparent_60%)]"
-            : "bg-[radial-gradient(ellipse_at_top_right,var(--accent)/15,transparent_60%)]"
-        )} />
+        {/* Background circuit lines effect */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
 
-        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between z-10">
           {/* Left: project info */}
           <div className="min-w-0 flex-1">
             {/* Phase badge strip */}
             <div className="flex flex-wrap items-center gap-2 mb-4">
               <span className={cn(
-                "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold tracking-wide border",
+                "inline-flex items-center gap-1.5 rounded-[8px] px-2.5 py-1 text-[10px] font-black uppercase tracking-widest border",
                 isPlanning
-                  ? "bg-status-warning-bg text-status-warning-text border-status-warning-border"
-                  : "bg-primary/10 text-primary border-primary/20"
+                  ? "bg-status-warning-bg/50 text-status-warning-fg border-status-warning-fg/30 shadow-[0_0_10px_rgba(245,158,11,0.2)]"
+                  : "bg-primary/10 text-primary border-primary/30 shadow-[0_0_10px_rgba(var(--primary),0.2)]"
               )}>
                 {isPlanning
-                  ? <><Clock className="h-3 w-3" /> {STAGE_LABELS[project.stage] ?? project.stage}</>
-                  : <><Zap className="h-3 w-3" /> {STAGE_LABELS[project.stage] ?? project.stage}</>
+                  ? <><Clock className="h-3 w-3" /> SYS_STATUS: {STAGE_LABELS[project.stage] ?? project.stage}</>
+                  : <><Zap className="h-3 w-3" /> SYS_STATUS: {STAGE_LABELS[project.stage] ?? project.stage}</>
                 }
               </span>
               {project.category && (
-                <span className="inline-flex items-center rounded-full bg-card/80 border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
+                <span className="inline-flex items-center rounded-[8px] bg-background/50 border border-border/40 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                   {CATEGORY_LABELS[project.category] ?? project.category}
                 </span>
               )}
               {project.business_model && (
-                <span className="inline-flex items-center rounded-full bg-card/80 border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
+                <span className="inline-flex items-center rounded-[8px] bg-background/50 border border-border/40 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                   {formatEnum(project.business_model)}
                 </span>
               )}
             </div>
             
             <div className="flex items-center gap-4">
-              <h1 className="font-display text-3xl font-bold text-foreground md:text-4xl leading-tight">
+              <h1 className="font-display text-4xl font-black text-foreground md:text-5xl tracking-tight uppercase leading-none">
                 {project.name}
               </h1>
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="rounded-full p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                title="Eliminar proyecto"
+                className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-card/50 text-muted-foreground hover:bg-destructive hover:text-destructive-foreground hover:shadow-[0_0_15px_rgba(var(--destructive),0.3)] border border-border/40 transition-all hover:scale-110"
+                title="PURGAR SISTEMA"
               >
-                <Trash2 className="h-5 w-5" />
+                <Trash2 className="h-4 w-4" />
               </button>
             </div>
 
             {project.description && (
-              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
+              <p className="mt-4 max-w-2xl text-[13px] leading-relaxed text-muted-foreground font-medium">
                 {project.description}
               </p>
             )}
 
             {/* Meta info pills */}
-            <div className="mt-5 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-wrap gap-3">
               {project.target_market && (
-                <div className="flex items-center gap-1.5 rounded-xl bg-card/70 border border-border/50 px-3 py-1.5 text-xs">
-                  <Target className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="font-medium text-foreground">{project.target_market}</span>
+                <div className="flex items-center gap-2 rounded-[10px] bg-background/50 border border-border/40 px-3 py-2 text-xs">
+                  <Target className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-bold text-foreground">{project.target_market}</span>
                 </div>
               )}
               {project.value_proposition && (
-                <div className="flex items-center gap-1.5 rounded-xl bg-card/70 border border-border/50 px-3 py-1.5 text-xs max-w-xs truncate">
-                  <Sparkles className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <span className="font-medium text-foreground truncate">{project.value_proposition}</span>
+                <div className="flex items-center gap-2 rounded-[10px] bg-background/50 border border-border/40 px-3 py-2 text-xs max-w-sm truncate">
+                  <Sparkles className="h-4 w-4 shrink-0 text-accent" />
+                  <span className="font-bold text-foreground truncate">{project.value_proposition}</span>
                 </div>
               )}
             </div>
@@ -160,65 +153,67 @@ export function ProjectHeader({
 
           {/* Right: phase-specific CTA */}
           {isPlanning ? (
-            <div className="shrink-0">
+            <div className="shrink-0 mt-4 lg:mt-0">
               {showLaunchConfirm ? (
-                <div className="rounded-2xl border border-status-warning-border bg-status-warning-bg p-5 max-w-xs space-y-3 shadow-lg">
-                  <div className="flex items-center gap-2">
-                    <Rocket className="h-5 w-5 text-status-warning-fg" />
-                    <h3 className="font-semibold text-status-warning-text text-sm">¿Listo para lanzar?</h3>
+                <div className="rounded-[16px] border border-status-warning-border bg-card/80 backdrop-blur-md p-5 max-w-xs space-y-4 shadow-[0_0_30px_rgba(245,158,11,0.15)] animate-in fade-in zoom-in-95">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full bg-status-warning-bg flex items-center justify-center">
+                      <Rocket className="h-4 w-4 text-status-warning-fg" />
+                    </div>
+                    <h3 className="font-black text-status-warning-fg text-sm uppercase tracking-wider">¿Ejecutar Lanzamiento?</h3>
                   </div>
-                  <p className="text-xs text-status-warning-text leading-relaxed">
-                    Cambiarás el proyecto a fase <strong>LAUNCHED</strong>. Esto activará métricas reales, cálculos financieros y análisis avanzados.
+                  <p className="text-xs text-muted-foreground font-medium leading-relaxed">
+                    Cambiarás el sistema a fase <strong className="text-foreground">LAUNCHED</strong>. Esto habilitará métricas de producción y análisis avanzados.
                   </p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setShowLaunchConfirm(false)}
-                      className="flex-1 rounded-xl border border-status-warning-border bg-card px-3 py-2 text-xs font-semibold text-status-warning-text hover:bg-status-warning-bg transition-colors"
-                    >
-                      Cancelar
-                    </button>
+                  <div className="flex flex-col gap-2">
                     <button
                       onClick={() => { onLaunchProject?.(); setShowLaunchConfirm(false); }}
                       disabled={isLaunching}
-                      className="flex-1 rounded-xl bg-status-warning-fg px-3 py-2 text-xs font-bold text-white hover:opacity-90 disabled:opacity-50 transition-colors flex items-center justify-center gap-1"
+                      className="w-full rounded-[10px] bg-status-warning-fg px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-background shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 transition-all flex items-center justify-center gap-2"
                     >
-                      <Rocket className="h-3 w-3" />
-                      {isLaunching ? "Lanzando..." : "¡Lanzar!"}
+                      <Rocket className="h-3.5 w-3.5" />
+                      {isLaunching ? "Iniciando Secuencia..." : "Confirmar Lanzamiento"}
+                    </button>
+                    <button
+                      onClick={() => setShowLaunchConfirm(false)}
+                      className="w-full rounded-[10px] border border-border/40 bg-background/50 px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-muted-foreground hover:bg-card transition-colors"
+                    >
+                      Abortar
                     </button>
                   </div>
                 </div>
               ) : (
                 <button
                   onClick={() => setShowLaunchConfirm(true)}
-                  className="group relative overflow-hidden rounded-2xl border-2 border-status-warning-border bg-gradient-to-br from-status-warning-fg to-primary px-6 py-5 shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
+                  className="group relative flex items-center gap-4 rounded-[16px] border border-border/40 bg-background/80 p-2 pr-6 shadow-lg transition-all hover:bg-card hover:border-status-warning-fg/50 hover:shadow-[0_0_30px_rgba(245,158,11,0.15)] active:scale-[0.98]"
                 >
-                  <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="relative flex items-center gap-3">
-                    <div className="rounded-full bg-white/20 p-2">
-                      <Rocket className="h-5 w-5 text-white" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-xs font-bold uppercase tracking-wider text-white/70">¿Tu proyecto está listo?</p>
-                      <p className="text-base font-bold text-white">Marcar como Lanzado</p>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-white ml-1 group-hover:translate-x-1 transition-transform" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-[12px] bg-status-warning-fg text-background shadow-inner">
+                    <Rocket className="h-5 w-5" />
                   </div>
+                  <div className="text-left">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-status-warning-fg/80">Secuencia de Inicio</p>
+                    <p className="text-sm font-black text-foreground uppercase tracking-wider mt-0.5">Lanzar Sistema</p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground ml-2 group-hover:text-status-warning-fg group-hover:translate-x-1 transition-all" />
                 </button>
               )}
             </div>
           ) : (
-            <div className="shrink-0 flex flex-col items-end gap-2">
-              <div className="flex items-center gap-2 rounded-2xl bg-card/80 border border-primary/20 px-4 py-3">
-                <div className="h-2.5 w-2.5 rounded-full bg-accent animate-pulse" />
-                <span className="text-sm font-semibold text-foreground">Proyecto Activo</span>
+            <div className="shrink-0 flex flex-col items-end gap-3 mt-4 lg:mt-0">
+              <div className="flex items-center gap-2 rounded-[12px] bg-background/50 border border-border/40 px-3 py-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                </span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Sistema Online</span>
               </div>
               <Button
                 onClick={onGenerateScore}
                 disabled={!onGenerateScore || isGenerating}
-                className="btn-premium rounded-xl"
+                className="h-12 rounded-[14px] bg-foreground px-6 text-[11px] font-black uppercase tracking-widest text-background shadow-[0_5px_20px_rgba(var(--foreground),0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2"
               >
                 <TrendingUp className="h-4 w-4" />
-                {isGenerating ? "Analizando..." : "Generar Score"}
+                {isGenerating ? "PROCESANDO..." : "COMPUTAR SCORE"}
               </Button>
             </div>
           )}
@@ -227,24 +222,29 @@ export function ProjectHeader({
 
       {/* Action navigation grid */}
       <div className={cn(
-        "grid gap-3",
+        "grid gap-4",
         isPlanning ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-2 sm:grid-cols-3 md:grid-cols-5"
       )}>
         {actions.map((action, i) => {
-          const actionClass = cn(
-            "group flex items-center gap-3 rounded-2xl border p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 text-left",
-            action.bg
-          );
+          const actionClass = "group flex flex-col items-start gap-2 rounded-[16px] border border-border/40 bg-card/40 backdrop-blur-md p-4 transition-all duration-300 hover:bg-card hover:border-primary/40 hover:shadow-[0_5px_15px_rgba(0,0,0,0.05)] hover:-translate-y-1";
+          
           const ActionContent = (
             <>
-              <action.icon className={cn("h-5 w-5 shrink-0", action.color)} />
-              <span className={cn("text-sm font-semibold", action.color)}>{action.label}</span>
-              <ChevronRight className={cn("ml-auto h-3.5 w-3.5 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all", action.color)} />
+              <div className="flex items-center justify-between w-full mb-1">
+                <div className={cn("h-8 w-8 rounded-[10px] bg-background/80 flex items-center justify-center border border-border/40 shadow-inner", action.color)}>
+                  <action.icon className="h-4 w-4" />
+                </div>
+                <ArrowRight className="h-3 w-3 text-muted-foreground opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0" />
+              </div>
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-widest text-foreground">{action.title}</p>
+                <p className="text-[10px] font-bold text-muted-foreground mt-0.5 uppercase">{action.desc}</p>
+              </div>
             </>
           );
           if (action.type === 'button') {
             return (
-              <button key={i} onClick={action.onClick} className={actionClass}>
+              <button key={i} onClick={action.onClick} className={actionClass + " text-left"}>
                 {ActionContent}
               </button>
             );
@@ -257,56 +257,40 @@ export function ProjectHeader({
         })}
       </div>
 
-      {/* Planning phase: generate score CTA (separate row for planning) */}
+      {/* Planning phase workflow steps - Brutalist terminal style */}
       {isPlanning && (
-        <button
-          onClick={onGenerateScore}
-          disabled={!onGenerateScore || isGenerating}
-          className="group flex w-full items-center justify-between rounded-2xl border border-dashed border-primary/30 bg-primary/5 px-5 py-4 text-primary transition-all hover:bg-primary/10 hover:border-primary/50 disabled:opacity-50"
-        >
-          <span className="flex items-center gap-3">
-            <div className="rounded-xl bg-primary/10 p-2">
-              <Shield className="h-4 w-4 text-primary" />
-            </div>
-            <div className="text-left">
-              <p className="text-sm font-bold">{isGenerating ? "Generando diagnóstico..." : "Generar diagnóstico de viabilidad"}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Evalúa el potencial de tu idea con IA y métricas ponderadas</p>
-            </div>
-          </span>
-          <ArrowRight className="h-4 w-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-        </button>
-      )}
-
-      {/* Planning phase workflow steps */}
-      {isPlanning && (
-        <div className="rounded-3xl border border-border/60 bg-card/60 backdrop-blur-sm p-5">
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Flujo recomendado para ideas en planeación</p>
-          <div className="flex items-start gap-0 overflow-x-auto pb-1">
+        <div className="rounded-[20px] border border-border/40 bg-card/40 backdrop-blur-xl p-6 shadow-sm overflow-hidden relative">
+          <div className="flex items-center gap-2 mb-6">
+            <Terminal className="h-4 w-4 text-muted-foreground" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Boot Sequence (Recomendado)</p>
+          </div>
+          
+          <div className="flex items-start gap-4 overflow-x-auto pb-2 custom-scrollbar">
             {[
-              { step: 1, label: "Define tu idea", desc: "Registra nombre, problema y propuesta de valor", done: true },
-              { step: 2, label: "Análisis IA", desc: "Genera tu primer análisis de viabilidad con IA", done: false },
-              { step: 3, label: "Score de viabilidad", desc: "Revisa los puntajes por dimensión", done: false },
-              { step: 4, label: "Itera tu modelo", desc: "Ajusta y valida con el tutor inteligente", done: false },
-              { step: 5, label: "¡Lanza!", desc: "Cuando estés listo, marca tu proyecto como lanzado", done: false },
+              { step: "01", label: "INIT_IDEA", desc: "Propuesta de valor", done: true },
+              { step: "02", label: "RUN_DIAGNOSTIC", desc: "Análisis IA", done: false },
+              { step: "03", label: "EVAL_SCORE", desc: "Revisa viabilidad", done: false },
+              { step: "04", label: "EXEC_ITERATE", desc: "Ajusta modelo", done: false },
+              { step: "05", label: "SYS_LAUNCH", desc: "Despliegue final", done: false },
             ].map((item, i, arr) => (
-              <div key={item.step} className="flex items-start gap-0 min-w-0">
-                <div className="flex flex-col items-center min-w-[120px] max-w-[140px] px-2">
-                  <div className={cn(
-                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold border-2",
-                    item.done
-                      ? "bg-status-success-fg text-white border-status-success-fg"
-                      : "bg-card text-muted-foreground border-border"
-                  )}>
-                    {item.done ? <CheckCircle2 className="h-4 w-4" /> : item.step}
+              <div key={item.step} className="flex items-center gap-4 min-w-[180px] shrink-0">
+                <div className="flex flex-col gap-2 w-full">
+                  <div className="flex items-center gap-3">
+                    <span className={cn(
+                      "text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-[4px]",
+                      item.done ? "bg-status-success-fg/20 text-status-success-fg" : "bg-muted text-muted-foreground"
+                    )}>
+                      [{item.step}]
+                    </span>
+                    {i < arr.length - 1 && (
+                      <div className={cn("h-px flex-1", item.done ? "bg-status-success-fg/30" : "bg-border/50")} />
+                    )}
                   </div>
-                  <p className="mt-2 text-center text-xs font-bold text-foreground leading-tight">{item.label}</p>
-                  <p className="mt-1 text-center text-[10px] text-muted-foreground leading-tight hidden sm:block">{item.desc}</p>
+                  <div>
+                    <p className={cn("text-xs font-black uppercase tracking-wider", item.done ? "text-foreground" : "text-muted-foreground")}>{item.label}</p>
+                    <p className="text-[10px] font-bold text-muted-foreground mt-0.5 uppercase truncate">{item.desc}</p>
+                  </div>
                 </div>
-                {i < arr.length - 1 && (
-                  <div className="mt-4 flex-1 min-w-[16px]">
-                    <div className="h-px w-full bg-border mt-0" />
-                  </div>
-                )}
               </div>
             ))}
           </div>
@@ -322,26 +306,33 @@ export function ProjectHeader({
       )}
 
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <DialogContent>
+        <DialogContent className="border border-destructive/30 bg-background/95 backdrop-blur-xl sm:rounded-[24px] p-6 sm:p-8 shadow-[0_0_50px_rgba(var(--destructive),0.15)]">
           <DialogHeader>
-            <DialogTitle>Eliminar proyecto</DialogTitle>
-            <DialogDescription>
-              ¿Estás seguro de que deseas eliminar permanentemente el proyecto <strong>{project.name}</strong>?
-              Esta acción no se puede deshacer e incluirá la eliminación de todos sus análisis, historiales y reportes.
+            <DialogTitle className="font-display text-2xl font-black text-foreground flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                <Trash2 className="h-5 w-5" />
+              </div>
+              Purge Instance
+            </DialogTitle>
+            <DialogDescription className="mt-4 text-[13px] leading-relaxed text-muted-foreground">
+              Estás a punto de ejecutar la destrucción total del nodo <strong className="text-foreground font-black px-1.5 py-0.5 bg-muted rounded-md">{project.name}</strong>.
+              <br /><br />
+              Esta acción es irreversible y eliminará en cascada todos sus diagnósticos, métricas, logs y reportes generados. ¿Confirmas la purga?
             </DialogDescription>
           </DialogHeader>
-          <div className="mt-4 flex justify-end gap-3">
-            <Button variant="ghost" onClick={() => setShowDeleteConfirm(false)} disabled={isDeleting}>
-              Cancelar
+          <div className="mt-8 flex flex-col-reverse sm:flex-row justify-end gap-3">
+            <Button variant="ghost" className="rounded-[12px] font-bold text-[13px] h-11" onClick={() => setShowDeleteConfirm(false)} disabled={isDeleting}>
+              Abortar
             </Button>
             <Button
               variant="danger"
+              className="rounded-[12px] font-bold text-[13px] h-11 shadow-[0_0_15px_rgba(var(--destructive),0.4)]"
               onClick={() => {
                 onDeleteProject?.();
               }}
               disabled={isDeleting}
             >
-              {isDeleting ? "Eliminando..." : "Eliminar proyecto"}
+              {isDeleting ? "Ejecutando Purga..." : "Confirmar Destrucción"}
             </Button>
           </div>
         </DialogContent>

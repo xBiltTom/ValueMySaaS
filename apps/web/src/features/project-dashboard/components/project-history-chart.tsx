@@ -4,15 +4,16 @@ import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Area, Area
 import { formatDate } from "@/lib/formatters";
 import { MaybeNumber } from "@/types/api";
 import { cn } from "@/lib/utils";
+import { TerminalSquare } from "lucide-react";
 
 type Point = { date: string; label: string | null; value: MaybeNumber };
 
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-xl border border-border bg-card/95 backdrop-blur-sm px-3 py-2 shadow-lg">
-      <p className="text-xs font-semibold text-muted-foreground mb-1">{label}</p>
-      <p className="text-sm font-bold text-foreground">{payload[0].value ?? "—"}</p>
+    <div className="rounded-[12px] border border-border/40 bg-card/95 backdrop-blur-md px-3 py-2 shadow-[0_5px_15px_rgba(0,0,0,0.1)]">
+      <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">DATE: {label}</p>
+      <p className="text-sm font-mono font-bold text-foreground">VAL: {payload[0].value ?? "NULL"}</p>
     </div>
   );
 }
@@ -35,51 +36,62 @@ export function ProjectHistoryChart({
 
   return (
     <div className={cn(
-      "rounded-3xl border p-5 space-y-4",
-      isPlanning
-        ? "border-status-warning-border/60 bg-gradient-to-b from-status-warning-bg/30 to-card"
-        : "border-border bg-card"
+      "relative overflow-hidden rounded-[20px] border border-border/60 bg-card/40 backdrop-blur-md p-5 space-y-4 shadow-sm group",
     )}>
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-bold text-foreground">{title}</p>
-        <div className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
+      {/* Background scanline */}
+      <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.02)_50%)] bg-[length:100%_4px] pointer-events-none opacity-50" />
+
+      <div className="relative z-10 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <TerminalSquare className="h-4 w-4 text-muted-foreground opacity-50" />
+          <p className="text-[11px] font-black uppercase tracking-widest text-foreground">{title}</p>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: color }}></span>
+            <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: color }}></span>
+          </span>
+          <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-muted-foreground hidden sm:block">DATA_STREAM</span>
+        </div>
       </div>
 
       {chartData.length > 0 ? (
-        <div className="h-48">
+        <div className="relative z-10 h-48 rounded-[12px] bg-background/30 p-2 border border-border/20">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
               <defs>
                 <linearGradient id={`grad-${color.replace("#", "")}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={color} stopOpacity={0.25} />
-                  <stop offset="100%" stopColor={color} stopOpacity={0} />
+                  <stop offset="0%" stopColor={color} stopOpacity={0.3} />
+                  <stop offset="100%" stopColor={color} stopOpacity={0.05} />
                 </linearGradient>
               </defs>
               <XAxis
                 dataKey="label"
                 tickLine={false}
                 axisLine={false}
-                fontSize={10}
-                tick={{ fill: "#94A3B8" }}
+                fontSize={9}
+                tick={{ fill: "currentColor", opacity: 0.5, fontFamily: 'monospace' }}
               />
-              <YAxis tickLine={false} axisLine={false} fontSize={10} tick={{ fill: "#94A3B8" }} />
-              <Tooltip content={<CustomTooltip />} />
+              <YAxis tickLine={false} axisLine={false} fontSize={9} tick={{ fill: "currentColor", opacity: 0.5, fontFamily: 'monospace' }} />
+              <Tooltip content={<CustomTooltip />} cursor={{ stroke: color, strokeWidth: 1, strokeDasharray: '4 4' }} />
               <Area
-                type="monotone"
+                type="step"
                 dataKey="value"
                 stroke={color}
-                strokeWidth={2.5}
+                strokeWidth={2}
                 dot={false}
                 fill={`url(#grad-${color.replace("#", "")})`}
+                animationDuration={1500}
+                animationEasing="ease-out"
               />
             </AreaChart>
           </ResponsiveContainer>
         </div>
       ) : (
-        <div className="h-48 flex flex-col items-center justify-center text-center">
-          <div className="h-1 w-16 rounded-full bg-border mb-3" />
-          <p className="text-xs text-muted-foreground">Sin datos históricos</p>
-          <p className="text-xs text-muted-foreground/60 mt-1">Registra métricas para ver la evolución</p>
+        <div className="relative z-10 h-48 flex flex-col items-center justify-center text-center rounded-[12px] border border-dashed border-border/40 bg-background/20">
+          <TerminalSquare className="h-6 w-6 text-muted-foreground/30 mb-3" />
+          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Log_Empty</p>
+          <p className="text-[9px] font-mono text-muted-foreground/60 mt-1 uppercase tracking-wider">Esperando secuencias de datos</p>
         </div>
       )}
     </div>
