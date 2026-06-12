@@ -1,33 +1,10 @@
 import os
 
-from alembic.config import Config
-from sqlalchemy import pool, text
-from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import async_engine_from_config
+from sqlalchemy import text
 
-from app.core.config import settings
 from app.core.logging import logger
-from app.db.base import Base
 from app.db.session import engine
 import app.models  # noqa: F401
-
-
-def _get_alembic_cfg() -> Config:
-    cfg = Config(os.path.join(os.path.dirname(__file__), "../..", "alembic.ini"))
-    cfg.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
-    return cfg
-
-
-def do_run_migrations(connection: Connection) -> None:
-    from alembic import context
-    context.configure(
-        connection=connection,
-        target_metadata=Base.metadata,
-        compare_type=True,
-        compare_server_default=True,
-    )
-    with context.begin_transaction():
-        context.run_migrations()
 
 
 async def check_db_connection() -> None:
@@ -42,18 +19,43 @@ async def check_db_connection() -> None:
 
 
 async def run_migrations() -> None:
-    """Run Alembic migrations at startup using the async engine directly."""
+    """Run Alembic migrations at startup.
+
+    To avoid import shadowing of the top-level `alembic` package by the
+    project's local `alembic` directory, run the installed alembic CLI
+    executable (from the virtualenv) as a subprocess and point it to the
+    repository's alembic.ini file.
+    """
     try:
-        logger.info("Running database migrations...")
-        alembic_cfg = _get_alembic_cfg()
-        connectable = async_engine_from_config(
-            alembic_cfg.get_section(alembic_cfg.config_ini_section, {}),
-            prefix="sqlalchemy.",
-            poolclass=pool.NullPool,
+        logger.info("Running database migrations (via alembic CLI)...")
+        import asyncio
+        import sys
+
+        repo_alembic_ini = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "../..", "alembic.ini")
         )
-        async with connectable.connect() as conn:
-            await conn.run_sync(do_run_migrations)
-        await connectable.dispose()
+
+        # Prefer the alembic script that lives next to the current python
+        # executable in the virtualenv, fallback to system `alembic` in PATH.
+        venv_alembic = os.path.join(os.path.dirname(sys.executable), "alembic")
+        if os.path.exists(venv_alembic) and os.access(venv_alembic, os.X_OK):
+            cmd = [venv_alembic, "-c", repo_alembic_ini, "upgrade", "head"]
+        else:
+            cmd = ["alembic", "-c", repo_alembic_ini, "upgrade", "head"]
+
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            cwd=os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")),
+        )
+        stdout, stderr = await proc.communicate()
+        if proc.returncode != 0:
+            err = stderr.decode().strip() if stderr else ""
+            logger.error("Migration failed: %s", err)
+            raise RuntimeError(f"Alembic migration failed: {err}")
+        if stdout:
+            logger.info("Migration output: %s", stdout.decode().strip())
         logger.info("Migrations completed successfully.")
     except Exception as exc:
         logger.error("Migration error: %s", exc)
