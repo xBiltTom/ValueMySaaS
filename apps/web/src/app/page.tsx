@@ -42,7 +42,7 @@ export default function Home() {
               href="/register"
               className="inline-flex h-10 items-center justify-center rounded-[14px] bg-foreground px-5 text-sm font-bold text-background shadow-sm transition hover:scale-105 active:scale-95"
             >
-              Deploy Start
+              Empezar Gratis
             </Link>
           </div>
         </div>
@@ -69,7 +69,7 @@ export default function Home() {
             href="/register"
             className="group relative inline-flex h-14 w-full sm:w-auto items-center justify-center gap-3 rounded-[20px] bg-foreground px-8 text-base font-bold text-background transition-all hover:scale-105 active:scale-95 overflow-hidden shadow-[0_0_20px_rgba(var(--primary),0.1)] hover:shadow-[0_0_30px_rgba(var(--primary),0.3)]"
           >
-            <span className="relative">Inicializar Dashboard</span>
+            <span className="relative">Crear Cuenta</span>
             <ArrowRight className="relative h-5 w-5 group-hover:translate-x-1 transition-transform" />
           </Link>
           
@@ -77,8 +77,7 @@ export default function Home() {
             href="/login"
             className="group inline-flex h-14 w-full sm:w-auto items-center justify-center gap-2 rounded-[20px] border border-border/60 bg-card/30 backdrop-blur-md px-8 text-base font-bold text-foreground transition-all hover:bg-muted/50 hover:border-border active:scale-95"
           >
-            <GitPullRequest className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-            Sign in with Github
+            Iniciar Sesión
           </Link>
         </div>
       </section>
@@ -217,7 +216,7 @@ export default function Home() {
             className="inline-flex h-16 w-full sm:w-auto items-center justify-center gap-3 rounded-[24px] bg-foreground px-10 text-lg font-bold text-background shadow-[0_0_30px_rgba(var(--foreground),0.1)] transition-all hover:scale-105 active:scale-95"
           >
             <Cpu className="h-5 w-5" />
-            Deploy ValueMySaaS
+            Empezar Gratis Ahora
           </Link>
         </div>
       </section>
