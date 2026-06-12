@@ -8,9 +8,8 @@ import { getApiErrorMessage } from "@/lib/api-client";
 import { listAiKeys } from "@/features/ai-keys/api";
 import { AiKeyForm } from "@/features/ai-keys/components/ai-key-form";
 import { AiKeyList } from "@/features/ai-keys/components/ai-key-list";
-import { ByokInfoCard } from "@/features/ai-keys/components/byok-info-card";
 import { useCurrentUser } from "@/features/auth/use-auth";
-import { Coins, Sparkles } from "lucide-react";
+import { KeyRound, ShieldAlert, Cpu } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function AiKeysPage() {
@@ -22,55 +21,57 @@ export default function AiKeysPage() {
 
   return (
     <DashboardShell>
-      <div className="mb-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-        <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/50 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-foreground mb-3">
-            <div className="h-1.5 w-1.5 rounded-full bg-accent"></div>
-            Configuración
+      <div className="relative animate-in fade-in slide-in-from-bottom-8 duration-700 max-w-5xl mx-auto">
+        
+        {/* Background ambient effect */}
+        <div className="absolute top-0 left-0 w-full h-[300px] bg-[linear-gradient(to_right,rgba(150,150,150,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(150,150,150,0.05)_1px,transparent_1px)] bg-[size:3rem_3rem] [mask-image:radial-gradient(ellipse_60%_100%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none -z-10" />
+
+        <div className="mb-12 relative">
+          <div className="mb-4 inline-flex items-center gap-2.5 rounded-xl border border-border/60 bg-card/40 backdrop-blur-md px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest text-muted-foreground shadow-sm">
+            <KeyRound className="h-3 w-3 text-accent" />
+            Configuración de Nodos IA
           </div>
-          <h1 className="font-display text-4xl font-bold tracking-tight md:text-5xl">Créditos y API Keys <span className="text-muted-foreground text-3xl font-sans">(BYOK)</span></h1>
-          <p className="mt-4 max-w-3xl text-base leading-relaxed text-muted-foreground">
-            Usa los créditos otorgados por tus profesores para usar la IA, o conecta tu propia clave API para acceso ilimitado.
+          <h1 className="font-display text-4xl font-black tracking-tight text-foreground sm:text-5xl md:text-6xl flex items-center gap-4">
+            <Cpu className="hidden sm:block h-10 w-10 text-primary opacity-80" />
+            API Keys <span className="text-muted-foreground/50">BYOK</span>
+          </h1>
+          <p className="mt-4 text-sm font-bold text-muted-foreground max-w-2xl uppercase tracking-wider">
+            Créditos del sistema: <span className="text-primary">{user?.ai_credits || 0} DISPONIBLES</span>. Conecta tus propias API Keys para acceso ilimitado.
           </p>
         </div>
-      </div>
 
-      <div className="grid gap-8 xl:grid-cols-[0.85fr_1.15fr] relative z-10">
-        <div className="space-y-6">
-          <div className="bento-card overflow-hidden">
-            <div className="bg-primary text-primary-foreground px-6 py-5 flex items-center justify-between border-b border-border/10">
-              <h2 className="text-xl font-display font-bold flex items-center gap-2">
-                <Coins className="h-6 w-6" /> Tus Créditos
+        <div className="grid gap-8 lg:grid-cols-[1fr_1.5fr] relative z-10">
+          <div className="space-y-6">
+            <div className="rounded-[24px] border border-border/40 bg-card/60 backdrop-blur-xl p-6 shadow-lg relative overflow-hidden group">
+              <div className="absolute -right-10 -top-10 opacity-[0.03] pointer-events-none">
+                <ShieldAlert className="w-48 h-48" />
+              </div>
+              <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-foreground mb-4 flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-primary" />
+                Registrar Nuevo Nodo
               </h2>
-              <Badge className="bg-background/20 text-primary-foreground border-none text-sm px-3 py-1 font-bold shadow-none backdrop-blur-sm">
-                {user?.ai_credits || 0} Disponibles
+              <AiKeyForm />
+            </div>
+          </div>
+          
+          <section className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-foreground flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-accent" />
+                Conexiones Activas
+              </h2>
+              <Badge variant="outline" className="text-[9px] uppercase font-bold tracking-wider border-border/60">
+                {aiKeysQuery.data?.items.length || 0} Registros
               </Badge>
             </div>
-            <div className="p-6 bg-card">
-              <p className="text-base text-muted-foreground leading-relaxed">
-                Cada análisis de IA o resumen de conversación consume <strong className="text-foreground">1 crédito</strong>. 
-                Si te quedas sin créditos, puedes pedir una recarga a tu profesor o usar tu propia API Key abajo.
-              </p>
-            </div>
-          </div>
 
-          <ByokInfoCard />
-          <AiKeyForm />
+            {aiKeysQuery.isLoading ? <LoadingState /> : null}
+            {aiKeysQuery.isError ? (
+              <ErrorState message={getApiErrorMessage(aiKeysQuery.error)} />
+            ) : null}
+            {aiKeysQuery.data ? <AiKeyList aiKeys={aiKeysQuery.data} /> : null}
+          </section>
         </div>
-        
-        <section className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-bold font-display flex items-center gap-2"><Sparkles className="h-6 w-6 text-accent" /> Claves Personales</h2>
-            <p className="mt-2 text-sm text-muted-foreground font-medium">
-              Si tienes una clave activa aquí, no consumiremos tus créditos.
-            </p>
-          </div>
-          {aiKeysQuery.isLoading ? <LoadingState label="Cargando API Keys..." /> : null}
-          {aiKeysQuery.isError ? (
-            <ErrorState title="No se pudo cargar tus API Keys" message={getApiErrorMessage(aiKeysQuery.error)} />
-          ) : null}
-          {aiKeysQuery.data ? <AiKeyList aiKeys={aiKeysQuery.data} /> : null}
-        </section>
       </div>
     </DashboardShell>
   );

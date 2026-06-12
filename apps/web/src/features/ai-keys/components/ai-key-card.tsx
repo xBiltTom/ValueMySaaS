@@ -1,11 +1,10 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Power, PowerOff, Trash2, CheckCircle2 } from "lucide-react";
+import { Power, Trash2, ShieldCheck, TerminalSquare } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { ErrorState } from "@/components/shared/error-state";
 import { formatDateTime } from "@/lib/formatters";
 import { getApiErrorMessage } from "@/lib/api-client";
@@ -44,54 +43,111 @@ export function AiKeyCard({ aiKey }: { aiKey: AiKey }) {
   };
 
   return (
-    <Card className={cn("p-6 rounded-3xl transition-all duration-300", aiKey.is_active ? "border-primary/25 bg-primary/5 shadow-md" : "border-border opacity-70 hover:opacity-100")}>
-      <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-start">
-        <div>
-          <div className="flex flex-wrap gap-2 items-center">
-            <ProviderBadge provider={aiKey.provider} />
-            <Badge className={cn("px-3 py-1 rounded-full text-xs font-semibold", aiKey.is_active ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
-              {aiKey.is_active ? <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Activa</span> : "Inactiva"}
-            </Badge>
-          </div>
-          <h3 className="mt-4 text-xl font-display font-semibold">{aiKey.label || "Sin etiqueta"}</h3>
-          <p className="mt-1 font-mono text-sm text-muted-foreground bg-muted/50 px-2 py-1 rounded inline-block">{maskedKey(aiKey.key_last_four)}</p>
-          <p className="mt-3 text-xs text-muted-foreground/80">
-            Actualizada: {formatDateTime(aiKey.updated_at || aiKey.created_at)}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" className="rounded-xl" onClick={() => setShowVerify((value) => !value)}>
-            Verificar
-          </Button>
-          <Button variant="ghost" className="rounded-xl" onClick={() => updateMutation.mutate()} disabled={updateMutation.isPending}>
-            {aiKey.is_active ? <PowerOff className="h-4 w-4 mr-2" /> : <Power className="h-4 w-4 mr-2" />}
-            {aiKey.is_active ? "Desactivar" : "Activar"}
-          </Button>
-          {confirmDelete ? (
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-destructive">¿Confirmar?</span>
-              <Button variant="danger" className="h-9 rounded-xl px-3 text-xs" onClick={onDelete} disabled={deleteMutation.isPending}>
-                Sí, eliminar
-              </Button>
-              <Button variant="ghost" className="h-9 rounded-xl px-3 text-xs" onClick={() => setConfirmDelete(false)}>
-                Cancelar
-              </Button>
+    <div className={cn(
+      "group relative overflow-hidden rounded-[24px] border transition-all duration-500",
+      aiKey.is_active 
+        ? "border-primary/40 bg-card/60 backdrop-blur-xl shadow-[0_0_30px_rgba(var(--primary),0.1)]" 
+        : "border-border/40 bg-card/30 backdrop-blur-md opacity-80 hover:opacity-100"
+    )}>
+      <div className="p-5 sm:p-6">
+        <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap gap-2 items-center mb-3">
+              <ProviderBadge provider={aiKey.provider} />
+              <Badge variant="outline" className={cn(
+                "px-2 py-0.5 rounded-[6px] text-[9px] font-black uppercase tracking-widest border-border/40", 
+                aiKey.is_active ? "bg-primary/20 text-primary border-primary/30" : "bg-muted/50 text-muted-foreground"
+              )}>
+                {aiKey.is_active ? (
+                  <span className="flex items-center gap-1.5">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span>
+                    </span>
+                    ONLINE
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground"></span>
+                    OFFLINE
+                  </span>
+                )}
+              </Badge>
             </div>
-          ) : (
-            <Button variant="danger" className="rounded-xl" onClick={onDelete} disabled={deleteMutation.isPending}>
-              <Trash2 className="h-4 w-4 mr-2" />
-              Eliminar
+            
+            <h3 className="text-xl font-display font-black text-foreground tracking-tight truncate">
+              {aiKey.label || "Sin etiqueta"}
+            </h3>
+            
+            <div className="mt-2 flex items-center gap-2">
+              <code className="font-mono text-[11px] font-bold text-muted-foreground bg-background/50 border border-border/40 px-2 py-1 rounded-[6px]">
+                {maskedKey(aiKey.key_last_four)}
+              </code>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                UPD: {formatDateTime(aiKey.updated_at || aiKey.created_at)}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 shrink-0">
+            <Button 
+              variant="secondary" 
+              className={cn(
+                "h-10 rounded-[12px] text-xs font-black uppercase tracking-wider border-border/40 transition-all",
+                showVerify ? "bg-accent text-accent-foreground border-accent/50" : "bg-card/50 hover:bg-card"
+              )} 
+              onClick={() => setShowVerify((value) => !value)}
+            >
+              <TerminalSquare className="h-4 w-4 mr-2" />
+              Terminal Test
             </Button>
-          )}
+            
+            <Button 
+              variant="ghost" 
+              className="h-10 rounded-[12px] text-xs font-black uppercase tracking-wider border border-border/40 bg-card/50 hover:bg-card transition-all" 
+              onClick={() => updateMutation.mutate()} 
+              disabled={updateMutation.isPending}
+            >
+              <Power className={cn("h-4 w-4 mr-2", aiKey.is_active ? "text-destructive" : "text-primary")} />
+              {aiKey.is_active ? "Apagar" : "Encender"}
+            </Button>
+
+            {confirmDelete ? (
+              <Button 
+                variant="danger" 
+                className="h-10 rounded-[12px] text-[10px] font-black uppercase tracking-wider shadow-[0_0_15px_rgba(var(--destructive),0.4)] animate-in fade-in" 
+                onClick={onDelete} 
+                disabled={deleteMutation.isPending}
+              >
+                Confirmar
+              </Button>
+            ) : (
+              <Button 
+                variant="ghost" 
+                className="h-10 w-10 p-0 rounded-[12px] border border-border/40 bg-card/50 text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition-all hover:border-destructive/50" 
+                onClick={onDelete} 
+                disabled={deleteMutation.isPending}
+                aria-label="Eliminar"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
+
+        {updateMutation.isError ? (
+          <div className="mt-4"><ErrorState message={getApiErrorMessage(updateMutation.error)} /></div>
+        ) : null}
+        {deleteMutation.isError ? (
+          <div className="mt-4"><ErrorState message={getApiErrorMessage(deleteMutation.error)} /></div>
+        ) : null}
       </div>
-      {updateMutation.isError ? (
-        <ErrorState title="No se pudo actualizar la API Key" message={getApiErrorMessage(updateMutation.error)} />
+
+      {showVerify ? (
+        <div className="border-t border-border/40 bg-background/50 animate-in slide-in-from-top-2 duration-300">
+          <AiKeyVerifyPanel aiKey={aiKey} />
+        </div>
       ) : null}
-      {deleteMutation.isError ? (
-        <ErrorState title="No se pudo eliminar la API Key" message={getApiErrorMessage(deleteMutation.error)} />
-      ) : null}
-      {showVerify ? <div className="mt-6 pt-4 border-t border-border/50"><AiKeyVerifyPanel aiKey={aiKey} /></div> : null}
-    </Card>
+    </div>
   );
 }
