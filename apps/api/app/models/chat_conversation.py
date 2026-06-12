@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Index, String, func
+from sqlalchemy import DateTime, Enum, ForeignKey, Index, Integer, String, Text, func, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -40,6 +40,18 @@ class ChatConversation(Base):
         Enum(ConversationStatus, name="conversationstatus", create_constraint=True),
         nullable=False,
         default=ConversationStatus.ACTIVE,
+    )
+
+    # --- Campos de memoria conversacional ---
+    # Resumen auto-generado cuando el historial supera context_window_size
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Contador de mensajes (evita COUNT(*) en cada request)
+    total_messages: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default=text("0")
+    )
+    # Tamaño de la ventana de historial antes de activar resumen
+    context_window_size: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=20, server_default=text("20")
     )
 
     created_at: Mapped[datetime] = mapped_column(

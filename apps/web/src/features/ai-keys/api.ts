@@ -38,3 +38,8 @@ export async function updateAiKey(keyId: string, payload: UpdateAiKeyPayload) {
 export async function deleteAiKey(keyId: string) {
   await apiClient.delete(`/ai/keys/${keyId}`);
 }
+
+export async function listAiKeyModels(keyId: string) {
+  const { data } = await apiClient.get<{ items: { id: string; name: string }[]; provider: string }>(`/ai/keys/${keyId}/models`);
+  return data;
+}

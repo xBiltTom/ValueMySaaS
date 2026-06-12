@@ -54,6 +54,7 @@ class AuthService:
 
     async def login(self, email: str, password: str) -> Token:
         user = await self.authenticate_user(email, password)
+        await self.user_repository.update_last_login_at(user_id=user.id)
         return Token(access_token=create_access_token(user.id))
 
     async def get_active_user(self, user_id: UUID) -> User:

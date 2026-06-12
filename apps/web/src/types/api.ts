@@ -6,6 +6,7 @@ export type User = {
   username: string | null;
   full_name: string | null;
   role: UserRole;
+  ai_credits: number;
   is_active: boolean;
   is_verified: boolean;
   created_at: string;
@@ -288,7 +289,7 @@ export type SaasReportListResponse = {
   offset: number;
 };
 
-export type AiProvider = "OPENAI" | "GEMINI" | "ANTHROPIC" | "OPENROUTER" | "OTHER";
+export type AiProvider = "OPENAI" | "GEMINI" | "ANTHROPIC" | "OPENROUTER" | "GROQ" | "NVIDIA" | "OTHER";
 
 export type AiKey = {
   id: string;
@@ -363,6 +364,7 @@ export type Conversation = {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  total_messages?: number;
 };
 
 export type ConversationListResponse = {

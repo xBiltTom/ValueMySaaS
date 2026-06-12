@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Enum, Index, String, UniqueConstraint, func, text
+from sqlalchemy import Boolean, DateTime, Enum, Index, Integer, String, UniqueConstraint, func, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -30,6 +30,12 @@ class User(Base):
     is_verified: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default=text("false")
     )
+    ai_credits: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=5, server_default=text("5")
+    )
+    last_login_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -57,6 +63,10 @@ class User(Base):
     )
     reports: Mapped[list["Report"]] = relationship(  # noqa: F821
         "Report", back_populates="user", lazy="select"
+    )
+    credit_transactions: Mapped[list["CreditTransaction"]] = relationship(  # noqa: F821
+        "CreditTransaction", foreign_keys="CreditTransaction.user_id",
+        back_populates="user", lazy="select"
     )
 
     __table_args__ = (

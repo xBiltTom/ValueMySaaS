@@ -6,5 +6,8 @@ export function analysisTypeLabel(type: AiAnalysisType) {
 }
 
 export function getAnalysisText(analysis: AiAnalysis) {
-  return analysis.output_text || null;
+  if (!analysis.output_text) return null;
+  let text = analysis.output_text.replace(/```json[\s\S]*/i, "");
+  text = text.replace(/\{\s*"problem_clarity_score"[\s\S]*/i, "");
+  return text.trim() || null;
 }

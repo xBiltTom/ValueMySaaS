@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { clearAuthToken, getAuthToken, subscribeToAuthToken } from "@/lib/auth-token";
 import { getCurrentUser } from "@/features/auth/api";
 
@@ -10,12 +10,20 @@ export function useCurrentUser({ redirectToLogin = false } = {}) {
   const router = useRouter();
   const pathname = usePathname();
   const token = useSyncExternalStore(subscribeToAuthToken, getAuthToken, () => null);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    if (redirectToLogin && !token) {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted || !redirectToLogin) return;
+    
+    const currentToken = getAuthToken();
+    if (!currentToken) {
       router.replace(`/login?next=${encodeURIComponent(pathname)}`);
     }
-  }, [pathname, redirectToLogin, router, token]);
+  }, [isMounted, pathname, redirectToLogin, router, token]);
 
   const userQuery = useQuery({
     queryKey: ["auth", "me"],
@@ -27,7 +35,7 @@ export function useCurrentUser({ redirectToLogin = false } = {}) {
     ...userQuery,
     authToken: token,
     hasToken: Boolean(token),
-    isCheckingToken: false,
+    isCheckingToken: !isMounted,
   };
 }
 

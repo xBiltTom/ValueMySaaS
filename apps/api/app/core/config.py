@@ -44,10 +44,4 @@ class Settings(BaseSettings):
     def is_development(self) -> bool:
         return self.APP_ENV == "development"
 
-    @property
-    def sync_database_url(self) -> str:
-        """Compatibility alias; Alembic uses the async DATABASE_URL."""
-        return self.DATABASE_URL
-
-
 settings = Settings()

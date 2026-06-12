@@ -2,11 +2,10 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Eye, EyeOff, Save } from "lucide-react";
+import { Eye, EyeOff, Terminal, KeyRound } from "lucide-react";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorState } from "@/components/shared/error-state";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -38,65 +37,61 @@ export function AiKeyForm() {
   });
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Registrar API Key</CardTitle>
-        <CardDescription>La clave solo se usa para enviarla al backend y cifrarla. No se guarda en localStorage.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form className="space-y-4" onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>
-          {mutation.isSuccess ? (
-            <div className="rounded-md border border-primary/20 bg-primary/10 p-4 text-sm font-semibold text-primary">
-              API Key guardada. El campo sensible fue limpiado.
-            </div>
-          ) : null}
-          {mutation.isError ? (
-            <ErrorState title="No se pudo guardar la API Key" message={getApiErrorMessage(mutation.error)} />
-          ) : null}
+    <form className="space-y-4" onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>
+      {mutation.isSuccess ? (
+        <div className="rounded-[12px] border border-primary/30 bg-primary/10 p-3 text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
+          <Terminal className="h-4 w-4" />
+          Key cifrada y guardada.
+        </div>
+      ) : null}
+      {mutation.isError ? (
+        <ErrorState message={getApiErrorMessage(mutation.error)} />
+      ) : null}
 
-          <label className="block">
-            <span className="text-sm font-semibold">Proveedor</span>
-            <Select className="mt-2" {...form.register("provider")}>
-              {aiProviders.map((item) => (
-                <option key={item} value={item}>
-                  {providerLabels[item]}
-                </option>
-              ))}
-            </Select>
-          </label>
-          <label className="block">
-            <span className="text-sm font-semibold">Etiqueta</span>
-            <Input className="mt-2" placeholder="Google AI Studio" {...form.register("label")} />
-            {form.formState.errors.label ? (
-              <p className="mt-1 text-xs font-medium text-destructive">{form.formState.errors.label.message}</p>
-            ) : null}
-          </label>
-          <label className="block">
-            <span className="text-sm font-semibold">API Key</span>
-            <div className="mt-2 flex gap-2">
-              <Input
-                type={showKey ? "text" : "password"}
-                placeholder="Pega tu API Key"
-                autoComplete="off"
-                {...form.register("api_key")}
-              />
-              <Button type="button" variant="secondary" onClick={() => setShowKey((value) => !value)} aria-label="Mostrar u ocultar API Key">
-                {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </Button>
-            </div>
-            {form.formState.errors.api_key ? (
-              <p className="mt-1 text-xs font-medium text-destructive">{form.formState.errors.api_key.message}</p>
-            ) : null}
-          </label>
-          <p className="rounded-md border border-border bg-white p-3 text-xs leading-5 text-muted-foreground">
-            Modelo sugerido para verificar después: <strong>{providerHints[provider]}</strong>
-          </p>
-          <Button type="submit" disabled={mutation.isPending}>
-            <Save className="h-4 w-4" />
-            {mutation.isPending ? "Guardando..." : "Guardar API Key"}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+      <div className="space-y-3">
+        <label className="block">
+          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Proveedor</span>
+          <Select className="mt-1.5 h-11 w-full rounded-[12px] border-border/40 bg-background/50 px-3 text-sm font-bold shadow-inner focus:border-primary focus:shadow-[0_0_15px_rgba(var(--primary),0.2)]" {...form.register("provider")}>
+            {aiProviders.map((item) => (
+              <option key={item} value={item}>
+                {providerLabels[item]}
+              </option>
+            ))}
+          </Select>
+        </label>
+        
+        <label className="block">
+          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Alias (Etiqueta)</span>
+          <Input className="mt-1.5 h-11 w-full rounded-[12px] border-border/40 bg-background/50 px-3 text-sm font-bold shadow-inner focus:border-primary focus:shadow-[0_0_15px_rgba(var(--primary),0.2)]" placeholder="Ej. Mi Workspace Principal" {...form.register("label")} />
+          {form.formState.errors.label ? (
+            <p className="mt-1.5 text-[10px] font-bold text-destructive uppercase">{form.formState.errors.label.message}</p>
+          ) : null}
+        </label>
+
+        <label className="block">
+          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Clave API</span>
+          <div className="mt-1.5 flex gap-2">
+            <Input
+              type={showKey ? "text" : "password"}
+              placeholder="sk-..."
+              autoComplete="off"
+              className="h-11 w-full rounded-[12px] border-border/40 bg-background/50 px-3 text-sm font-mono shadow-inner focus:border-primary focus:shadow-[0_0_15px_rgba(var(--primary),0.2)]"
+              {...form.register("api_key")}
+            />
+            <Button type="button" variant="secondary" className="h-11 w-11 shrink-0 rounded-[12px] border border-border/40 bg-card/50 hover:bg-card" onClick={() => setShowKey((value) => !value)} aria-label="Mostrar u ocultar API Key">
+              {showKey ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+            </Button>
+          </div>
+          {form.formState.errors.api_key ? (
+            <p className="mt-1.5 text-[10px] font-bold text-destructive uppercase">{form.formState.errors.api_key.message}</p>
+          ) : null}
+        </label>
+      </div>
+
+      <Button type="submit" disabled={mutation.isPending} className="mt-2 h-12 w-full rounded-[14px] bg-foreground text-background text-[13px] font-black uppercase tracking-wider shadow-[0_5px_20px_rgba(var(--foreground),0.2)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2">
+        <KeyRound className="h-4 w-4" />
+        {mutation.isPending ? "ENCRIPTANDO..." : "Guardar e Inicializar"}
+      </Button>
+    </form>
   );
 }

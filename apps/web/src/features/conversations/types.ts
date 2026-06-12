@@ -16,7 +16,7 @@ export type UpdateConversationPayload = {
 };
 
 export type SendConversationMessagePayload = {
-  ai_key_id: string;
+  ai_key_id?: string;
   model_name?: string | null;
   message: string;
 };

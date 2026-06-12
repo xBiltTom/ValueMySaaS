@@ -28,5 +28,7 @@ class UserRead(BaseModel):
     role: UserRole
     is_active: bool
     is_verified: bool
+    ai_credits: int
     created_at: datetime
     updated_at: datetime
+

@@ -122,6 +122,45 @@ class DashboardService:
         if project is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SaaS project not found")
 
+        # ------------------------------------------------------------------ #
+        # Planning projects: show only costs + contextual AI Analysis message #
+        # ------------------------------------------------------------------ #
+        stage = project.stage if isinstance(project.stage, SaasStage) else SaasStage(project.stage)
+        if stage in {SaasStage.IDEA, SaasStage.PLANNING}:
+            latest_snapshot = await self.metric_snapshot_repository.get_latest_by_project(
+                saas_project_id=project_id,
+            )
+            monthly_costs = (
+                getattr(latest_snapshot, "monthly_costs", None) if latest_snapshot else None
+            )
+            planning_recommendation = DashboardRecommendation(
+                priority="high",
+                title="Proyecto en planeación",
+                message=(
+                    "Este proyecto está en planeación. Usa el Análisis IA para obtener "
+                    "un diagnóstico de viabilidad."
+                ),
+            )
+            return ProjectDashboardResponse(
+                project=self._project_summary(project),
+                latest_snapshot=self._latest_snapshot_summary(latest_snapshot),
+                latest_score=None,
+                metric_cards=MetricCards(monthly_costs=monthly_costs),
+                alerts=[],
+                recommendations=[planning_recommendation],
+                series=ProjectSeries(
+                    mrr=[],
+                    monthly_revenue=[],
+                    paying_customers=[],
+                    active_users=[],
+                    churn_rate=[],
+                    overall_score=[],
+                ),
+            )
+
+        # ------------------------------------------------------------------ #
+        # Launched / operational projects: full financial dashboard           #
+        # ------------------------------------------------------------------ #
         latest_snapshot = await self.metric_snapshot_repository.get_latest_by_project(
             saas_project_id=project_id,
         )
@@ -172,10 +211,10 @@ class DashboardService:
 
     def _projects_by_category(self, projects: list[SaasProject]) -> dict[str, int]:
         counts: dict[str, int] = {}
-        for category in SaasCategory:
-            count = sum(1 for project in projects if project.category == category)
-            if count:
-                counts[category.value] = count
+        for project in projects:
+            key = self._enum_value(project.category)
+            if key:
+                counts[key] = counts.get(key, 0) + 1
         return counts
 
     def _score_project_summary(

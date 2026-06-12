@@ -26,6 +26,8 @@ export const createProjectSchema = z.object({
   target_audience: z.string().min(2, "Define la audiencia objetivo."),
   main_problem: z.string().min(8, "Describe el problema principal."),
   value_proposition: z.string().min(8, "Describe la propuesta de valor."),
+  competitors: z.string().optional(),
+  acquisition_strategy: z.string().optional(),
   current_price: z.number().min(0, "El precio no puede ser negativo.").optional(),
   currency: z.string().min(3).max(10),
 });

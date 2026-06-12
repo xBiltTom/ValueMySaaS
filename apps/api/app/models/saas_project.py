@@ -59,6 +59,8 @@ class SaasProject(Base):
     country_focus: Mapped[str | None] = mapped_column(String(100), nullable=True)
     main_problem: Mapped[str | None] = mapped_column(Text, nullable=True)
     value_proposition: Mapped[str | None] = mapped_column(Text, nullable=True)
+    competitors: Mapped[str | None] = mapped_column(Text, nullable=True)
+    acquisition_strategy: Mapped[str | None] = mapped_column(Text, nullable=True)
     pricing_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     current_price: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
     currency: Mapped[str] = mapped_column(

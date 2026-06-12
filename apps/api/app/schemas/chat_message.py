@@ -27,9 +27,13 @@ class ChatMessageListResponse(BaseModel):
 
 
 class SendChatMessageRequest(BaseModel):
-    ai_key_id: UUID
+    ai_key_id: UUID | None = Field(
+        default=None,
+        description="ID de tu API Key propia. Si no se provee, se usarán créditos del sistema.",
+    )
     model_name: str | None = Field(default=None, max_length=100)
-    message: str = Field(min_length=1, max_length=4000)
+    message: str | None = Field(default=None, max_length=4000)
+    messages: list[dict[str, Any]] | None = Field(default=None, description="Requerido por Vercel AI SDK useChat")
 
 
 class SendChatMessageResponse(BaseModel):

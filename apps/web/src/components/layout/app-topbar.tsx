@@ -1,46 +1,56 @@
 "use client";
 
 import Link from "next/link";
-import { LogOut, Menu, Plus } from "lucide-react";
+import { LogOut, Plus, Terminal } from "lucide-react";
 import { User } from "@/types/api";
 import { Button } from "@/components/ui/button";
 import { useLogout } from "@/features/auth/use-auth";
+import { ThemeToggle } from "@/components/theme-toggle";
 
-export function AppTopbar({ user, onMenuClick }: { user?: User; onMenuClick?: () => void }) {
+export function AppTopbar({ user }: { user?: User }) {
   const logout = useLogout();
 
   return (
-    <header className="sticky top-0 z-20 border-b border-border bg-background/90 px-4 py-3 backdrop-blur md:px-7">
+    <header className="sticky top-0 z-20 border-b border-border/80 dark:border-border/40 bg-background/90 dark:bg-background/80 px-4 py-3 backdrop-blur-xl md:px-7">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={onMenuClick}
-            aria-label="Abrir menu"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground transition hover:bg-muted lg:hidden"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              Gestion de valor SaaS
+        {/* Brand — shown on mobile only since sidebar has it on desktop */}
+        <Link href="/dashboard" className="flex items-center gap-2.5 lg:hidden group">
+          <span className="flex h-9 w-9 items-center justify-center rounded-[12px] bg-foreground text-background shadow-[0_0_15px_rgba(var(--foreground),0.1)] transition-transform group-hover:scale-105 group-hover:-rotate-3">
+            <Terminal className="h-4 w-4" />
+          </span>
+          <span className="font-display text-lg font-black tracking-tight text-foreground">ValueMySaaS</span>
+        </Link>
+
+        {/* Page context label — desktop only */}
+        <div className="hidden lg:block">
+          <div className="flex items-center gap-3">
+            <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+              Workspace / {user?.username || "Usuario"}
             </p>
-            <h1 className="text-lg font-semibold">ValueMySaaS</h1>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex items-center gap-3">
           <Link
             href="/projects/new"
-            className="hidden h-10 items-center justify-center gap-2 rounded-md bg-primary px-3 text-sm font-semibold text-primary-foreground transition hover:bg-[#245448] sm:inline-flex"
+            className="hidden h-10 items-center justify-center gap-2 rounded-[14px] bg-foreground px-5 text-[13px] font-bold text-background shadow-[0_0_15px_rgba(var(--foreground),0.15)] transition-all hover:scale-105 active:scale-95 sm:inline-flex"
           >
-            <Plus className="h-4 w-4 cursor-pointer" />
-            Nuevo SaaS
+            <Plus className="h-4 w-4" />
+            Deploy App
           </Link>
-          <div className="hidden text-right sm:block">
-            <p className="text-sm font-semibold">{user?.full_name || user?.username || "Usuario"}</p>
-            <p className="text-xs text-muted-foreground">{user?.email}</p>
+
+          {/* Theme toggle — mobile only; sidebar has it on desktop */}
+          <div className="lg:hidden">
+            <ThemeToggle />
           </div>
-          <Button variant="ghost" onClick={logout} aria-label="Cerrar sesion" className="cursor-pointer">
+
+          <Button
+            variant="ghost"
+            onClick={logout}
+            aria-label="Cerrar sesión"
+            className="h-10 w-10 p-0 rounded-[12px] bg-card/50 text-muted-foreground transition-all hover:bg-destructive hover:text-destructive-foreground hover:shadow-[0_0_15px_rgba(var(--destructive),0.3)] border border-border/80 dark:border-border/40 lg:hidden"
+          >
             <LogOut className="h-4 w-4" />
           </Button>
         </div>

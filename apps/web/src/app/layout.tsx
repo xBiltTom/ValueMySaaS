@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
-import { Manrope, Newsreader } from "next/font/google";
+import { Plus_Jakarta_Sans, Syne } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "sonner";
 import { QueryProvider } from "@/lib/query-provider";
+import { ThemeProvider } from "@/components/theme-provider";
 
-const manrope = Manrope({
+const jakarta = Plus_Jakarta_Sans({
   variable: "--font-sans",
   subsets: ["latin"],
 });
 
-const newsreader = Newsreader({
+const syne = Syne({
   variable: "--font-display",
   subsets: ["latin"],
 });
@@ -26,10 +28,24 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${manrope.variable} ${newsreader.variable} h-full antialiased`}
+      className={`${jakarta.variable} ${syne.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full bg-[var(--background)] text-[var(--foreground)]">
-        <QueryProvider>{children}</QueryProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <QueryProvider>{children}</QueryProvider>
+          <Toaster
+            position="bottom-right"
+            offset={80}
+            richColors
+            toastOptions={{ className: "font-sans text-sm rounded-xl" }}
+          />
+        </ThemeProvider>
       </body>
     </html>
   );

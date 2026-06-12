@@ -52,6 +52,15 @@ class SaasProjectRepository:
         total_result = await self.db.execute(count_statement)
         return list(result.scalars().all()), total_result.scalar_one()
 
+    async def count_by_owner(self, *, owner_id: UUID) -> int:
+        result = await self.db.execute(
+            select(func.count()).select_from(SaasProject).where(
+                SaasProject.owner_id == owner_id,
+                SaasProject.deleted_at.is_(None),
+            )
+        )
+        return result.scalar_one()
+
     async def get_by_id_for_owner(self, *, project_id: UUID, owner_id: UUID) -> SaasProject | None:
         result = await self.db.execute(
             select(SaasProject).where(

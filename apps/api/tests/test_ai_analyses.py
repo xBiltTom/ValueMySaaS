@@ -20,6 +20,7 @@ class FakeUser:
         self.full_name = "Founder"
         self.is_active = True
         self.is_verified = False
+        self.ai_credits = 5
         self.created_at = datetime.now(timezone.utc)
         self.updated_at = self.created_at
         self.deleted_at = None
@@ -83,13 +84,31 @@ class FakeAnalysisRepository:
         return None
 
 
-class FakeKeyService:
+class FakeCreditService:
+    """Simula CreditService usando BYOK para los tests."""
     def __init__(self, key: FakeKey) -> None:
         self.key = key
 
-    async def get_decrypted_key_for_user(self, *, key_id, user_id):
-        if self.key.id == key_id and self.key.user_id == user_id:
-            return self.key, "plain-secret"
+    async def resolve_llm_credentials(self, *, user, ai_key_id):
+        from app.services.credit_service import LlmCredentials
+        return LlmCredentials(
+            provider=self.key.provider,
+            api_key="plain-secret",
+            model_name=None,
+            credit_used=False,
+        )
+
+    async def consume_credit(self, *, user_id, reason, description=None, related_analysis_id=None):
+        pass
+
+
+class FakeUserRepository:
+    def __init__(self, user: FakeUser) -> None:
+        self.user = user
+
+    async def get_by_id(self, user_id):
+        if self.user.id == user_id:
+            return self.user
         return None
 
 
@@ -154,26 +173,29 @@ class ResolvingFakeLlmClient:
 
 def build_service(fake_user: FakeUser, project: FakeProject, key: FakeKey) -> AiAnalysisService:
     return AiAnalysisService(
-        FakeAnalysisRepository(),
-        FakeKeyService(key),
-        FakeProjectRepository([project]),
-        FakeSnapshotRepository(),
-        FakeScoreRepository(),
-        FakeContextService(),
-        FakeLlmClient(),
+        ai_analysis_repository=FakeAnalysisRepository(),
+        credit_service=FakeCreditService(key),
+        saas_project_repository=FakeProjectRepository([project]),
+        metric_snapshot_repository=FakeSnapshotRepository(),
+        saas_score_repository=FakeScoreRepository(),
+        ai_context_service=FakeContextService(),
+        llm_client_service=FakeLlmClient(),
+        user_repository=FakeUserRepository(fake_user),
     )
 
 
 def build_resolving_service(fake_user: FakeUser, project: FakeProject, key: FakeKey) -> AiAnalysisService:
     return AiAnalysisService(
-        FakeAnalysisRepository(),
-        FakeKeyService(key),
-        FakeProjectRepository([project]),
-        FakeSnapshotRepository(),
-        FakeScoreRepository(),
-        FakeContextService(),
-        ResolvingFakeLlmClient(),
+        ai_analysis_repository=FakeAnalysisRepository(),
+        credit_service=FakeCreditService(key),
+        saas_project_repository=FakeProjectRepository([project]),
+        metric_snapshot_repository=FakeSnapshotRepository(),
+        saas_score_repository=FakeScoreRepository(),
+        ai_context_service=FakeContextService(),
+        llm_client_service=ResolvingFakeLlmClient(),
+        user_repository=FakeUserRepository(fake_user),
     )
+
 
 
 def build_client(fake_user: FakeUser, service: AiAnalysisService) -> TestClient:
@@ -225,7 +247,7 @@ def test_generate_analysis_with_fake_llm_persists_metadata():
     assert data["provider"] == "OPENAI"
     assert data["model_name"] == "gpt-test"
     assert data["analysis_type"] == "FULL_DIAGNOSIS"
-    assert data["prompt_version"] == "v1"
+    assert data["prompt_version"] == "v2"
     assert "API" not in data["output_text"]
 
 

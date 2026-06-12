@@ -14,24 +14,13 @@ router = APIRouter(
 )
 
 
-@router.post("/basic", response_model=ReportRead, status_code=status.HTTP_201_CREATED)
-async def generate_basic_report(
+@router.post("/generate", response_model=ReportRead, status_code=status.HTTP_201_CREATED)
+async def generate_report(
     project_id: UUID,
     current_user: User = Depends(get_current_user),
     report_service: ReportService = Depends(get_report_service),
 ):
-    return await report_service.generate_basic_report(
-        project_id=project_id,
-        owner_id=current_user.id,
-    )
-
-
-@router.post("/executive", response_model=ReportRead, status_code=status.HTTP_201_CREATED)
-async def generate_executive_report(
-    project_id: UUID,
-    current_user: User = Depends(get_current_user),
-    report_service: ReportService = Depends(get_report_service),
-):
+    # We use executive report as the standard 'general' report under the hood
     return await report_service.generate_executive_report(
         project_id=project_id,
         owner_id=current_user.id,
@@ -64,6 +53,20 @@ async def get_report(
     report_service: ReportService = Depends(get_report_service),
 ):
     return await report_service.get_report(
+        project_id=project_id,
+        report_id=report_id,
+        owner_id=current_user.id,
+    )
+
+
+@router.delete("/{report_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_report(
+    project_id: UUID,
+    report_id: UUID,
+    current_user: User = Depends(get_current_user),
+    report_service: ReportService = Depends(get_report_service),
+):
+    await report_service.delete_report(
         project_id=project_id,
         report_id=report_id,
         owner_id=current_user.id,

@@ -6,6 +6,34 @@ class UserRole(str, enum.Enum):
     ADMIN = "ADMIN"
 
 
+class ProjectPhase(str, enum.Enum):
+    """Abstracción de alto nivel sobre SaasStage para bifurcar la lógica de evaluación."""
+    PLANNING = "PLANNING"        # IDEA, PLANNING → evaluación cualitativa con IA
+    IMPLEMENTED = "IMPLEMENTED"  # MVP, LAUNCHED, GROWING, PAUSED → scoring cuantitativo
+
+
+class IdeaVerdict(str, enum.Enum):
+    """Veredicto final de la evaluación cualitativa para proyectos en planificación."""
+    BUILD = "BUILD"                    # Construye — score ≥ 70
+    VALIDATE_FIRST = "VALIDATE_FIRST"  # Valida primero — score 50-69
+    RETHINK = "RETHINK"                # Replantea — score < 50
+
+
+class InfrastructureComplexity(str, enum.Enum):
+    """Complejidad técnica estimada por el LLM para proyectos en planificación."""
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+
+
+class CreditReason(str, enum.Enum):
+    """Motivo de cada transacción de crédito de IA."""
+    ADMIN_GRANT = "ADMIN_GRANT"        # Admin otorga créditos
+    ADMIN_REVOKE = "ADMIN_REVOKE"      # Admin revoca créditos
+    AI_ANALYSIS = "AI_ANALYSIS"        # Consumo por análisis IA
+    CHAT_MESSAGE = "CHAT_MESSAGE"      # Consumo por mensaje de chat
+
+
 class SaasCategory(str, enum.Enum):
     EDTECH = "EDTECH"
     FINTECH = "FINTECH"
@@ -59,6 +87,10 @@ class AiProvider(str, enum.Enum):
     GEMINI = "GEMINI"
     ANTHROPIC = "ANTHROPIC"
     OPENROUTER = "OPENROUTER"
+    # groq/model-name  (e.g. groq/llama-3.3-70b-versatile, groq/mixtral-8x7b-32768)
+    GROQ = "GROQ"
+    # nvidia_nim/org/model-name  (e.g. nvidia_nim/meta/llama-3.1-70b-instruct)
+    NVIDIA = "NVIDIA"
     OTHER = "OTHER"
 
 

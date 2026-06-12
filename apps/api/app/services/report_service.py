@@ -29,62 +29,41 @@ class ReportService:
         self.dashboard_service = dashboard_service
 
     async def generate_basic_report(self, *, project_id: UUID, owner_id: UUID) -> Report:
-        project = await self._ensure_project_owned(project_id=project_id, owner_id=owner_id)
-        dashboard = await self.dashboard_service.get_project_dashboard(
-            project_id=project_id,
-            owner_id=owner_id,
-        )
-        latest_snapshot = await self.metric_snapshot_repository.get_latest_by_project(
-            saas_project_id=project_id,
-        )
-        latest_score = await self.saas_score_repository.get_latest_by_project(
-            saas_project_id=project_id,
-        )
-        generated_at = datetime.now(timezone.utc)
-        content = self._basic_content(
-            dashboard=dashboard,
-            latest_score=latest_score,
-            generated_at=generated_at,
+        project, dashboard, latest_snapshot, latest_score, generated_at = await self._gather_report_data(
+            project_id=project_id, owner_id=owner_id
         )
         return await self._create_report(
             project_id=project_id,
             owner_id=owner_id,
             title=f"Reporte basico de {project.name}",
             report_type=ReportType.BASIC,
-            content=content,
+            content=self._basic_content(project=project, dashboard=dashboard, latest_score=latest_score, generated_at=generated_at),
             generated_at=generated_at,
             metric_snapshot_id=latest_snapshot.id if latest_snapshot else None,
             score_id=latest_score.id if latest_score else None,
         )
 
     async def generate_executive_report(self, *, project_id: UUID, owner_id: UUID) -> Report:
-        project = await self._ensure_project_owned(project_id=project_id, owner_id=owner_id)
-        dashboard = await self.dashboard_service.get_project_dashboard(
-            project_id=project_id,
-            owner_id=owner_id,
-        )
-        latest_snapshot = await self.metric_snapshot_repository.get_latest_by_project(
-            saas_project_id=project_id,
-        )
-        latest_score = await self.saas_score_repository.get_latest_by_project(
-            saas_project_id=project_id,
-        )
-        generated_at = datetime.now(timezone.utc)
-        content = self._executive_content(
-            dashboard=dashboard,
-            latest_score=latest_score,
-            generated_at=generated_at,
+        project, dashboard, latest_snapshot, latest_score, generated_at = await self._gather_report_data(
+            project_id=project_id, owner_id=owner_id
         )
         return await self._create_report(
             project_id=project_id,
             owner_id=owner_id,
-            title=f"Reporte ejecutivo de {project.name}",
+            title=f"Análisis General de {project.name}",
             report_type=ReportType.EXECUTIVE,
-            content=content,
+            content=self._executive_content(project=project, dashboard=dashboard, latest_score=latest_score, generated_at=generated_at),
             generated_at=generated_at,
             metric_snapshot_id=latest_snapshot.id if latest_snapshot else None,
             score_id=latest_score.id if latest_score else None,
         )
+
+    async def _gather_report_data(self, *, project_id: UUID, owner_id: UUID) -> tuple:
+        project = await self._ensure_project_owned(project_id=project_id, owner_id=owner_id)
+        dashboard = await self.dashboard_service.get_project_dashboard(project_id=project_id, owner_id=owner_id)
+        latest_snapshot = await self.metric_snapshot_repository.get_latest_by_project(saas_project_id=project_id)
+        latest_score = await self.saas_score_repository.get_latest_by_project(saas_project_id=project_id)
+        return project, dashboard, latest_snapshot, latest_score, datetime.now(timezone.utc)
 
     async def list_reports(
         self,
@@ -117,6 +96,10 @@ class ReportService:
         if report is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Report not found")
         return report
+
+    async def delete_report(self, *, project_id: UUID, report_id: UUID, owner_id: UUID) -> None:
+        report = await self.get_report(project_id=project_id, report_id=report_id, owner_id=owner_id)
+        await self.report_repository.delete(report_id=report.id)
 
     async def _ensure_project_owned(self, *, project_id: UUID, owner_id: UUID):
         project = await self.saas_project_repository.get_by_id_for_owner(
@@ -155,59 +138,95 @@ class ReportService:
             }
         )
 
-    def _basic_content(self, *, dashboard, latest_score, generated_at: datetime) -> dict:
+    def _basic_content(self, *, project, dashboard, latest_score, generated_at: datetime) -> dict:
+        is_planning = project.stage.value in ["IDEA", "PLANNING"]
+        
+        if is_planning:
+            return {
+                "kind": "BASIC",
+                "generated_at": generated_at.isoformat(),
+                "phase": "PLANNING",
+                "summary": {
+                    "title": "Evaluación Básica de Idea",
+                    "message": "Tu proyecto se encuentra en fase de ideación o planificación. El enfoque principal debe ser validar el problema y estructurar la viabilidad técnica.",
+                },
+                "project_details": {
+                    "name": project.name,
+                    "description": project.description,
+                    "target_audience": project.target_audience,
+                    "business_model": project.business_model.value,
+                    "stage": project.stage.value,
+                },
+                "recommendation": "Antes de escribir código, asegúrate de hablar con al menos 10 usuarios potenciales y definir el MVP más pequeño posible.",
+            }
+            
+        # IMPLEMENTED phase
         dashboard_data = dashboard.model_dump(mode="json")
         return {
             "kind": "BASIC",
             "generated_at": generated_at.isoformat(),
-            "project": dashboard_data["project"],
+            "phase": "IMPLEMENTED",
             "summary": {
-                "title": "Resumen basico de sostenibilidad",
-                "message": self._summary_message(dashboard.latest_score),
+                "title": "Resumen Operativo del SaaS",
+                "message": self._summary_message(latest_score),
             },
-            "latest_snapshot": dashboard_data["latest_snapshot"],
-            "latest_score": dashboard_data["latest_score"],
-            "metric_cards": dashboard_data["metric_cards"],
-            "alerts": dashboard_data["alerts"],
-            "recommendations": dashboard_data["recommendations"],
-            "conclusion": self._conclusion_message(dashboard.latest_score),
-            "data_quality": self._data_quality(dashboard),
+            "metrics": {
+                "health_score": dashboard_data["latest_score"]["sustainability_level"] if dashboard_data["latest_score"] else "Desconocido",
+                "mrr": next((m["value"] for m in dashboard_data.get("metric_cards", []) if m["key"] == "mrr"), 0),
+                "active_users": next((m["value"] for m in dashboard_data.get("metric_cards", []) if m["key"] == "active_users"), 0),
+            },
+            "decision": dashboard_data["latest_score"]["decision_recommendation"] if dashboard_data["latest_score"] else "Faltan datos",
+            "conclusion": self._conclusion_message(latest_score),
         }
 
-    def _executive_content(self, *, dashboard, latest_score, generated_at: datetime) -> dict:
+    def _executive_content(self, *, project, dashboard, latest_score, generated_at: datetime) -> dict:
+        if project.stage == ProjectStage.PLANNING:
+            return {
+                "kind": "EXECUTIVE",
+                "generated_at": generated_at.isoformat(),
+                "phase": "PLANNING",
+                "summary": {
+                    "title": "Análisis General",
+                    "message": "Evaluación del modelo de negocio, encaje de mercado y viabilidad estratégica.",
+                },
+                "market_fit": {
+                    "audience": project.target_audience,
+                    "model": project.business_model.value,
+                    "category": project.category.value,
+                },
+                "strategic_risks": [
+                    "Riesgo de construir sin validar el dolor del cliente.",
+                    "Complejidad técnica superior a la estimada si no se define bien el MVP.",
+                    "Modelo de monetización no probado en mercado real."
+                ],
+                "action_plan": [
+                    "1. Entrevistas de validación de problema.",
+                    "2. Creación de landing page para capturar leads.",
+                    "3. Desarrollo iterativo del MVP core."
+                ],
+                "conclusion": "El proyecto requiere validación antes de realizar grandes inversiones de tiempo o capital.",
+            }
+
+        # IMPLEMENTED phase
         dashboard_data = dashboard.model_dump(mode="json")
         return {
             "kind": "EXECUTIVE",
             "generated_at": generated_at.isoformat(),
-            "project": dashboard_data["project"],
-            "executive_summary": {
-                "title": "Diagnostico ejecutivo del SaaS",
-                "message": self._summary_message(dashboard.latest_score),
+            "phase": "IMPLEMENTED",
+            "summary": {
+                "title": "Análisis General del Proyecto",
+                "message": self._summary_message(latest_score),
             },
-            "service_value_assessment": {
-                "message": (
-                    "Evaluacion del valor del servicio desde metricas de sostenibilidad, "
-                    "crecimiento, retencion y producto."
-                )
-            },
-            "latest_snapshot": dashboard_data["latest_snapshot"],
-            "latest_score": dashboard_data["latest_score"],
-            "metric_cards": dashboard_data["metric_cards"],
-            "alerts": dashboard_data["alerts"],
+            "kpis": dashboard_data.get("metric_cards", []),
             "strengths": latest_score.strengths if latest_score and latest_score.strengths else [],
             "weaknesses": latest_score.weaknesses if latest_score and latest_score.weaknesses else [],
-            "recommendations": dashboard_data["recommendations"],
-            "series": dashboard_data["series"],
-            "conclusion": {
-                "sustainability": dashboard_data["latest_score"]["sustainability_level"]
-                if dashboard_data["latest_score"]
-                else "INSUFFICIENT_DATA",
-                "decision": dashboard_data["latest_score"]["decision_recommendation"]
-                if dashboard_data["latest_score"]
-                else "INSUFFICIENT_DATA",
-                "message": self._conclusion_message(dashboard.latest_score),
+            "alerts": dashboard_data.get("alerts", []),
+            "strategic_recommendations": dashboard_data.get("recommendations", []),
+            "decision": {
+                "status": dashboard_data["latest_score"]["sustainability_level"] if dashboard_data["latest_score"] else "INSUFFICIENT_DATA",
+                "action": dashboard_data["latest_score"]["decision_recommendation"] if dashboard_data["latest_score"] else "INSUFFICIENT_DATA",
+                "reason": self._conclusion_message(latest_score),
             },
-            "data_quality": self._data_quality(dashboard),
         }
 
     def _data_quality(self, dashboard) -> dict:

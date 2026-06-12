@@ -45,6 +45,10 @@ class FakeConversation:
         self.created_at = now
         self.updated_at = now
         self.deleted_at = None
+        # Campos de memoria conversacional
+        self.summary = None
+        self.total_messages = 0
+        self.context_window_size = 20
 
 
 class FakeMessage:
@@ -105,21 +109,37 @@ class FakeMessageRepo:
         return [m for m in self.messages if m.conversation_id == conversation_id][-limit:]
 
 
-class FakeKey:
-    def __init__(self, user_id):
-        self.id = uuid.uuid4()
-        self.user_id = user_id
-        self.provider = AiProvider.OTHER
+class FakeUserRepo:
+    def __init__(self, user):
+        self.user = user
 
-
-class FakeKeyService:
-    def __init__(self, key):
-        self.key = key
-
-    async def get_decrypted_key_for_user(self, *, key_id, user_id):
-        if self.key.id == key_id and self.key.user_id == user_id:
-            return self.key, "secret"
+    async def get_by_id(self, user_id):
+        if self.user.id == user_id:
+            return self.user
         return None
+
+    async def decrement_credits(self, *, user_id):
+        return True
+
+
+class FakeCreditService:
+    """Simula el CreditService usando BYOK para los tests."""
+    def __init__(self, user, provider=AiProvider.OTHER, api_key="secret"):
+        self.user = user
+        self.provider = provider
+        self.api_key = api_key
+
+    async def resolve_llm_credentials(self, *, user, ai_key_id):
+        from app.services.credit_service import LlmCredentials
+        return LlmCredentials(
+            provider=self.provider,
+            api_key=self.api_key,
+            model_name=None,
+            credit_used=False,
+        )
+
+    async def consume_credit(self, *, user_id, reason, description=None, related_analysis_id=None):
+        pass
 
 
 class FakeContextService:
@@ -137,15 +157,17 @@ class FakeLlm:
         )
 
 
-def build_service(fake_user, project, conversation, key, message_repo=None):
+def build_service(fake_user, project, conversation, message_repo=None):
     return ChatService(
         FakeProjectRepo(project),
         FakeConversationRepo(conversation),
         message_repo or FakeMessageRepo(),
-        FakeKeyService(key),
+        FakeCreditService(fake_user),
         FakeContextService(),
         FakeLlm(),
+        FakeUserRepo(fake_user),
     )
+
 
 
 def build_client(fake_user, service):
@@ -169,14 +191,12 @@ def test_send_message_saves_user_and_assistant():
     fake_user = FakeUser()
     project = FakeProject(owner_id=fake_user.id)
     conversation = FakeConversation(project_id=project.id, user_id=fake_user.id)
-    key = FakeKey(fake_user.id)
     message_repo = FakeMessageRepo()
-    client = build_client(fake_user, build_service(fake_user, project, conversation, key, message_repo))
+    client = build_client(fake_user, build_service(fake_user, project, conversation, message_repo))
 
     response = client.post(
         f"/api/v1/saas-projects/{project.id}/conversations/{conversation.id}/messages",
         json={
-            "ai_key_id": str(key.id),
             "model_name": "groq/llama-3.1-8b-instant",
             "message": "Que significa mi churn?",
         },
@@ -200,12 +220,11 @@ def test_inactive_conversation_returns_400():
     fake_user = FakeUser()
     project = FakeProject(owner_id=fake_user.id)
     conversation = FakeConversation(project_id=project.id, user_id=fake_user.id, status=ConversationStatus.ARCHIVED)
-    key = FakeKey(fake_user.id)
-    client = build_client(fake_user, build_service(fake_user, project, conversation, key))
+    client = build_client(fake_user, build_service(fake_user, project, conversation))
 
     response = client.post(
         f"/api/v1/saas-projects/{project.id}/conversations/{conversation.id}/messages",
-        json={"ai_key_id": str(key.id), "model_name": "groq/model", "message": "Hola"},
+        json={"model_name": "groq/model", "message": "Hola"},
     )
 
     app.dependency_overrides.clear()
@@ -218,12 +237,11 @@ def test_foreign_project_returns_404():
     other_user = FakeUser()
     project = FakeProject(owner_id=other_user.id)
     conversation = FakeConversation(project_id=project.id, user_id=other_user.id)
-    key = FakeKey(fake_user.id)
-    client = build_client(fake_user, build_service(fake_user, project, conversation, key))
+    client = build_client(fake_user, build_service(fake_user, project, conversation))
 
     response = client.post(
         f"/api/v1/saas-projects/{project.id}/conversations/{conversation.id}/messages",
-        json={"ai_key_id": str(key.id), "model_name": "groq/model", "message": "Hola"},
+        json={"model_name": "groq/model", "message": "Hola"},
     )
 
     app.dependency_overrides.clear()

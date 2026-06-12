@@ -12,7 +12,7 @@ export function ScoreHistory({ scores }: { scores: SaasScoreListResponse }) {
       <CardContent className="space-y-3">
         {scores.items.length ? (
           scores.items.map((score) => (
-            <div key={score.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-white p-4">
+            <div key={score.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-card p-4">
               <div>
                 <p className="font-semibold">Score {score.overall_score}</p>
                 <p className="text-sm text-muted-foreground">{formatDateTime(score.created_at)}</p>

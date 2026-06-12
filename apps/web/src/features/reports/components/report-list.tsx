@@ -1,50 +1,130 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { FileSearch } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { EmptyState } from "@/components/shared/empty-state";
-import { formatDateTime, formatEnum } from "@/lib/formatters";
+import { TerminalSquare, ArrowRight, Trash2 } from "lucide-react";
+import { formatDateTime } from "@/lib/formatters";
 import { SaasReportListResponse } from "@/features/reports/types";
-import { reportTypeLabel } from "@/features/reports/utils";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { deleteReport } from "@/features/reports/api";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export function ReportList({ projectId, reports }: { projectId: string; reports: SaasReportListResponse }) {
+  const queryClient = useQueryClient();
+  const [reportToDelete, setReportToDelete] = useState<string | null>(null);
+
+  const deleteMutation = useMutation({
+    mutationFn: (reportId: string) => deleteReport(projectId, reportId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["reports", projectId] });
+      toast.success("Reporte eliminado");
+    },
+    onError: () => {
+      toast.error("Error al eliminar reporte");
+    }
+  });
+
   if (!reports.items.length) {
     return (
-      <EmptyState
-        icon={FileSearch}
-        title="Aún no hay reportes generados."
-        description="Genera un reporte básico o ejecutivo para convertir el diagnóstico en evidencia."
-      />
+      <div className="relative overflow-hidden rounded-[20px] border border-dashed border-border/60 bg-card/20 backdrop-blur-md p-8 text-center shadow-sm">
+        <TerminalSquare className="mx-auto h-8 w-8 text-muted-foreground/30 mb-4" />
+        <h3 className="text-[12px] font-black uppercase tracking-widest text-foreground mb-2">Aún no hay reportes</h3>
+        <p className="text-[11px] font-mono text-muted-foreground uppercase">
+          &gt; Genera un nuevo reporte para obtener tu análisis.
+        </p>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Reportes generados</CardTitle>
-      </CardHeader>
-      <CardContent className="grid gap-3 md:grid-cols-2">
-        {reports.items.map((report) => (
-          <Link key={report.id} href={`/projects/${projectId}/reports/${report.id}`} className="block">
-            <article className="h-full rounded-md border border-border bg-white p-4 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="font-semibold">{report.title}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {formatDateTime(report.generated_at || report.created_at)}
+    <section className="mt-8">
+      <h2 className="text-[12px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2 mb-4">
+        <span className="h-1.5 w-1.5 bg-primary rounded-full"></span>
+        TUS REPORTES
+      </h2>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {reports.items.map((report, i) => (
+          <div key={report.id} className="relative group h-full">
+            <Link href={`/projects/${projectId}/reports/${report.id}`} className="block h-full">
+              <article className="relative overflow-hidden rounded-[16px] border border-border/40 bg-card/40 backdrop-blur-md h-full flex flex-col justify-between p-5 transition-all hover:bg-card hover:border-primary/40 shadow-sm cursor-pointer">
+                <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.02)_50%)] bg-[length:100%_4px] pointer-events-none opacity-50" />
+                
+                <div className="relative z-10">
+                  <div className="flex items-start justify-between gap-3 mb-4 border-b border-dashed border-border/40 pb-4">
+                    <span className="inline-block border border-primary/20 bg-primary/10 text-primary uppercase text-[9px] tracking-widest font-black px-2 py-0.5 rounded-[4px]">
+                      Reporte General
+                    </span>
+                    <span className="text-[9px] font-mono text-muted-foreground uppercase">ID_{i.toString().padStart(3, '0')}</span>
+                  </div>
+                  <h3 className="font-display text-lg font-black uppercase tracking-tight mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                    {report.title}
+                  </h3>
+                  <p className="text-[10px] font-mono text-muted-foreground uppercase">
+                    &gt; {formatDateTime(report.generated_at || report.created_at)}
                   </p>
                 </div>
-                <Badge className="bg-primary/10 text-primary">{reportTypeLabel(report.report_type)}</Badge>
-              </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Badge>{formatEnum(report.status)}</Badge>
-                {report.metric_snapshot_id ? <Badge>Snapshot vinculado</Badge> : null}
-                {report.score_id ? <Badge>Score vinculado</Badge> : null}
-              </div>
-            </article>
-          </Link>
+                
+                <div className="relative z-10 mt-6 flex flex-col gap-3">
+                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all">
+                    LEER REPORTE <ArrowRight className="h-3 w-3" />
+                  </div>
+                </div>
+              </article>
+            </Link>
+            
+            {/* Delete button (absolute positioned top right over the card) */}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setReportToDelete(report.id);
+              }}
+              disabled={deleteMutation.isPending && reportToDelete === report.id}
+              className="absolute top-3 right-3 z-20 p-2 rounded-lg bg-background/80 border border-border/40 text-muted-foreground hover:text-status-danger-fg hover:border-status-danger-border hover:bg-status-danger-bg/20 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 backdrop-blur-md"
+              title="Eliminar reporte"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
         ))}
-      </CardContent>
-    </Card>
+      </div>
+
+      <Dialog open={!!reportToDelete} onOpenChange={(open) => !open && setReportToDelete(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="font-display uppercase tracking-tight">¿Eliminar este reporte?</DialogTitle>
+            <DialogDescription className="font-mono text-xs uppercase leading-relaxed mt-2">
+              Esta acción no se puede deshacer. El reporte será eliminado permanentemente del proyecto.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-6 flex gap-2 sm:gap-0">
+            <Button variant="secondary" onClick={() => setReportToDelete(null)}>
+              Cancelar
+            </Button>
+            <Button 
+              variant="danger" 
+              onClick={() => {
+                if (reportToDelete) {
+                  deleteMutation.mutate(reportToDelete);
+                  setReportToDelete(null);
+                }
+              }}
+              className="bg-status-danger-bg border border-status-danger-border text-status-danger-fg hover:bg-status-danger-bg/80"
+            >
+              Eliminar Definitivamente
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </section>
   );
 }

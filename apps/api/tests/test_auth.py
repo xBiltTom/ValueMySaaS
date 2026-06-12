@@ -25,7 +25,8 @@ class FakeUser:
         self.email = email
         self.username = username
         self.full_name = full_name
-        self.hashed_password = hash_password(password)
+        self.hashed_password = f"mocked_hash_{password}"
+        self.ai_credits = 5
         self.role = UserRole.USER
         self.is_active = is_active
         self.is_verified = False

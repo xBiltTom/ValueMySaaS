@@ -26,6 +26,7 @@ export const metricSnapshotSchema = z.object({
   critical_bugs: optionalCount,
   uptime_percentage: z.number().min(0).max(100).optional(),
   notes: z.string().optional(),
+  custom_metrics: z.any().optional(),
 });
 
 export type MetricSnapshotFormValues = z.infer<typeof metricSnapshotSchema>;

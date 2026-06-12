@@ -1,27 +1,57 @@
+"""Chat service con memoria conversacional usando ventana deslizante.
+
+Estrategia de memoria (sin RAG):
+1. Si total_messages <= context_window_size: enviar todo el historial.
+2. Si total_messages > context_window_size:
+   - Si hay summary: enviar resumen + últimos N mensajes.
+   - Si no hay summary: generar uno con el LLM y guardarlo.
+3. Cada turno incrementa total_messages en el modelo.
+
+El sistema de créditos se aplica igual que en el análisis de IA.
+"""
 import json
+import logging
 from uuid import UUID
 
 from fastapi import HTTPException, status
 
-from app.models.enums import ChatRole, ConversationStatus
+from app.db.session import AsyncSessionLocal
+from app.models.enums import ChatRole, ConversationStatus, CreditReason
+from app.repositories.ai_key_repository import AiProviderKeyRepository
 from app.repositories.chat_message_repository import ChatMessageRepository
 from app.repositories.conversation_repository import ConversationRepository
+from app.repositories.credit_transaction_repository import CreditTransactionRepository
 from app.repositories.saas_project_repository import SaasProjectRepository
+from app.repositories.system_ai_key_repository import SystemAiKeyRepository
+from app.repositories.user_repository import UserRepository
 from app.schemas.chat_message import ChatMessageListResponse, SendChatMessageRequest, SendChatMessageResponse
 from app.services.ai_context_service import AiContextService
-from app.services.ai_key_service import AiProviderKeyService
+from app.services.credit_service import CreditService
 from app.services.llm_client_service import LlmClientService
 
-CHAT_PROMPT_VERSION = "v1"
+logger = logging.getLogger(__name__)
 
-CHAT_SYSTEM_PROMPT = """Eres el analizador conversacional de ValueMySaaS.
-Tu funcion es ayudar al usuario a entender y mejorar su SaaS o idea de SaaS usando exclusivamente el contexto proporcionado.
-Actuas como si el usuario estuviera hablando con su propio SaaS desde la perspectiva de gestion de servicios TI.
-Debes explicar metricas, riesgos, valor del servicio, continuidad, desempeno, retencion, crecimiento y mejora continua.
-No inventes metricas ni datos.
-Si faltan datos, dilo explicitamente.
-No prometas exito ni des asesoria financiera garantizada.
-Responde en espanol, de forma clara, accionable y priorizada."""
+CHAT_PROMPT_VERSION = "v2"
+
+# Número mínimo de mensajes recientes a incluir siempre
+RECENT_MESSAGES_WINDOW = 10
+
+CHAT_SYSTEM_PROMPT = """Eres el asistente conversacional de ValueMySaaS.
+Ayudas a estudiantes de Ingeniería de Sistemas a entender y mejorar su proyecto SaaS.
+Usas exclusivamente el contexto y el historial proporcionado como referencia.
+
+REGLAS CRÍTICAS:
+1. Responde ÚNICAMENTE a la "Pregunta del estudiante".
+2. Si el estudiante simplemente te saluda (ej. "hola", "buenos días"), devuélvele el saludo amablemente y pregúntale en qué puedes ayudarle con su proyecto. NO realices análisis ni des consejos no solicitados.
+3. El "Contexto del proyecto SaaS" es solo información pasiva. Úsala solo si es necesario para responder la pregunta actual.
+4. Explica conceptos como MRR, churn, LTV/CAC, de forma simple y clara cuando sea pertinente.
+5. No inventes datos. Si falta información, dilo claramente.
+6. Responde en español."""
+
+SUMMARY_SYSTEM_PROMPT = """Resume el siguiente historial de conversación en máximo 150 palabras.
+Conserva los puntos clave: decisiones tomadas, problemas identificados y recomendaciones dadas.
+El resumen se usará como contexto para continuar la conversación.
+Responde solo con el resumen, sin introducción."""
 
 
 class ChatService:
@@ -30,16 +60,18 @@ class ChatService:
         saas_project_repository: SaasProjectRepository,
         conversation_repository: ConversationRepository,
         chat_message_repository: ChatMessageRepository,
-        ai_key_service: AiProviderKeyService,
+        credit_service: CreditService,
         ai_context_service: AiContextService,
         llm_client_service: LlmClientService,
+        user_repository: UserRepository,
     ) -> None:
         self.saas_project_repository = saas_project_repository
         self.conversation_repository = conversation_repository
         self.chat_message_repository = chat_message_repository
-        self.ai_key_service = ai_key_service
+        self.credit_service = credit_service
         self.ai_context_service = ai_context_service
         self.llm_client_service = llm_client_service
+        self.user_repository = user_repository
 
     async def list_messages(
         self,
@@ -60,7 +92,9 @@ class ChatService:
             limit=limit,
             offset=offset,
         )
-        total = await self.chat_message_repository.count_by_conversation(conversation_id=conversation.id)
+        total = await self.chat_message_repository.count_by_conversation(
+            conversation_id=conversation.id
+        )
         return ChatMessageListResponse(items=items, total=total, limit=limit, offset=offset)
 
     async def send_message(
@@ -77,72 +111,339 @@ class ChatService:
             owner_id=owner_id,
         )
         if conversation.status != ConversationStatus.ACTIVE:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Conversation is not active")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="La conversación no está activa.",
+            )
 
-        key, api_key = await self.ai_key_service.get_decrypted_key_for_user(
-            key_id=payload.ai_key_id,
-            user_id=owner_id,
+        # Resolver credenciales LLM (BYOK o créditos del sistema)
+        user = await self.user_repository.get_by_id(owner_id)
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
+
+        credentials = await self.credit_service.resolve_llm_credentials(
+            user=user,
+            ai_key_id=payload.ai_key_id,
         )
+
+        # Guardar el mensaje del usuario
+        actual_message = payload.message or (payload.messages[-1].get("content", "") if payload.messages else "")
         user_message = await self.chat_message_repository.create(
             data={
                 "conversation_id": conversation.id,
                 "role": ChatRole.USER,
-                "content": payload.message,
+                "content": actual_message,
                 "message_metadata": {
                     "model_name_requested": payload.model_name,
-                    "ai_key_id": str(payload.ai_key_id),
+                    "used_byok": not credentials.credit_used,
                 },
             }
         )
-        context = await self.ai_context_service.build_context(project_id=project_id, owner_id=owner_id)
+
+        # Construir contexto del proyecto
+        try:
+            context = await self.ai_context_service.build_context(
+                project_id=project_id, owner_id=owner_id
+            )
+        except HTTPException:
+            context = {}
+
+        # Obtener historial y construir los mensajes para el LLM
         recent_messages = await self.chat_message_repository.list_recent_by_conversation(
             conversation_id=conversation.id,
-            limit=10,
+            limit=RECENT_MESSAGES_WINDOW + 1,  # +1 para excluir el recién guardado
         )
-        user_prompt = self._build_user_prompt(
+        # El mensaje recién guardado ya está incluido, excluirlo del historial
+        history_messages = [m for m in recent_messages if m.id != user_message.id]
+
+        user_prompt = await self._build_user_prompt(
+            conversation=conversation,
             context=context,
-            recent_messages=recent_messages,
-            current_message=payload.message,
+            history_messages=history_messages,
+            current_message=actual_message,
+            credentials=credentials,
+            owner_id=owner_id,
         )
+
+        # Llamar al LLM
         llm_response = await self.llm_client_service.generate_analysis(
-            provider=key.provider,
-            api_key=api_key,
-            model_name=payload.model_name,
+            provider=credentials.provider,
+            api_key=credentials.api_key,
+            model_name=payload.model_name or credentials.model_name,
             system_prompt=CHAT_SYSTEM_PROMPT,
             user_prompt=user_prompt,
+            fallback_keys=credentials.fallback_system_keys,
         )
+
+        # Guardar la respuesta del asistente
         assistant_message = await self.chat_message_repository.create(
             data={
                 "conversation_id": conversation.id,
                 "role": ChatRole.ASSISTANT,
                 "content": llm_response.output_text,
                 "message_metadata": {
-                    "provider": key.provider.value,
+                    "provider": credentials.provider.value,
                     "model_name": llm_response.model_name,
                     "prompt_version": CHAT_PROMPT_VERSION,
                     "tokens_input": llm_response.tokens_input,
                     "tokens_output": llm_response.tokens_output,
+                    "used_credits": credentials.credit_used,
                 },
                 "token_count": llm_response.tokens_output,
             }
         )
+
+        # Incrementar contador de mensajes (1 usuario + 1 asistente = 2)
+        new_total = conversation.total_messages + 2
         await self.conversation_repository.update(
             conversation=conversation,
             data={
-                "provider": key.provider,
+                "provider": credentials.provider,
                 "model_name": llm_response.model_name,
                 "system_prompt_version": CHAT_PROMPT_VERSION,
+                "total_messages": new_total,
             },
         )
+
+        # Consumir crédito DESPUÉS de guardar (si se usó el sistema)
+        if credentials.credit_used:
+            await self.credit_service.consume_credit(
+                user_id=owner_id,
+                reason=CreditReason.CHAT_MESSAGE,
+                description=f"Mensaje de chat — conversación {conversation.id}",
+            )
+
         return SendChatMessageResponse(
             conversation_id=conversation.id,
             user_message=user_message,
             assistant_message=assistant_message,
             model_name=llm_response.model_name or payload.model_name or "",
-            provider=key.provider,
+            provider=credentials.provider,
         )
 
-    async def _get_owned_conversation(self, *, project_id: UUID, conversation_id: UUID, owner_id: UUID):
+    async def stream_message(
+        self,
+        *,
+        project_id: UUID,
+        conversation_id: UUID,
+        owner_id: UUID,
+        payload: SendChatMessageRequest,
+    ):
+        conversation = await self._get_owned_conversation(
+            project_id=project_id,
+            conversation_id=conversation_id,
+            owner_id=owner_id,
+        )
+        if conversation.status != ConversationStatus.ACTIVE:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="La conversación no está activa.",
+            )
+
+        user = await self.user_repository.get_by_id(owner_id)
+        credentials = await self.credit_service.resolve_llm_credentials(
+            user=user,
+            ai_key_id=payload.ai_key_id,
+        )
+
+        actual_message = payload.message or (payload.messages[-1].get("content", "") if payload.messages else "")
+        user_message = await self.chat_message_repository.create(
+            data={
+                "conversation_id": conversation.id,
+                "role": ChatRole.USER,
+                "content": actual_message,
+                "message_metadata": {
+                    "model_name_requested": payload.model_name,
+                    "used_byok": not credentials.credit_used,
+                },
+            }
+        )
+
+        try:
+            context = await self.ai_context_service.build_context(
+                project_id=project_id, owner_id=owner_id
+            )
+        except HTTPException:
+            context = {}
+
+        recent_messages = await self.chat_message_repository.list_recent_by_conversation(
+            conversation_id=conversation.id,
+            limit=RECENT_MESSAGES_WINDOW + 1,
+        )
+        history_messages = [m for m in recent_messages if m.id != user_message.id]
+
+        user_prompt = await self._build_user_prompt(
+            conversation=conversation,
+            context=context,
+            history_messages=history_messages,
+            current_message=actual_message,
+            credentials=credentials,
+            owner_id=owner_id,
+        )
+
+        resolved_model, chunk_generator = await self.llm_client_service.stream_analysis(
+            provider=credentials.provider,
+            api_key=credentials.api_key,
+            model_name=payload.model_name or credentials.model_name,
+            system_prompt=CHAT_SYSTEM_PROMPT,
+            user_prompt=user_prompt,
+            fallback_keys=credentials.fallback_system_keys,
+        )
+
+        async def event_generator():
+            full_text = ""
+            try:
+                async for chunk in chunk_generator:
+                    full_text += chunk
+                    yield chunk
+            except Exception as e:
+                logger.error(f"Error in chat stream: {e}")
+                yield f"\n[Error de generación: {str(e)}]\n"
+                return
+
+            # New session required: FastAPI closes the request session before the generator finishes.
+            try:
+                async with AsyncSessionLocal() as session:
+                    chat_repo = ChatMessageRepository(session)
+                    conv_repo = ConversationRepository(session)
+
+                    await chat_repo.create(
+                        data={
+                            "conversation_id": conversation.id,
+                            "role": ChatRole.ASSISTANT,
+                            "content": full_text,
+                            "message_metadata": {
+                                "provider": credentials.provider.value,
+                                "model_name": resolved_model,
+                                "prompt_version": CHAT_PROMPT_VERSION,
+                                "used_credits": credentials.credit_used,
+                            },
+                            "token_count": 0,
+                        }
+                    )
+                    
+                    conv = await conv_repo.get_by_id_for_project_user(
+                        conversation_id=conversation_id, saas_project_id=project_id, user_id=owner_id
+                    )
+                    if conv:
+                        new_total = conv.total_messages + 2
+                        await conv_repo.update(
+                            conversation=conv,
+                            data={
+                                "provider": credentials.provider,
+                                "model_name": resolved_model,
+                                "system_prompt_version": CHAT_PROMPT_VERSION,
+                                "total_messages": new_total,
+                            },
+                        )
+                    await session.commit()
+
+                    if credentials.credit_used:
+                        credit_svc = CreditService(
+                            user_repository=UserRepository(session),
+                            ai_key_repository=AiProviderKeyRepository(session),
+                            system_ai_key_repository=SystemAiKeyRepository(session),
+                            credit_transaction_repository=CreditTransactionRepository(session),
+                        )
+                        await credit_svc.consume_credit(
+                            user_id=owner_id,
+                            reason=CreditReason.CHAT_MESSAGE,
+                            description=f"Mensaje de chat stream — conversación {conversation.id}",
+                        )
+                        await session.commit()
+            except Exception as db_e:
+                logger.error(f"Error guardando historial del chat en DB: {db_e}")
+                yield f"\n[Error interno guardando historial: {str(db_e)}]\n"
+
+        return event_generator()
+
+    async def _build_user_prompt(
+        self,
+        *,
+        conversation,
+        context: dict,
+        history_messages: list,
+        current_message: str,
+        credentials,
+        owner_id: UUID,
+    ) -> str:
+        """Construye el prompt con la estrategia de ventana deslizante.
+
+        Si el historial supera el context_window_size, usa el resumen almacenado
+        o genera uno nuevo con el LLM.
+        """
+        window_size = conversation.context_window_size or 20
+
+        # Historial reciente (últimos RECENT_MESSAGES_WINDOW mensajes)
+        recent = history_messages[-RECENT_MESSAGES_WINDOW:]
+        history_lines = []
+        for msg in recent:
+            if msg.role == ChatRole.SYSTEM:
+                continue
+            role_label = "Estudiante" if msg.role == ChatRole.USER else "Asistente"
+            history_lines.append(f"{role_label}: {msg.content}")
+        history_text = "\n".join(history_lines) or "Sin historial previo."
+
+        # Si hay demasiados mensajes, usar/generar resumen
+        summary_text = ""
+        if conversation.total_messages > window_size:
+            if conversation.summary:
+                summary_text = f"\n\n[Resumen de conversación anterior]:\n{conversation.summary}"
+            else:
+                # Generar resumen automáticamente (sin consumir créditos extra)
+                summary = await self._generate_summary(
+                    all_messages=history_messages,
+                    credentials=credentials,
+                )
+                if summary:
+                    await self.conversation_repository.update(
+                        conversation=conversation,
+                        data={"summary": summary},
+                    )
+                    summary_text = f"\n\n[Resumen de conversación anterior]:\n{summary}"
+
+        context_text = json.dumps(context, ensure_ascii=False, indent=2) if context else "Sin datos disponibles."
+
+        return (
+            f"Contexto del proyecto SaaS:\n{context_text}"
+            f"{summary_text}\n\n"
+            f"Historial reciente:\n{history_text}\n\n"
+            f"Pregunta del estudiante:\n{current_message}"
+        )
+
+    async def _generate_summary(
+        self,
+        *,
+        all_messages: list,
+        credentials,
+    ) -> str | None:
+        """Genera un resumen de conversación usando el LLM. Solo para compresión de contexto."""
+        if not all_messages:
+            return None
+        lines = []
+        for msg in all_messages:
+            if msg.role == ChatRole.SYSTEM:
+                continue
+            role = "Usuario" if msg.role == ChatRole.USER else "Asistente"
+            lines.append(f"{role}: {msg.content}")
+        conversation_text = "\n".join(lines)
+        try:
+            response = await self.llm_client_service.generate_analysis(
+                provider=credentials.provider,
+                api_key=credentials.api_key,
+                model_name=credentials.model_name,
+                system_prompt=SUMMARY_SYSTEM_PROMPT,
+                user_prompt=conversation_text,
+                fallback_keys=credentials.fallback_system_keys,
+            )
+            return response.output_text.strip() or None
+        except Exception as exc:
+            logger.warning("No se pudo generar resumen de conversación: %s", exc)
+            return None
+
+    async def _get_owned_conversation(
+        self, *, project_id: UUID, conversation_id: UUID, owner_id: UUID
+    ):
         await self._ensure_project_owned(project_id=project_id, owner_id=owner_id)
         conversation = await self.conversation_repository.get_by_id_for_project_user(
             conversation_id=conversation_id,
@@ -150,7 +451,10 @@ class ChatService:
             user_id=owner_id,
         )
         if conversation is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Conversación no encontrada.",
+            )
         return conversation
 
     async def _ensure_project_owned(self, *, project_id: UUID, owner_id: UUID) -> None:
@@ -159,21 +463,7 @@ class ChatService:
             owner_id=owner_id,
         )
         if project is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SaaS project not found")
-
-    def _build_user_prompt(self, *, context: dict, recent_messages: list, current_message: str) -> str:
-        history_lines = []
-        for message in recent_messages:
-            if message.role == ChatRole.SYSTEM:
-                continue
-            role = "Usuario" if message.role == ChatRole.USER else "Asistente"
-            history_lines.append(f"{role}: {message.content}")
-        history = "\n".join(history_lines[-10:])
-        return (
-            "Contexto estructurado del SaaS:\n"
-            f"{json.dumps(context, ensure_ascii=False, indent=2)}\n\n"
-            "Historial reciente:\n"
-            f"{history or 'Sin historial previo.'}\n\n"
-            "Pregunta actual:\n"
-            f"{current_message}"
-        )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Proyecto SaaS no encontrado.",
+            )

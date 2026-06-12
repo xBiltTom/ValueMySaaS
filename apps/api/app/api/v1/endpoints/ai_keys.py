@@ -12,6 +12,7 @@ from app.schemas.ai_key import (
     AiProviderKeyUpdate,
     AiProviderKeyVerifyRequest,
     AiProviderKeyVerifyResponse,
+    AiModelListResponse,
 )
 from app.services.ai_key_service import AiProviderKeyService
 
@@ -90,3 +91,15 @@ async def delete_ai_key(
 ) -> Response:
     await ai_key_service.delete_key(key_id=key_id, user_id=current_user.id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/{key_id}/models", response_model=AiModelListResponse)
+async def get_ai_key_models(
+    key_id: UUID,
+    current_user: User = Depends(get_current_user),
+    ai_key_service: AiProviderKeyService = Depends(get_ai_key_service),
+):
+    return await ai_key_service.list_models(
+        user_id=current_user.id,
+        key_id=key_id,
+    )
