@@ -66,3 +66,10 @@ class ReportRepository:
         if report_type is not None:
             statement = statement.where(Report.report_type == report_type)
         return statement
+
+    async def delete(self, *, report_id: UUID) -> None:
+        result = await self.db.execute(select(Report).where(Report.id == report_id))
+        report = result.scalar_one_or_none()
+        if report:
+            await self.db.delete(report)
+            await self.db.flush()

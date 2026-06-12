@@ -97,6 +97,10 @@ class ReportService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Report not found")
         return report
 
+    async def delete_report(self, *, project_id: UUID, report_id: UUID, owner_id: UUID) -> None:
+        report = await self.get_report(project_id=project_id, report_id=report_id, owner_id=owner_id)
+        await self.report_repository.delete(report_id=report.id)
+
     async def _ensure_project_owned(self, *, project_id: UUID, owner_id: UUID):
         project = await self.saas_project_repository.get_by_id_for_owner(
             project_id=project_id,
