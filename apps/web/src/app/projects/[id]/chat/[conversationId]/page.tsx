@@ -16,7 +16,7 @@ import { ConversationList } from "@/features/conversations/components/conversati
 import { ChatModelSelector } from "@/features/conversations/components/chat-model-selector";
 import { getAuthToken } from "@/lib/auth-token";
 import { API_BASE_URL } from "@/lib/api-client";
-import { Menu, X, MessageSquarePlus } from "lucide-react";
+import { Menu, X, TerminalSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function ConversationPage() {
@@ -154,19 +154,19 @@ export default function ConversationPage() {
 
   return (
     <DashboardShell>
-      <div className="flex h-[calc(100vh-100px)] -mx-4 md:-mx-7 -my-6 bg-background overflow-hidden relative border border-border/40 shadow-sm rounded-2xl">
+      <div className="flex h-[calc(100vh-100px)] -mx-4 md:-mx-7 -my-6 bg-background overflow-hidden relative border-2 border-border/60 shadow-[8px_8px_0_rgba(0,0,0,0.2)] md:shadow-[12px_12px_0_rgba(0,0,0,0.2)] rounded-2xl">
         
         {/* Mobile Sidebar Overlay */}
         {mobileSidebarOpen && (
           <div 
-            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 md:hidden animate-in fade-in duration-200"
+            className="fixed inset-0 bg-background/80 backdrop-blur-md z-40 md:hidden animate-in fade-in duration-200"
             onClick={() => setMobileSidebarOpen(false)} 
           />
         )}
 
         {/* Sidebar for Conversations */}
         <div className={cn(
-          "absolute md:relative z-50 h-full w-72 md:w-80 shrink-0 transform transition-transform duration-300 ease-in-out bg-card/95 backdrop-blur-xl border-r border-border/50",
+          "absolute md:relative z-50 h-full w-72 md:w-80 shrink-0 transform transition-transform duration-300 ease-in-out bg-card/95 backdrop-blur-xl border-r-2 border-border/60",
           mobileSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}>
           {conversationsQuery.data ? (
@@ -179,23 +179,29 @@ export default function ConversationPage() {
         </div>
 
         {/* Main Chat Area */}
-        <main className="flex-1 flex flex-col relative bg-gradient-to-b from-background to-muted/20">
+        <main className="flex-1 flex flex-col relative bg-card/10">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:30px_30px] pointer-events-none" />
+
           {/* Topbar */}
-          <header className="h-16 border-b border-border/40 bg-background/80 backdrop-blur-xl flex items-center px-4 md:px-6 justify-between shrink-0 sticky top-0 z-10 transition-all">
+          <header className="h-16 border-b-2 border-border/60 bg-background/80 backdrop-blur-xl flex items-center px-4 md:px-6 justify-between shrink-0 sticky top-0 z-20 transition-all">
             <div className="flex items-center gap-3 min-w-0">
               <button 
                 onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-                className="md:hidden p-2 -ml-2 rounded-xl text-muted-foreground hover:bg-muted transition-colors active:scale-95"
+                className="md:hidden p-2 -ml-2 rounded-xl text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors active:scale-95"
                 aria-label="Toggle Menu"
               >
                 {mobileSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
               <div className="flex flex-col min-w-0">
-                <h2 className="font-display font-semibold text-foreground text-sm md:text-base truncate">
-                  {conversationQuery.data?.title || "Nueva conversación"}
-                </h2>
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold hidden sm:block">
-                  Asistente IA
+                <div className="flex items-center gap-2">
+                  <TerminalSquare className="h-4 w-4 text-primary hidden sm:block" />
+                  <h2 className="font-display font-black uppercase tracking-tight text-foreground text-sm md:text-base truncate">
+                    {conversationQuery.data?.title || "NUEVO HILO DE COMUNICACIÓN"}
+                  </h2>
+                </div>
+                <span className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground/70 font-black hidden sm:flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 bg-primary/80 rounded-full animate-pulse" />
+                  SISTEMA IA ACTIVO
                 </span>
               </div>
             </div>
@@ -210,19 +216,23 @@ export default function ConversationPage() {
 
           {/* Messages Scroll Area */}
           {isChatSwitching ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-8">
-              <div className="relative flex h-16 w-16 items-center justify-center mb-4">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/20"></span>
-                <span className="relative inline-flex rounded-full h-8 w-8 bg-primary/40 backdrop-blur-sm border border-primary/30 shadow-[0_0_15px_rgba(var(--primary),0.3)]"></span>
+            <div className="flex-1 flex flex-col items-center justify-center p-8 z-10">
+              <div className="relative flex h-16 w-16 items-center justify-center mb-6">
+                <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full animate-pulse" />
+                <div className="h-12 w-12 bg-background border-2 border-primary/50 text-primary rounded-[8px] shadow-[4px_4px_0_rgba(var(--primary),0.2)] flex items-center justify-center relative z-10 animate-bounce">
+                  <TerminalSquare className="h-6 w-6" />
+                </div>
               </div>
-              <p className="text-muted-foreground animate-pulse font-medium text-sm">Cargando sesión...</p>
+              <p className="text-muted-foreground animate-pulse font-mono font-black tracking-widest text-[11px] uppercase">
+                SINCRONIZANDO NODOS...
+              </p>
             </div>
           ) : conversationQuery.isError || messagesQuery.isError ? (
-            <div className="flex-1 flex items-center justify-center p-8">
-              <ErrorState message="No se pudo cargar la conversación" />
+            <div className="flex-1 flex items-center justify-center p-8 z-10">
+              <ErrorState message="ERR_CONVERSATION_LOAD_FAILED" />
             </div>
           ) : (
-            <div className="flex-1 overflow-y-auto px-4 md:px-8 lg:px-24 pb-40 pt-8 scroll-smooth">
+            <div className="flex-1 overflow-y-auto px-4 md:px-8 lg:px-24 pb-48 pt-8 scroll-smooth custom-scrollbar z-10">
               <ChatMessageList 
                 messages={{ 
                   items: messages.map((m: any) => ({
@@ -239,25 +249,27 @@ export default function ConversationPage() {
               />
               {isChatLoading && messages[messages.length - 1]?.role === "user" && (
                 <div className="flex justify-start mt-8 mb-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                  <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-4 shadow-sm text-sm text-foreground/70 flex items-center gap-3">
+                  <div className="bg-card/40 backdrop-blur-md border-2 border-primary/20 rounded-[8px] p-4 shadow-[4px_4px_0_rgba(var(--primary),0.1)] text-sm text-foreground/70 flex items-center gap-3 font-mono">
                     <span className="relative flex h-3 w-3">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/60"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-primary m-0.5"></span>
                     </span>
-                    <span className="animate-pulse">Analizando...</span>
+                    <span className="animate-pulse uppercase tracking-wider text-[11px] font-black">PROCESANDO CONSULTA...</span>
                   </div>
                 </div>
               )}
               {chatError && (
                 <div className="mt-6 animate-in fade-in">
-                  <ErrorState message={chatError.message} />
+                  <div className="bg-destructive/10 border-2 border-destructive p-4 rounded-[8px]">
+                    <ErrorState message={chatError.message} />
+                  </div>
                 </div>
               )}
             </div>
           )}
 
           {/* Bottom Input Form */}
-          <div className="absolute bottom-0 w-full bg-gradient-to-t from-background via-background to-transparent pt-20 pb-6 px-4 md:px-8 lg:px-24 pointer-events-none">
+          <div className="absolute bottom-0 w-full bg-gradient-to-t from-background via-background/95 to-transparent pt-32 pb-6 px-4 md:px-8 lg:px-24 pointer-events-none z-20">
             <div className="pointer-events-auto max-w-4xl mx-auto">
               <ChatInputForm 
                 projectId={projectId} 

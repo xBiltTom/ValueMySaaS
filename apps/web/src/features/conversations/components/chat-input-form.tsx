@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { Send, Sparkles } from "lucide-react";
+import { Send, Sparkles, Terminal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { suggestedQuestions } from "@/features/conversations/utils";
@@ -64,20 +64,20 @@ export function ChatInputForm({
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto flex flex-col gap-4">
+    <div className="w-full max-w-4xl mx-auto flex flex-col gap-4">
       {isEmptyChat && (
-        <div className="flex flex-wrap gap-2 justify-center mb-2">
+        <div className="flex flex-wrap gap-2 justify-start md:justify-center mb-4">
           {suggestedQuestions.map((question) => (
             <button
               key={question}
               type="button"
-              className="rounded-[18px] border border-border/60 bg-card/60 backdrop-blur-md px-4 py-2 text-[13px] font-medium text-foreground/80 shadow-sm hover:border-primary/40 hover:bg-muted/80 hover:text-primary hover:-translate-y-0.5 transition-all flex items-center gap-2"
+              className="group border border-primary/30 bg-card/60 backdrop-blur-md px-3 py-2 text-[11px] font-mono text-primary/80 uppercase shadow-[2px_2px_0_rgba(var(--primary),0.2)] hover:border-primary hover:bg-primary/10 hover:text-primary transition-all flex items-center gap-2 rounded-[6px]"
               onClick={() => {
                 form.setValue("message", question);
                 if (textareaRef.current) textareaRef.current.focus();
               }}
             >
-              <Sparkles className="h-3.5 w-3.5" />
+              <Sparkles className="h-3 w-3 group-hover:animate-pulse" />
               {question}
             </button>
           ))}
@@ -85,9 +85,12 @@ export function ChatInputForm({
       )}
 
       <form 
-        className="relative flex items-end w-full rounded-[24px] bg-card/80 backdrop-blur-xl border border-border/60 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)] focus-within:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.12)] focus-within:border-primary/40 transition-all overflow-hidden group"
+        className="relative flex items-end w-full bg-card/90 backdrop-blur-xl border-2 border-primary/50 shadow-[0_0_15px_rgba(var(--primary),0.1)] focus-within:shadow-[0_0_20px_rgba(var(--primary),0.2)] focus-within:border-primary transition-all overflow-hidden group"
         onSubmit={form.handleSubmit(onSubmit)}
       >
+        <div className="absolute left-4 top-4 text-primary pointer-events-none">
+          <Terminal className="h-5 w-5" />
+        </div>
         <Textarea
           {...form.register("message")}
           ref={(e) => {
@@ -95,21 +98,25 @@ export function ChatInputForm({
             textareaRef.current = e;
           }}
           onKeyDown={handleKeyDown}
-          placeholder="¿En qué te puedo ayudar hoy?"
-          className="min-h-[60px] max-h-[200px] w-full resize-none bg-transparent border-0 py-4 pl-6 pr-14 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/50 text-[15.5px] leading-relaxed"
+          placeholder="Escribe un comando o consulta..."
+          className="min-h-[60px] max-h-[200px] w-full resize-none bg-transparent border-0 py-4 pl-12 pr-16 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-primary/40 font-mono text-[14px] text-foreground leading-relaxed custom-scrollbar"
           rows={1}
         />
         <Button 
           type="submit" 
           disabled={!watchMessage?.trim() || isChatLoading} 
-          className="absolute right-2.5 bottom-2.5 h-10 w-10 p-0 inline-flex items-center justify-center rounded-full transition-all duration-300 shadow-sm disabled:opacity-30 disabled:bg-muted-foreground hover:scale-105 active:scale-95 bg-foreground text-background hover:bg-foreground/90"
+          className="absolute right-3 bottom-3 h-10 w-10 p-0 inline-flex items-center justify-center rounded-[6px] transition-all duration-300 disabled:opacity-30 disabled:bg-muted disabled:text-muted-foreground hover:scale-105 active:scale-95 bg-primary text-primary-foreground shadow-[2px_2px_0_rgba(0,0,0,0.3)] hover:shadow-[4px_4px_0_rgba(0,0,0,0.3)]"
         >
-          <Send className="h-4 w-4" />
+          <Send className="h-4 w-4 ml-1" />
         </Button>
       </form>
-      <div className="text-center mt-1">
-        <p className="text-[11px] text-muted-foreground/60 tracking-wide font-medium">
-          La IA puede cometer errores. Verifica la información importante.
+      <div className="flex items-center justify-between mt-1 px-1">
+        <p className="text-[10px] font-mono text-primary/60 uppercase tracking-widest flex items-center gap-2">
+          <span className="inline-block h-1.5 w-1.5 bg-primary rounded-full animate-pulse"></span>
+          Sistema IA activo
+        </p>
+        <p className="text-[10px] font-mono text-muted-foreground/60 tracking-widest uppercase">
+          Verifica respuestas crudas
         </p>
       </div>
     </div>
