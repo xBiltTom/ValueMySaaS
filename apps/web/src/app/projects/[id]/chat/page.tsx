@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { MessageSquare } from "lucide-react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
@@ -17,6 +17,7 @@ import { CreateConversationForm } from "@/features/conversations/components/crea
 export default function ProjectChatPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const projectId = params.id;
 
   const projectQuery = useQuery({ queryKey: ["project", projectId], queryFn: () => getProject(projectId) });
@@ -27,11 +28,11 @@ export default function ProjectChatPage() {
   });
 
   useEffect(() => {
-    if (conversationsQuery.data?.items && conversationsQuery.data.items.length > 0) {
+    if (searchParams.get("new") !== "true" && conversationsQuery.data?.items && conversationsQuery.data.items.length > 0) {
       // Redirect to the first (most recent) conversation
       router.replace(`/projects/${projectId}/chat/${conversationsQuery.data.items[0].id}`);
     }
-  }, [conversationsQuery.data, projectId, router]);
+  }, [conversationsQuery.data, projectId, router, searchParams]);
 
   if (projectQuery.isLoading || keysQuery.isLoading || conversationsQuery.isLoading) {
     return <DashboardShell><LoadingState /></DashboardShell>;

@@ -44,7 +44,7 @@ export function ConversationList({ projectId, conversations, onSelect }: { proje
 
       <div className="border-b-2 border-border/60 p-4 relative z-10 bg-background/50 backdrop-blur-md">
         <Link
-          href={`/projects/${projectId}/chat`}
+          href={`/projects/${projectId}/chat?new=true`}
           className="group relative flex h-12 w-full items-center justify-start gap-3 rounded-lg border-2 border-border/60 bg-card px-4 text-[11px] font-black uppercase tracking-widest text-foreground shadow-[2px_2px_0_rgba(0,0,0,0.2)] hover:border-primary hover:shadow-[4px_4px_0_rgba(var(--primary))] hover:-translate-y-0.5 hover:-translate-x-0.5 transition-all active:shadow-none active:translate-x-0 active:translate-y-0"
           onClick={onSelect}
         >
