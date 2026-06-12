@@ -11,7 +11,7 @@ import { deleteConversation } from "@/features/conversations/api";
 import { ConversationListResponse } from "@/features/conversations/types";
 import { cn } from "@/lib/utils";
 
-export function ConversationList({ projectId, conversations }: { projectId: string; conversations: ConversationListResponse }) {
+export function ConversationList({ projectId, conversations, onSelect }: { projectId: string; conversations: ConversationListResponse; onSelect?: () => void; }) {
   const params = useParams();
   const currentConversationId = params.conversationId as string;
   const queryClient = useQueryClient();
@@ -43,6 +43,7 @@ export function ConversationList({ projectId, conversations }: { projectId: stri
         <Link
           href={`/projects/${projectId}/chat`}
           className="inline-flex h-12 w-full items-center justify-start gap-2 rounded-xl border border-border bg-card px-4 text-sm font-semibold text-foreground shadow-sm transition-colors hover:border-primary/40 hover:bg-muted hover:text-primary"
+          onClick={onSelect}
         >
           <Plus aria-hidden="true" className="h-4 w-4 shrink-0" />
           Nueva conversación
@@ -74,6 +75,7 @@ export function ConversationList({ projectId, conversations }: { projectId: stri
                 <Link
                   href={`/projects/${projectId}/chat/${conversation.id}`}
                   className="min-w-0 flex-1 truncate outline-none focus-visible:underline"
+                  onClick={onSelect}
                 >
                   {conversation.title || "Nueva conversación"}
                 </Link>
