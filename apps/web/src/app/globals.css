@@ -226,25 +226,26 @@
     }
   }
 
-  /* Custom Tech-Brutalist Scrollbar */
-  .custom-scrollbar::-webkit-scrollbar {
+  /* Global Tech-Brutalist Scrollbar */
+  *::-webkit-scrollbar {
     width: 10px;
     height: 10px;
   }
-  .custom-scrollbar::-webkit-scrollbar-track {
+  *::-webkit-scrollbar-track {
     background: var(--background);
-    border-left: 2px solid var(--border);
+    border-left: 1px solid var(--border);
+    border-top: 1px solid var(--border);
   }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
+  *::-webkit-scrollbar-thumb {
     background-color: var(--primary);
     border: 2px solid var(--background);
     border-radius: 0px; /* Sharp edges */
   }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  *::-webkit-scrollbar-thumb:hover {
     background-color: var(--foreground);
   }
   /* For Firefox */
-  .custom-scrollbar {
+  * {
     scrollbar-width: thin;
     scrollbar-color: var(--primary) var(--background);
   }
