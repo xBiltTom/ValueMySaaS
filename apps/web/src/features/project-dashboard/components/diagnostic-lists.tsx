@@ -103,7 +103,13 @@ export function DiagnosticList({
           ) : (
             <div className="rounded-[16px] border border-dashed border-border/60 bg-background/30 px-4 py-8 text-center flex flex-col items-center gap-3">
               <TerminalSquare className="h-6 w-6 text-muted-foreground/50" />
-              <p className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest">Awaiting Input Data...</p>
+              <p className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest">
+                {variant === "alert" 
+                  ? "SYS_OK: NO_ISSUES_DETECTED" 
+                  : variant === "strength" 
+                  ? "SYS_INFO: NO_STRENGTHS_FOUND" 
+                  : "SYS_INFO: NO_RECOMMENDATIONS"}
+              </p>
             </div>
           )}
         </div>
