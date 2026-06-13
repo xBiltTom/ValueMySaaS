@@ -225,6 +225,29 @@
       bottom: calc(64px + max(0px, env(safe-area-inset-bottom)) + 8px) !important;
     }
   }
+
+  /* Custom Tech-Brutalist Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: var(--background);
+    border-left: 2px solid var(--border);
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--primary);
+    border: 2px solid var(--background);
+    border-radius: 0px; /* Sharp edges */
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: var(--foreground);
+  }
+  /* For Firefox */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) var(--background);
+  }
 }
 
 @keyframes page-fade-up {
