@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Lightbulb, BarChart3, Info } from "lucide-react";
+import { ArrowLeft, Lightbulb, BarChart3, Info, Database, X } from "lucide-react";
+import { useState, useEffect } from "react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingState } from "@/components/shared/loading-state";
@@ -18,6 +19,19 @@ import { cn } from "@/lib/utils";
 export default function ProjectMetricsPage() {
   const params = useParams<{ id: string }>();
   const projectId = params.id;
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Prevent background scrolling when mobile sidebar is open
+  useEffect(() => {
+    if (isSidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isSidebarOpen]);
 
   const projectQuery = useQuery({ queryKey: ["project", projectId], queryFn: () => getProject(projectId) });
   const snapshotsQuery = useQuery({
@@ -49,7 +63,7 @@ export default function ProjectMetricsPage() {
 
       {/* Page header */}
       <div className={cn(
-        "relative overflow-hidden rounded-[24px] border border-border/60 bg-card/40 backdrop-blur-xl p-6 md:p-8 mb-8 shadow-sm",
+        "relative overflow-hidden rounded-[24px] border border-border/60 bg-card/40 backdrop-blur-xl p-6 md:p-8 mb-8 shadow-sm shrink-0",
         isPlanning ? "border-t-4 border-t-status-warning-fg" : "border-t-4 border-t-primary"
       )}>
         {/* Background scanline effect */}
@@ -100,30 +114,71 @@ export default function ProjectMetricsPage() {
       ) : null}
 
       <div className={cn(
-        "grid gap-6",
-        isPlanning ? "xl:grid-cols-1 max-w-2xl" : "xl:grid-cols-[1.1fr_0.9fr]"
+        "flex flex-col xl:flex-row gap-8 items-start relative w-full",
+        isPlanning ? "max-w-2xl" : ""
       )}>
-        {project ? (
-          <MetricSnapshotForm projectId={projectId} projectStage={project.stage} />
-        ) : <div />}
+        {/* Left Column (Inputs) */}
+        <div className="flex-1 w-full xl:max-h-[calc(100vh-280px)] xl:overflow-y-auto xl:pr-4 custom-scrollbar xl:sticky xl:top-6">
+          {project ? (
+            <MetricSnapshotForm projectId={projectId} projectStage={project.stage} />
+          ) : <div />}
+          
+          {isPlanning && snapshotsQuery.data?.items.length ? (
+            <div className="mt-8">
+              <MetricSnapshotList snapshots={snapshotsQuery.data} />
+            </div>
+          ) : null}
+        </div>
 
+        {/* Right Column (DATA_LOG_HISTORY & Calc) */}
         {!isPlanning && (
-          <div className="space-y-6">
-            {snapshotsQuery.data ? <MetricSnapshotList snapshots={snapshotsQuery.data} /> : null}
-            {calculationQuery.data ? (
-              <MetricCalculationPanel calculation={calculationQuery.data} projectStage={project?.stage} />
-            ) : null}
-            {calculationQuery.isError && snapshotsQuery.data?.items.length ? (
-              <ErrorState title="Cálculos no disponibles" message={getApiErrorMessage(calculationQuery.error)} />
-            ) : null}
-          </div>
-        )}
+          <>
+            {/* Mobile Toggle Button */}
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="xl:hidden fixed bottom-24 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[4px_4px_0_rgba(0,0,0,0.5)] border-2 border-primary-foreground transition-transform active:translate-y-1"
+            >
+              <Database className="h-6 w-6" />
+            </button>
 
-        {isPlanning && snapshotsQuery.data?.items.length ? (
-          <div>
-            <MetricSnapshotList snapshots={snapshotsQuery.data} />
-          </div>
-        ) : null}
+            {/* Mobile Overlay */}
+            {isSidebarOpen && (
+              <div 
+                className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm xl:hidden transition-opacity duration-300"
+                onClick={() => setIsSidebarOpen(false)}
+              />
+            )}
+
+            {/* Sidebar / Right Column */}
+            <div className={cn(
+              "fixed inset-y-0 right-0 z-50 w-full max-w-[380px] bg-card border-l-2 border-border/60 p-6 shadow-2xl transition-transform duration-300 ease-in-out xl:static xl:w-[400px] 2xl:w-[450px] xl:shrink-0 xl:h-[calc(100vh-280px)] xl:overflow-y-auto xl:bg-transparent xl:border-none xl:p-0 xl:shadow-none custom-scrollbar xl:sticky xl:top-6",
+              isSidebarOpen ? "translate-x-0" : "translate-x-full xl:translate-x-0"
+            )}>
+              {/* Mobile Close Button */}
+              <div className="flex items-center justify-between mb-6 xl:hidden border-b border-border/40 pb-4">
+                <h2 className="text-[14px] font-black uppercase tracking-widest text-primary font-mono flex items-center gap-2">
+                  <Database className="h-4 w-4" /> /SYS/DATA_LOG
+                </h2>
+                <button 
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="p-2 rounded-[8px] bg-muted/50 border border-border hover:bg-muted text-foreground transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="space-y-6 h-full overflow-y-auto xl:overflow-visible custom-scrollbar pb-24 xl:pb-0 pr-2 xl:pr-4">
+                {snapshotsQuery.data ? <MetricSnapshotList snapshots={snapshotsQuery.data} /> : null}
+                {calculationQuery.data ? (
+                  <MetricCalculationPanel calculation={calculationQuery.data} projectStage={project?.stage} />
+                ) : null}
+                {calculationQuery.isError && snapshotsQuery.data?.items.length ? (
+                  <ErrorState title="Cálculos no disponibles" message={getApiErrorMessage(calculationQuery.error)} />
+                ) : null}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </DashboardShell>
   );
