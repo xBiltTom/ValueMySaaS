@@ -40,16 +40,18 @@ def _to_decimal(value) -> Decimal | None:
     return value if isinstance(value, Decimal) else Decimal(str(value))
 
 
-def _auto_fill_derived_metrics(data: dict) -> dict:
+def _auto_fill_derived_metrics(data: dict, force_recalc: list[str] | None = None) -> dict:
     """Calcula métricas derivadas si no fueron provistas por el cliente.
 
     Permite que el estudiante ingrese solo los datos básicos (mrr, monthly_costs,
     cash_available) y el sistema complete automáticamente las métricas complejas.
 
-    Solo completa campos que vengan como None — nunca sobrescribe valores explícitos.
+    Solo completa campos que vengan como None — nunca sobrescribe valores explícitos,
+    a menos que estén en la lista force_recalc.
     Todas las divisiones por cero están controladas.
     """
     d = dict(data)
+    force = force_recalc or []
 
     mrr = _to_decimal(d.get("mrr"))
     monthly_revenue = _to_decimal(d.get("monthly_revenue"))
@@ -144,6 +146,22 @@ class MetricSnapshotService:
         project = await self._ensure_project_owned(project_id=project_id, owner_id=owner_id)
         data = payload.model_dump(exclude_unset=True)
         data["captured_at"] = self._normalize_captured_at(data.get("captured_at"))
+
+        # Verify month uniqueness
+        dt = data.get("captured_at")
+        if dt:
+            from fastapi import HTTPException, status
+            # dt is already a datetime object at this point because _normalize_captured_at returns a datetime
+            exists = await self.metric_snapshot_repository.check_exists_for_month(
+                saas_project_id=project_id,
+                year=dt.year,
+                month=dt.month,
+            )
+            if exists:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Ya existe un snapshot para {dt.strftime('%m/%Y')}. Por favor, edita el existente en lugar de crear uno nuevo.",
+                )
 
         # For planning-phase projects, silently discard metrics that don't exist yet.
         stage = project.stage if isinstance(project.stage, SaasStage) else SaasStage(project.stage)

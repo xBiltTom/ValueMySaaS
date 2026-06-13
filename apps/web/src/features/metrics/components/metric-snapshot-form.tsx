@@ -144,11 +144,17 @@ export function MetricSnapshotForm({
   onCancelEdit?: () => void;
 }) {
   const queryClient = useQueryClient();
+  const getCurrentMonthStr = () => {
+    const d = new Date();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    return `${d.getFullYear()}-${mm}`;
+  };
+
   const form = useForm<MetricSnapshotFormValues>({
     resolver: zodResolver(metricSnapshotSchema),
     defaultValues: {
       period_label: "",
-      captured_at: new Date().toISOString().slice(0, 16),
+      captured_at: getCurrentMonthStr(),
       notes: "",
       custom_metrics: {},
     },
@@ -158,7 +164,7 @@ export function MetricSnapshotForm({
     if (editingSnapshot) {
       form.reset({
         period_label: editingSnapshot.period_label || "",
-        captured_at: editingSnapshot.captured_at ? new Date(editingSnapshot.captured_at).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16),
+        captured_at: editingSnapshot.captured_at ? new Date(editingSnapshot.captured_at).toISOString().slice(0, 7) : getCurrentMonthStr(),
         notes: editingSnapshot.notes || "",
         mrr: editingSnapshot.mrr !== null ? Number(editingSnapshot.mrr) : undefined,
         monthly_costs: editingSnapshot.monthly_costs !== null ? Number(editingSnapshot.monthly_costs) : undefined,
@@ -183,7 +189,7 @@ export function MetricSnapshotForm({
     } else {
       form.reset({
         period_label: "",
-        captured_at: new Date().toISOString().slice(0, 16),
+        captured_at: getCurrentMonthStr(),
         notes: "",
         custom_metrics: {},
       });
@@ -196,11 +202,21 @@ export function MetricSnapshotForm({
 
   const mutation = useMutation({
     mutationFn: (values: MetricSnapshotFormValues) => {
+      let finalDate = new Date();
+      let label = values.period_label;
+      const monthStr = values.captured_at;
+      
+      if (monthStr && monthStr.includes("-")) {
+        const [yyyy, mm] = monthStr.split("-");
+        finalDate = new Date(Date.UTC(Number(yyyy), Number(mm), 0, 23, 59, 59));
+        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        label = `${monthNames[Number(mm) - 1]} ${yyyy}`;
+      }
+
       const payload = {
         ...values,
-        captured_at: values.captured_at
-          ? new Date(values.captured_at).toISOString()
-          : new Date().toISOString(),
+        period_label: label,
+        captured_at: finalDate.toISOString(),
       };
       
       if (editingSnapshot) {
@@ -216,7 +232,7 @@ export function MetricSnapshotForm({
       if (!editingSnapshot) {
         form.reset({
           period_label: "",
-          captured_at: new Date().toISOString().slice(0, 16),
+          captured_at: getCurrentMonthStr(),
           notes: "",
           custom_metrics: {},
         });
@@ -296,30 +312,20 @@ export function MetricSnapshotForm({
         {/* PERIODO */}
         <Section icon={TerminalSquare} title="PERIODO_ID" description="Identificador temporal del snapshot">
           <div className="sm:col-span-2">
-            <FieldLabel>Nombre del periodo</FieldLabel>
+            <FieldLabel help="Mes y año al que corresponden estas métricas. Solo se permite 1 snapshot por mes.">
+              Mes a registrar
+            </FieldLabel>
             <input
-              className="w-full rounded-[8px] border-2 border-border/60 bg-background/60 backdrop-blur-sm px-4 py-3 text-[15px] font-mono font-bold outline-none transition-all focus:border-primary focus:shadow-[4px_4px_0_rgba(var(--primary),0.15)] hover:border-primary/40 text-foreground placeholder:text-muted-foreground/25"
-              placeholder={isPlanning ? "Ej: Junio 2026_EST" : "Ej: Q2_2026"}
-              {...reg("period_label")}
+              type="month"
+              className="w-full rounded-[8px] border-2 border-border/60 bg-background/60 backdrop-blur-sm px-4 py-3 text-[15px] font-mono font-bold outline-none transition-all focus:border-primary focus:shadow-[4px_4px_0_rgba(var(--primary),0.15)] hover:border-primary/40 text-foreground"
+              {...reg("captured_at")}
             />
-            {errors.period_label && (
+            {errors.captured_at && (
               <p className="mt-1.5 text-[10px] font-mono uppercase text-red-400">
-                ERR: {errors.period_label.message}
+                ERR: {errors.captured_at.message}
               </p>
             )}
           </div>
-          {!isPlanning && (
-            <div className="sm:col-span-2">
-              <FieldLabel help="Momento exacto de lectura de datos">
-                Timestamp de captura
-              </FieldLabel>
-              <input
-                type="datetime-local"
-                className="w-full rounded-[8px] border-2 border-border/60 bg-background/60 backdrop-blur-sm px-4 py-3 text-[14px] font-mono font-bold outline-none transition-all focus:border-primary focus:shadow-[4px_4px_0_rgba(var(--primary),0.15)] hover:border-primary/40 text-foreground"
-                {...reg("captured_at")}
-              />
-            </div>
-          )}
         </Section>
 
         {/* FINANCIERO */}

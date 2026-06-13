@@ -130,6 +130,21 @@ class MetricSnapshotRepository:
         await self.db.delete(snapshot)
         await self.db.flush()
 
+    async def check_exists_for_month(
+        self,
+        *,
+        saas_project_id: UUID,
+        year: int,
+        month: int,
+    ) -> bool:
+        statement = select(func.count()).select_from(SaasMetricSnapshot).where(
+            SaasMetricSnapshot.saas_project_id == saas_project_id,
+            func.extract('year', SaasMetricSnapshot.captured_at) == year,
+            func.extract('month', SaasMetricSnapshot.captured_at) == month,
+        )
+        result = await self.db.execute(statement)
+        return result.scalar_one() > 0
+
     def _build_project_query(
         self,
         *,
