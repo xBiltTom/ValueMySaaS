@@ -4,9 +4,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import {
-  Save, Lightbulb, TrendingUp, Users, Shield, CheckCircle2,
-  Info, DollarSign, BarChart3, HelpCircle, Rocket, TerminalSquare,
-  Cpu, GitBranch, Zap,
+  Lightbulb, TrendingUp, Users, Shield, CheckCircle2,
+  Info, DollarSign, BarChart3, HelpCircle, TerminalSquare,
+  Cpu, Zap,
 } from "lucide-react";
 import { ErrorState } from "@/components/shared/error-state";
 import { getApiErrorMessage } from "@/lib/api-client";
@@ -27,37 +27,24 @@ function FieldHelp({ text }: { text: string }) {
   );
 }
 
-function FieldLabel({ children, help, badge }: { children: React.ReactNode; help?: string; badge?: "score" | "derived" | "optional" }) {
-  const badgeStyles = {
-    score: "bg-primary/20 text-primary border-primary/40",
-    derived: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-    optional: "bg-muted/50 text-muted-foreground border-border/40",
-  };
-  const badgeLabels = { score: "SCORE", derived: "AUTO", optional: "OPC" };
-
+function FieldLabel({ children, help }: { children: React.ReactNode; help?: string }) {
   return (
-    <div className="flex items-center justify-between mb-3">
+    <div className="flex items-center mb-3">
       <span className="flex items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">
         <span className="text-primary mr-2">&gt;</span>
         {children}
         {help && <FieldHelp text={help} />}
       </span>
-      {badge && (
-        <span className={cn("text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-[4px] border font-mono", badgeStyles[badge])}>
-          {badgeLabels[badge]}
-        </span>
-      )}
     </div>
   );
 }
 
 function NumberInput({
   label, help, placeholder, register, name, errors,
-  integer = false, badge,
+  integer = false,
 }: {
   label: string; help?: string; placeholder?: string;
   register: any; name: any; errors: any; integer?: boolean;
-  badge?: "score" | "derived" | "optional";
 }) {
   const options = {
     setValueAs: (v: string) => v === "" ? undefined : (integer ? parseInt(v, 10) : parseFloat(v)),
@@ -65,7 +52,7 @@ function NumberInput({
   const hasError = !!errors[name];
   return (
     <label className="block group">
-      <FieldLabel help={help} badge={badge}>{label}</FieldLabel>
+      <FieldLabel help={help}>{label}</FieldLabel>
       <div className="relative">
         <input
           type="number" step={integer ? "1" : "0.01"} min="0"
@@ -140,28 +127,8 @@ function Section({
   );
 }
 
-// ─── Legend chip row ──────────────────────────────────────────────────────────
 
-function Legend() {
-  return (
-    <div className="flex flex-wrap gap-3 text-[9px] font-black uppercase tracking-widest font-mono">
-      {[
-        { color: "bg-primary/20 text-primary border-primary/40", label: "SCORE — impacta el diagnóstico" },
-        { color: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30", label: "AUTO — el sistema lo calcula" },
-        { color: "bg-muted/50 text-muted-foreground border-border/40", label: "OPC — opcional, enriquece el análisis" },
-      ].map(({ color, label }) => (
-        <div key={label} className="flex items-center gap-1.5">
-          <span className={cn("px-1.5 py-0.5 rounded-[4px] border", color)}>
-            {label.split(" — ")[0]}
-          </span>
-          <span className="text-muted-foreground">{label.split(" — ")[1]}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
 
-// ─── Main component ───────────────────────────────────────────────────────────
 
 export function MetricSnapshotForm({
   projectId,
@@ -243,15 +210,7 @@ export function MetricSnapshotForm({
         </div>
       </div>
 
-      {/* ── Legend ──────────────────────────────────────────────────── */}
-      {!isPlanning && (
-        <div className="rounded-[8px] border-2 border-border/40 bg-card/50 p-4">
-          <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground font-mono mb-3">
-            /LEYENDA_DE_CAMPOS
-          </p>
-          <Legend />
-        </div>
-      )}
+
 
       {/* ── Status messages ─────────────────────────────────────────── */}
       {mutation.isSuccess && (
@@ -277,7 +236,7 @@ export function MetricSnapshotForm({
         {/* PERIODO */}
         <Section icon={TerminalSquare} title="PERIODO_ID" description="Identificador temporal del snapshot">
           <div className="sm:col-span-2">
-            <FieldLabel badge="score">Nombre del periodo</FieldLabel>
+            <FieldLabel>Nombre del periodo</FieldLabel>
             <input
               className="w-full rounded-[8px] border-2 border-border/60 bg-background/60 backdrop-blur-sm px-4 py-3 text-[15px] font-mono font-bold outline-none transition-all focus:border-primary focus:shadow-[4px_4px_0_rgba(var(--primary),0.15)] hover:border-primary/40 text-foreground placeholder:text-muted-foreground/25"
               placeholder={isPlanning ? "Ej: Junio 2026_EST" : "Ej: Q2_2026"}
@@ -291,7 +250,7 @@ export function MetricSnapshotForm({
           </div>
           {!isPlanning && (
             <div className="sm:col-span-2">
-              <FieldLabel help="Momento exacto de lectura de datos" badge="optional">
+              <FieldLabel help="Momento exacto de lectura de datos">
                 Timestamp de captura
               </FieldLabel>
               <input
@@ -317,28 +276,26 @@ export function MetricSnapshotForm({
                 help="Servidores, dominios, APIs estimadas…"
                 placeholder="50.00"
                 register={reg} name="monthly_costs" errors={errors}
-                badge="score"
               />
               <NumberInput
                 label="CAPEX Inicial ($)"
                 help="Inversión requerida para construir y lanzar el MVP"
                 placeholder="500.00"
                 register={reg} name="custom_metrics.initial_investment_estimated" errors={errors}
-                badge="optional"
               />
               <NumberInput
                 label="Time-to-Market (Meses)"
                 help="Tiempo estimado hasta la primera versión"
                 placeholder="3"
                 register={reg} name="custom_metrics.time_to_mvp_months" errors={errors}
-                integer badge="optional"
+                integer
               />
               <NumberInput
                 label="Target Usuarios (Año 1)"
                 help="Usuarios esperados durante el primer año"
                 placeholder="1000"
                 register={reg} name="custom_metrics.expected_users_year_1" errors={errors}
-                integer badge="optional"
+                integer
               />
             </>
           ) : (
@@ -348,28 +305,24 @@ export function MetricSnapshotForm({
                 help="Ingreso Recurrente Mensual — base del análisis"
                 placeholder="0.00"
                 register={reg} name="mrr" errors={errors}
-                badge="score"
               />
               <NumberInput
                 label="Ingresos Totales ($)"
                 help="Flujo total de ingresos del periodo"
                 placeholder="0.00"
                 register={reg} name="monthly_revenue" errors={errors}
-                badge="score"
               />
               <NumberInput
                 label="Gastos Operativos ($)"
                 help="Total de egresos del mes"
                 placeholder="0.00"
                 register={reg} name="monthly_costs" errors={errors}
-                badge="score"
               />
               <NumberInput
                 label="Caja Disponible ($)"
-                help="Liquidez actual — calcula el Runway automáticamente"
+                help="Liquidez actual — el sistema calcula el Runway con esto"
                 placeholder="0.00"
                 register={reg} name="cash_available" errors={errors}
-                badge="derived"
               />
             </>
           )}
@@ -388,36 +341,36 @@ export function MetricSnapshotForm({
               help="Cuentas registradas acumuladas"
               placeholder="0"
               register={reg} name="total_users" errors={errors}
-              integer badge="score"
+              integer
             />
             <NumberInput
               label="Clientes Pagadores"
               help="Suscripciones activas este mes"
               placeholder="0"
               register={reg} name="paying_customers" errors={errors}
-              integer badge="score"
+              integer
             />
             <NumberInput
               label="Nuevos Usuarios"
               help="Registros del mes"
               placeholder="0"
               register={reg} name="new_users" errors={errors}
-              integer badge="optional"
+              integer
             />
             <NumberInput
               label="Nuevos Clientes"
-              help="Nuevas suscripciones este mes — calcula CAC si ingresas Marketing Spend"
+              help="Nuevas suscripciones este mes — junto con Marketing Spend, el sistema calcula el CAC"
               placeholder="0"
               register={reg} name="new_paying_customers" errors={errors}
-              integer badge="derived"
+              integer
             />
             <div className="sm:col-span-2">
               <NumberInput
                 label="Clientes que Cancelaron"
-                help="Suscripciones canceladas este mes — el sistema deriva el Churn Rate automáticamente"
+                help="Suscripciones canceladas este mes — el sistema calcula el Churn Rate a partir de este dato"
                 placeholder="0"
                 register={reg} name="churned_customers" errors={errors}
-                integer badge="derived"
+                integer
               />
             </div>
           </Section>
@@ -434,10 +387,9 @@ export function MetricSnapshotForm({
             <div className="sm:col-span-2">
               <NumberInput
                 label="Gasto en Marketing ($)"
-                help="Total invertido en adquisición este mes — junto con Nuevos Clientes, calcula el CAC"
+                help="Total invertido en adquisición este mes — junto con Nuevos Clientes, el sistema calcula el CAC"
                 placeholder="0.00"
                 register={reg} name="marketing_spend" errors={errors}
-                badge="derived"
               />
             </div>
 
@@ -475,31 +427,29 @@ export function MetricSnapshotForm({
           >
             <NumberInput
               label="NPS Score"
-              help="Net Promoter Score (-100 a 100). Mide si tus usuarios te recomiendan."
+              help="Net Promoter Score (-100 a 100). Mide si tus usuarios te recomiendan. Impacta el puntaje de producto."
               placeholder="0"
               register={reg} name="nps" errors={errors}
-              badge="score"
             />
             <NumberInput
               label="Uptime (%)"
               help="Disponibilidad del servicio este mes"
               placeholder="99.9"
               register={reg} name="uptime_percentage" errors={errors}
-              badge="optional"
             />
             <NumberInput
               label="Bugs Críticos"
               help="Errores de severidad alta reportados"
               placeholder="0"
               register={reg} name="critical_bugs" errors={errors}
-              integer badge="optional"
+              integer
             />
             <NumberInput
               label="Tickets Soporte"
               help="Volumen de incidencias de usuarios"
               placeholder="0"
               register={reg} name="support_tickets" errors={errors}
-              integer badge="optional"
+              integer
             />
           </Section>
         )}
@@ -513,7 +463,7 @@ export function MetricSnapshotForm({
           className="border-border/40"
         >
           <div className="sm:col-span-2">
-            <FieldLabel badge="optional">Notas del periodo</FieldLabel>
+            <FieldLabel>Notas del periodo</FieldLabel>
             <textarea
               rows={3}
               className="w-full rounded-[8px] border-2 border-border/60 bg-background/60 backdrop-blur-sm px-4 py-3 text-[13px] font-mono leading-relaxed placeholder:text-muted-foreground/25 outline-none transition-all focus:border-primary focus:shadow-[4px_4px_0_rgba(var(--primary),0.15)] hover:border-primary/40 text-foreground resize-none"
