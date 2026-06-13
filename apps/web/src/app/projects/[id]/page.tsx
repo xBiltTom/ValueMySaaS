@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BrainCircuit, Database, MessageSquareText, PlusCircle,
-  Rocket, Sparkles, TrendingUp, Terminal
+  Rocket, Sparkles, TrendingUp, Terminal, ChevronLeft
 } from "lucide-react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ErrorState } from "@/components/shared/error-state";
@@ -89,6 +89,17 @@ export default function ProjectDashboardPage() {
 
   return (
     <DashboardShell>
+      <div className="mb-6">
+        <Link
+          href="/projects"
+          className="group relative inline-flex h-10 items-center justify-start gap-3 rounded-lg border-2 border-border/60 bg-card px-3 text-[11px] font-black uppercase tracking-widest text-foreground shadow-[2px_2px_0_rgba(0,0,0,0.2)] hover:border-primary hover:shadow-[4px_4px_0_rgba(var(--primary),0.3)] hover:-translate-y-0.5 hover:-translate-x-0.5 transition-all active:shadow-none active:translate-x-0 active:translate-y-0"
+        >
+          <div className="h-6 w-6 bg-primary/10 text-primary flex items-center justify-center rounded-[4px] group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+            <ChevronLeft className="h-4 w-4 shrink-0" />
+          </div>
+          <span className="mt-0.5 mr-2">../ RETURN_TO_ROOT</span>
+        </Link>
+      </div>
       {(projectQuery.isLoading || dashboardQuery.isLoading) ? <LoadingState /> : null}
       {(projectQuery.isError || dashboardQuery.isError) ? (
         <ErrorState message={getApiErrorMessage(projectQuery.error || dashboardQuery.error)} />
