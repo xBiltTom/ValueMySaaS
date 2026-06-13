@@ -189,9 +189,27 @@ export function MetricSnapshotForm({
     } else {
       form.reset({
         period_label: "",
-        captured_at: getCurrentMonthStr(),
+        captured_at: "",
         notes: "",
-        custom_metrics: {},
+        mrr: "" as any,
+        monthly_costs: "" as any,
+        total_users: "" as any,
+        paying_customers: "" as any,
+        cash_available: "" as any,
+        marketing_spend: "" as any,
+        churned_customers: "" as any,
+        new_users: "" as any,
+        new_paying_customers: "" as any,
+        monthly_revenue: "" as any,
+        nps: "" as any,
+        uptime_percentage: "" as any,
+        critical_bugs: "" as any,
+        support_tickets: "" as any,
+        custom_metrics: {
+          initial_investment_estimated: "" as any,
+          time_to_mvp_months: "" as any,
+          expected_users_year_1: "" as any,
+        },
       });
     }
   }, [editingSnapshot, form]);
@@ -232,9 +250,27 @@ export function MetricSnapshotForm({
       if (!editingSnapshot) {
         form.reset({
           period_label: "",
-          captured_at: getCurrentMonthStr(),
+          captured_at: "",
           notes: "",
-          custom_metrics: {},
+          mrr: "" as any,
+          monthly_costs: "" as any,
+          total_users: "" as any,
+          paying_customers: "" as any,
+          cash_available: "" as any,
+          marketing_spend: "" as any,
+          churned_customers: "" as any,
+          new_users: "" as any,
+          new_paying_customers: "" as any,
+          monthly_revenue: "" as any,
+          nps: "" as any,
+          uptime_percentage: "" as any,
+          critical_bugs: "" as any,
+          support_tickets: "" as any,
+          custom_metrics: {
+            initial_investment_estimated: "" as any,
+            time_to_mvp_months: "" as any,
+            expected_users_year_1: "" as any,
+          },
         });
       }
       if (editingSnapshot && onCancelEdit) {

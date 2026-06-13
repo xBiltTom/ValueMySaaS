@@ -8,8 +8,8 @@ const optionalCount = z
   .optional();
 
 export const metricSnapshotSchema = z.object({
-  period_label: z.string().min(2, "El periodo es obligatorio."),
-  captured_at: z.string().optional(),
+  period_label: z.string().optional(),
+  captured_at: z.string().min(1, "Debes seleccionar un mes para registrar el snapshot."),
   mrr: optionalMoneyOrRate,
   monthly_revenue: optionalMoneyOrRate,
   monthly_costs: optionalMoneyOrRate,
