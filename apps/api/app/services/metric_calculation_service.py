@@ -30,6 +30,7 @@ CALCULATED_KEYS = [
     "ltv",
     "ltv_cac_ratio",
     "conversion_rate",
+    "mrr_growth_rate",
 ]
 
 MONEY_METRICS = {
@@ -45,6 +46,7 @@ RATIO_METRICS = {
     "churn_rate",
     "ltv_cac_ratio",
     "conversion_rate",
+    "mrr_growth_rate",
 }
 
 PROVIDED_EXPLANATIONS = {
@@ -54,6 +56,7 @@ PROVIDED_EXPLANATIONS = {
     "paying_customers": "Clientes pagos proporcionados.",
     "cac": "CAC fue proporcionado.",
     "churn_rate": "Churn rate proporcionado.",
+    "mrr_growth_rate": "Crecimiento MRR proporcionado.",
 }
 
 
@@ -81,7 +84,11 @@ class MetricCalculationService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Metric snapshot not found",
             )
-        return self._calculate_response(snapshot=snapshot)
+        previous_snapshot = await self.metric_snapshot_repository.get_previous_snapshot(
+            saas_project_id=project_id,
+            captured_at=snapshot.captured_at,
+        )
+        return self._calculate_response(snapshot=snapshot, previous_snapshot=previous_snapshot)
 
     async def calculate_for_snapshot(
         self,
@@ -100,7 +107,11 @@ class MetricCalculationService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Metric snapshot not found",
             )
-        return self._calculate_response(snapshot=snapshot)
+        previous_snapshot = await self.metric_snapshot_repository.get_previous_snapshot(
+            saas_project_id=project_id,
+            captured_at=snapshot.captured_at,
+        )
+        return self._calculate_response(snapshot=snapshot, previous_snapshot=previous_snapshot)
 
     async def _ensure_project_owned(self, *, project_id: UUID, owner_id: UUID) -> None:
         project = await self.saas_project_repository.get_by_id_for_owner(
@@ -117,6 +128,7 @@ class MetricCalculationService:
         self,
         *,
         snapshot: SaasMetricSnapshot,
+        previous_snapshot: SaasMetricSnapshot | None = None,
     ) -> MetricCalculationResponse:
         metrics: dict[str, CalculatedMetric] = {}
         values: dict[str, Decimal | int | str | None] = {}
@@ -143,6 +155,7 @@ class MetricCalculationService:
         self._calculate_arpu(metrics, values, warnings)
         self._calculate_ltv(metrics, values, warnings)
         self._calculate_ltv_cac_ratio(metrics, values, warnings)
+        self._calculate_mrr_growth_rate(metrics, values, warnings, previous_snapshot)
 
         # Mark missing metrics
         for key in METRIC_KEYS + CALCULATED_KEYS:
@@ -164,7 +177,7 @@ class MetricCalculationService:
             project_id=snapshot.saas_project_id,
             snapshot_id=snapshot.id,
             snapshot_captured_at=snapshot.captured_at,
-            previous_snapshot_id=None,
+            previous_snapshot_id=previous_snapshot.id if previous_snapshot else None,
             metrics=metrics,
             warnings=warnings,
             summary=summary,
@@ -246,6 +259,31 @@ class MetricCalculationService:
             return
         self._set_calculated(
             metrics, values, "ltv_cac_ratio", result, "ltv_cac_ratio = ltv / cac", "Ratio LTV/CAC."
+        )
+
+    def _calculate_mrr_growth_rate(
+        self,
+        metrics: dict[str, CalculatedMetric],
+        values: dict[str, Decimal | int | str | None],
+        warnings: list[str],
+        previous_snapshot: SaasMetricSnapshot | None,
+    ) -> None:
+        if previous_snapshot is None:
+            self._add_warning(warnings, "No hay snapshot anterior para calcular el crecimiento MRR.")
+            return
+        current_mrr = self._decimal(values.get('mrr'))
+        prev_mrr = self._decimal(previous_snapshot.mrr) if previous_snapshot.mrr is not None else None
+        if current_mrr is None or prev_mrr is None:
+            self._add_warning(warnings, "No se pudo calcular mrr_growth_rate por falta de MRR en un snapshot.")
+            return
+        if prev_mrr == 0:
+            self._add_warning(warnings, "MRR anterior es 0, no se puede calcular crecimiento.")
+            return
+        growth = (current_mrr - prev_mrr) / prev_mrr
+        self._set_calculated(
+            metrics, values, 'mrr_growth_rate', growth,
+            'mrr_growth_rate = (mrr_actual - mrr_anterior) / mrr_anterior',
+            'Crecimiento MRR mes a mes calculado automáticamente.'
         )
 
     def _set_calculated(

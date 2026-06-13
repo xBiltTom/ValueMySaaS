@@ -3,9 +3,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import { 
+import {
   Save, Lightbulb, TrendingUp, Users, Shield, CheckCircle2,
-  Info, DollarSign, BarChart3, HelpCircle, Rocket, TerminalSquare
+  Info, DollarSign, BarChart3, HelpCircle, Rocket, TerminalSquare,
+  Cpu, GitBranch, Zap,
 } from "lucide-react";
 import { ErrorState } from "@/components/shared/error-state";
 import { getApiErrorMessage } from "@/lib/api-client";
@@ -13,98 +14,171 @@ import { createMetricSnapshot } from "@/features/metrics/api";
 import { metricSnapshotSchema, MetricSnapshotFormValues } from "@/features/metrics/schemas";
 import { cn } from "@/lib/utils";
 
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
 function FieldHelp({ text }: { text: string }) {
   return (
     <span className="group relative inline-block ml-2 align-middle">
       <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/60 cursor-help transition-colors group-hover:text-primary" />
-      <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 hidden w-64 rounded-[8px] border border-border/60 bg-card/95 backdrop-blur-md p-3 text-[11px] font-mono leading-relaxed text-foreground shadow-2xl group-hover:block uppercase">
+      <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 hidden w-64 rounded-[8px] border-2 border-primary/30 bg-card/98 backdrop-blur-md p-3 text-[10px] font-mono leading-relaxed text-foreground shadow-[4px_4px_0_rgba(0,0,0,0.3)] group-hover:block uppercase">
         {text}
-        {/* Triángulo del tooltip */}
-        <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-border/60"></span>
       </span>
     </span>
   );
 }
 
-function FieldLabel({ children, help }: { children: React.ReactNode; help?: string }) {
+function FieldLabel({ children, help, badge }: { children: React.ReactNode; help?: string; badge?: "score" | "derived" | "optional" }) {
+  const badgeStyles = {
+    score: "bg-primary/20 text-primary border-primary/40",
+    derived: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+    optional: "bg-muted/50 text-muted-foreground border-border/40",
+  };
+  const badgeLabels = { score: "SCORE", derived: "AUTO", optional: "OPC" };
+
   return (
-    <span className="flex items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3">
-      <span className="text-primary mr-2">&gt;</span>
-      {children}
-      {help && <FieldHelp text={help} />}
-    </span>
+    <div className="flex items-center justify-between mb-3">
+      <span className="flex items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+        <span className="text-primary mr-2">&gt;</span>
+        {children}
+        {help && <FieldHelp text={help} />}
+      </span>
+      {badge && (
+        <span className={cn("text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-[4px] border font-mono", badgeStyles[badge])}>
+          {badgeLabels[badge]}
+        </span>
+      )}
+    </div>
   );
 }
 
-function NumberInput({ label, help, placeholder, register, name, errors, integer = false }: {
+function NumberInput({
+  label, help, placeholder, register, name, errors,
+  integer = false, badge,
+}: {
   label: string; help?: string; placeholder?: string;
   register: any; name: any; errors: any; integer?: boolean;
+  badge?: "score" | "derived" | "optional";
 }) {
-  const options = { setValueAs: (v: string) => v === "" ? undefined : (integer ? parseInt(v, 10) : parseFloat(v)) };
+  const options = {
+    setValueAs: (v: string) => v === "" ? undefined : (integer ? parseInt(v, 10) : parseFloat(v)),
+  };
+  const hasError = !!errors[name];
   return (
     <label className="block group">
-      <FieldLabel help={help}>{label}</FieldLabel>
+      <FieldLabel help={help} badge={badge}>{label}</FieldLabel>
       <div className="relative">
         <input
           type="number" step={integer ? "1" : "0.01"} min="0"
           placeholder={placeholder || "0"}
           className={cn(
-            "w-full rounded-[12px] border bg-background/90 dark:bg-background/50 shadow-sm dark:shadow-none backdrop-blur-sm px-4 py-3.5 text-lg font-mono font-bold text-foreground",
-            "placeholder:text-muted-foreground/30 outline-none transition-all",
-            "focus:border-primary focus:bg-background focus:shadow-[0_0_20px_rgba(var(--primary),0.15)]",
-            errors[name] ? "border-status-danger-border focus:border-status-danger-border focus:shadow-[0_0_20px_rgba(239,68,68,0.15)]" : "border-border/80 dark:border-border/40 hover:border-border"
+            "w-full rounded-[8px] border-2 bg-background/60 backdrop-blur-sm px-4 py-3 text-[15px] font-mono font-bold text-foreground",
+            "placeholder:text-muted-foreground/25 outline-none transition-all",
+            "focus:border-primary focus:bg-background focus:shadow-[4px_4px_0_rgba(var(--primary),0.15)]",
+            hasError
+              ? "border-red-500/70 focus:border-red-500"
+              : "border-border/60 hover:border-primary/40"
           )}
           {...register(name, options)}
         />
-        {/* Decorative corner */}
-        <div className="absolute top-0 right-0 h-3 w-3 border-t-2 border-r-2 border-primary/20 rounded-tr-[12px] opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
+        <div className="absolute top-0 right-0 h-2.5 w-2.5 border-t-2 border-r-2 border-primary/20 rounded-tr-[8px] opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" />
       </div>
-      {errors[name] && <p className="mt-2 text-[10px] font-mono uppercase text-status-danger-fg">ERR: {errors[name].message}</p>}
+      {hasError && (
+        <p className="mt-1.5 text-[10px] font-mono uppercase text-red-400">
+          ERR: {errors[name].message}
+        </p>
+      )}
     </label>
   );
 }
 
-function Section({ 
-  icon: Icon, title, description, color = "primary", children 
-}: { 
-  icon: React.ElementType; title: string; description?: string; 
-  color?: "primary" | "amber" | "emerald" | "violet"; children: React.ReactNode 
+function SectionHeader({
+  icon: Icon, title, description, variant = "default",
+}: {
+  icon: React.ElementType; title: string; description?: string;
+  variant?: "default" | "amber" | "emerald" | "violet" | "slate";
 }) {
-  const colors = {
-    primary: { bg: "bg-primary/5 border-primary/20", icon: "text-primary", title: "text-primary", glow: "shadow-[0_0_15px_rgba(var(--primary),0.05)]" },
-    amber: { bg: "bg-status-warning-bg/10 border-status-warning-border/40", icon: "text-status-warning-fg", title: "text-status-warning-fg", glow: "shadow-[0_0_15px_rgba(245,158,11,0.05)]" },
-    emerald: { bg: "bg-status-success-bg/10 border-status-success-border/40", icon: "text-status-success-fg", title: "text-status-success-fg", glow: "shadow-[0_0_15px_rgba(16,185,129,0.05)]" },
-    violet: { bg: "bg-accent/5 border-accent/20", icon: "text-accent", title: "text-accent", glow: "shadow-[0_0_15px_rgba(var(--accent),0.05)]" },
+  const styles = {
+    default: { border: "border-primary/30", bg: "bg-primary/5", icon: "text-primary", title: "text-primary" },
+    amber: { border: "border-amber-500/30", bg: "bg-amber-500/5", icon: "text-amber-400", title: "text-amber-400" },
+    emerald: { border: "border-emerald-500/30", bg: "bg-emerald-500/5", icon: "text-emerald-400", title: "text-emerald-400" },
+    violet: { border: "border-violet-500/30", bg: "bg-violet-500/5", icon: "text-violet-400", title: "text-violet-400" },
+    slate: { border: "border-slate-500/30", bg: "bg-slate-500/5", icon: "text-slate-400", title: "text-slate-400" },
   };
-  const c = colors[color];
+  const s = styles[variant];
+
   return (
-    <div className={cn("relative overflow-hidden rounded-[20px] border p-6 md:p-8 space-y-6 backdrop-blur-md", c.bg, c.glow)}>
-      {/* Abstract background elements */}
-      <div className="absolute top-0 right-0 p-4 opacity-[0.03] pointer-events-none">
-        <Icon className="h-48 w-48 -mt-12 -mr-12" />
+    <div className={cn("flex items-center gap-3 mb-6 pb-4 border-b-2 border-border/40")}>
+      <div className={cn("h-8 w-8 rounded-[6px] border-2 flex items-center justify-center shrink-0", s.border, s.bg)}>
+        <Icon className={cn("h-4 w-4", s.icon)} />
       </div>
-      
-      <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-4 justify-between border-b border-border/30 pb-6">
-        <div className="flex items-center gap-3">
-          <div className="rounded-[8px] bg-background/50 border border-border/40 p-2 shrink-0">
-            <Icon className={cn("h-5 w-5", c.icon)} />
-          </div>
-          <div>
-            <h3 className={cn("font-black uppercase tracking-widest text-[13px]", c.title)}>SYS_MODULE: {title}</h3>
-            {description && <p className="text-[10px] font-mono text-muted-foreground uppercase mt-1">{description}</p>}
-          </div>
-        </div>
+      <div className="flex-1 min-w-0">
+        <p className={cn("text-[11px] font-black uppercase tracking-widest", s.title)}>
+          SYS/{title}
+        </p>
+        {description && (
+          <p className="text-[10px] font-mono text-muted-foreground uppercase mt-0.5">{description}</p>
+        )}
       </div>
-      <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-6">{children}</div>
     </div>
   );
 }
 
-export function MetricSnapshotForm({ projectId, projectStage = "LAUNCHED" }: { projectId: string; projectStage?: string }) {
+function Section({
+  icon, title, description, variant, children, className,
+}: {
+  icon: React.ElementType; title: string; description?: string;
+  variant?: "default" | "amber" | "emerald" | "violet" | "slate";
+  children: React.ReactNode; className?: string;
+}) {
+  return (
+    <div className={cn("rounded-[12px] border-2 border-border/60 bg-card p-6 shadow-[4px_4px_0_rgba(0,0,0,0.08)]", className)}>
+      <SectionHeader icon={icon} title={title} description={description} variant={variant} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ─── Legend chip row ──────────────────────────────────────────────────────────
+
+function Legend() {
+  return (
+    <div className="flex flex-wrap gap-3 text-[9px] font-black uppercase tracking-widest font-mono">
+      {[
+        { color: "bg-primary/20 text-primary border-primary/40", label: "SCORE — impacta el diagnóstico" },
+        { color: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30", label: "AUTO — el sistema lo calcula" },
+        { color: "bg-muted/50 text-muted-foreground border-border/40", label: "OPC — opcional, enriquece el análisis" },
+      ].map(({ color, label }) => (
+        <div key={label} className="flex items-center gap-1.5">
+          <span className={cn("px-1.5 py-0.5 rounded-[4px] border", color)}>
+            {label.split(" — ")[0]}
+          </span>
+          <span className="text-muted-foreground">{label.split(" — ")[1]}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
+export function MetricSnapshotForm({
+  projectId,
+  projectStage = "LAUNCHED",
+}: {
+  projectId: string;
+  projectStage?: string;
+}) {
   const queryClient = useQueryClient();
   const form = useForm<MetricSnapshotFormValues>({
     resolver: zodResolver(metricSnapshotSchema),
-    defaultValues: { period_label: "", captured_at: new Date().toISOString().slice(0, 16), notes: "", custom_metrics: {} },
+    defaultValues: {
+      period_label: "",
+      captured_at: new Date().toISOString().slice(0, 16),
+      notes: "",
+      custom_metrics: {},
+    },
   });
 
   const isPlanning = projectStage === "PLANNING" || projectStage === "IDEA";
@@ -115,10 +189,16 @@ export function MetricSnapshotForm({ projectId, projectStage = "LAUNCHED" }: { p
     mutationFn: (values: MetricSnapshotFormValues) =>
       createMetricSnapshot(projectId, {
         ...values,
-        captured_at: values.captured_at ? new Date(values.captured_at).toISOString() : new Date().toISOString(),
+        captured_at: values.captured_at
+          ? new Date(values.captured_at).toISOString()
+          : new Date().toISOString(),
       }),
     onSuccess: async () => {
-      form.reset({ period_label: "", captured_at: new Date().toISOString().slice(0, 16), notes: "" });
+      form.reset({
+        period_label: "",
+        captured_at: new Date().toISOString().slice(0, 16),
+        notes: "",
+      });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["metric-snapshots", projectId] }),
         queryClient.invalidateQueries({ queryKey: ["project-dashboard", projectId] }),
@@ -128,206 +208,346 @@ export function MetricSnapshotForm({ projectId, projectStage = "LAUNCHED" }: { p
   });
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+
+      {/* ── Header ──────────────────────────────────────────────────── */}
       <div className={cn(
-        "relative overflow-hidden rounded-[20px] border p-6 md:p-8 backdrop-blur-xl shadow-sm",
+        "relative overflow-hidden rounded-[12px] border-2 p-6",
         isPlanning
-          ? "border-status-warning-border/60 bg-status-warning-bg/10"
+          ? "border-amber-500/40 bg-amber-500/5"
           : "border-primary/30 bg-primary/5"
       )}>
-        <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.02)_50%)] bg-[length:100%_4px] pointer-events-none" />
-        
-        <div className="relative z-10 flex items-center gap-4 mb-2">
-          <div className={cn("rounded-[12px] p-3 shadow-inner border", isPlanning ? "bg-status-warning-bg border-status-warning-fg/30" : "bg-primary/10 border-primary/30")}>
-            {isPlanning ? <Lightbulb className="h-6 w-6 text-status-warning-fg" /> : <BarChart3 className="h-6 w-6 text-primary" />}
+        <div className="absolute inset-0 bg-[repeating-linear-gradient(90deg,transparent,transparent_40px,rgba(255,255,255,0.01)_40px,rgba(255,255,255,0.01)_41px)] pointer-events-none" />
+        <div className="relative z-10 flex items-start gap-4">
+          <div className={cn(
+            "rounded-[8px] border-2 p-3 shrink-0",
+            isPlanning ? "border-amber-500/40 bg-amber-500/10" : "border-primary/40 bg-primary/10"
+          )}>
+            {isPlanning
+              ? <Lightbulb className="h-5 w-5 text-amber-400" />
+              : <BarChart3 className="h-5 w-5 text-primary" />}
           </div>
           <div>
-            <h2 className="text-xl font-display font-black uppercase tracking-tight">
-              {isPlanning ? "Input_Estimations()" : "Record_Snapshot()"}
+            <p className={cn("text-[10px] font-black uppercase tracking-widest mb-1 font-mono", isPlanning ? "text-amber-400" : "text-primary")}>
+              {isPlanning ? "MODO: PLANEACIÓN" : "MODO: OPERATIVO"}
+            </p>
+            <h2 className="text-lg font-display font-black uppercase tracking-tight text-foreground">
+              {isPlanning ? "Registrar Proyecciones" : "Registrar Snapshot"}
             </h2>
             <p className="text-[11px] font-mono text-muted-foreground mt-1 uppercase">
               {isPlanning
-                ? "> Ingresa proyecciones financieras para evaluar la viabilidad."
-                : "> Captura el estado actual para análisis y seguimiento."}
+                ? "> Estima costos y proyecciones para evaluar viabilidad con IA."
+                : "> Captura el estado real del periodo para diagnóstico y seguimiento."}
             </p>
           </div>
         </div>
-        {isPlanning && (
-          <div className="relative z-10 mt-6 flex items-start gap-3 rounded-[12px] border border-status-warning-border/60 bg-status-warning-bg/70 px-4 py-3 shadow-inner">
-            <Info className="h-4 w-4 text-status-warning-fg shrink-0 mt-0.5" />
-            <div className="space-y-2">
-              <p className="text-[11px] font-mono text-status-warning-text leading-relaxed uppercase">
-                [SYS_INFO]: Estima los <strong>costos, tiempo e inversión</strong> que necesitarás. La IA evalúa la viabilidad en base a esto.
-              </p>
-              <p className="text-[10px] font-mono text-status-warning-text/70 leading-relaxed uppercase">
-                * Valores nulos omiten esa variable en el análisis, restando precisión.
-              </p>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Success state */}
+      {/* ── Legend ──────────────────────────────────────────────────── */}
+      {!isPlanning && (
+        <div className="rounded-[8px] border-2 border-border/40 bg-card/50 p-4">
+          <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground font-mono mb-3">
+            /LEYENDA_DE_CAMPOS
+          </p>
+          <Legend />
+        </div>
+      )}
+
+      {/* ── Status messages ─────────────────────────────────────────── */}
       {mutation.isSuccess && (
-        <div className="relative overflow-hidden flex items-start gap-4 rounded-[20px] border border-status-success-border/60 bg-status-success-bg px-6 py-5 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
-          <CheckCircle2 className="h-6 w-6 text-status-success-fg shrink-0" />
+        <div className="flex items-start gap-4 rounded-[12px] border-2 border-emerald-500/40 bg-emerald-500/5 px-5 py-4">
+          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0 mt-0.5" />
           <div>
-            <p className="text-[13px] font-black uppercase tracking-widest text-status-success-text mb-1">
-              {isPlanning ? "SYS_STATUS: ESTIMACIONES_OK" : "SYS_STATUS: SNAPSHOT_OK"}
+            <p className="text-[11px] font-black uppercase tracking-widest text-emerald-400 font-mono">
+              {isPlanning ? "SYS_STATUS: ESTIMACIONES_OK" : "SYS_STATUS: SNAPSHOT_INYECTADO"}
             </p>
-            <p className="text-[11px] font-mono text-status-success-text/80 uppercase">
+            <p className="text-[10px] font-mono text-emerald-400/70 uppercase mt-1">
               {isPlanning
-                ? "> Transición a 'Análisis IA' disponible."
-                : "> Datos inyectados. Score diagnóstico listo."}
+                ? "> Usa el Análisis IA para diagnóstico de viabilidad."
+                : "> Datos procesados. Genera el Score para ver el diagnóstico completo."}
             </p>
           </div>
         </div>
       )}
-      {mutation.isError ? <ErrorState message={getApiErrorMessage(mutation.error)} /> : null}
+      {mutation.isError && <ErrorState message={getApiErrorMessage(mutation.error)} />}
 
-      <form className="space-y-6" onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>
-        {/* Period */}
-        <Section icon={isPlanning ? Lightbulb : BarChart3} title="Periodo_Identificador" description="Mes o corte de datos" color={isPlanning ? "amber" : "primary"}>
+      {/* ── Form ────────────────────────────────────────────────────── */}
+      <form className="space-y-5" onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>
+
+        {/* PERIODO */}
+        <Section icon={TerminalSquare} title="PERIODO_ID" description="Identificador temporal del snapshot">
           <div className="sm:col-span-2">
-            <FieldLabel>Nombre del periodo</FieldLabel>
-            <div className="relative">
-              <input
-                  className="w-full rounded-[12px] border border-border/80 dark:border-border/40 bg-background/90 dark:bg-background/50 shadow-sm dark:shadow-none backdrop-blur-sm px-4 py-3.5 text-base font-mono font-bold outline-none transition-all focus:border-primary focus:bg-background focus:shadow-[0_0_20px_rgba(var(--primary),0.15)] hover:border-border"
-                placeholder={isPlanning ? "Ej: Junio 2026_EST" : "Ej: Q2_2026"}
-                {...reg("period_label")}
-              />
-              <div className="absolute top-0 right-0 h-3 w-3 border-t-2 border-r-2 border-primary/20 rounded-tr-[12px] opacity-0 focus-within:opacity-100 transition-opacity pointer-events-none"></div>
-            </div>
-            {errors.period_label && <p className="mt-2 text-[10px] font-mono uppercase text-status-danger-fg">ERR: {errors.period_label.message}</p>}
+            <FieldLabel badge="score">Nombre del periodo</FieldLabel>
+            <input
+              className="w-full rounded-[8px] border-2 border-border/60 bg-background/60 backdrop-blur-sm px-4 py-3 text-[15px] font-mono font-bold outline-none transition-all focus:border-primary focus:shadow-[4px_4px_0_rgba(var(--primary),0.15)] hover:border-primary/40 text-foreground placeholder:text-muted-foreground/25"
+              placeholder={isPlanning ? "Ej: Junio 2026_EST" : "Ej: Q2_2026"}
+              {...reg("period_label")}
+            />
+            {errors.period_label && (
+              <p className="mt-1.5 text-[10px] font-mono uppercase text-red-400">
+                ERR: {errors.period_label.message}
+              </p>
+            )}
           </div>
           {!isPlanning && (
             <div className="sm:col-span-2">
-              <FieldLabel help="Momento exacto de lectura de datos">Timestamp de captura</FieldLabel>
-              <div className="relative">
-                <input
-                  type="datetime-local"
-                    className="w-full rounded-[12px] border border-border/80 dark:border-border/40 bg-background/90 dark:bg-background/50 shadow-sm dark:shadow-none backdrop-blur-sm px-4 py-3.5 text-base font-mono font-bold outline-none transition-all focus:border-primary focus:bg-background focus:shadow-[0_0_20px_rgba(var(--primary),0.15)] hover:border-border"
-                  {...reg("captured_at")}
-                />
-              </div>
+              <FieldLabel help="Momento exacto de lectura de datos" badge="optional">
+                Timestamp de captura
+              </FieldLabel>
+              <input
+                type="datetime-local"
+                className="w-full rounded-[8px] border-2 border-border/60 bg-background/60 backdrop-blur-sm px-4 py-3 text-[14px] font-mono font-bold outline-none transition-all focus:border-primary focus:shadow-[4px_4px_0_rgba(var(--primary),0.15)] hover:border-primary/40 text-foreground"
+                {...reg("captured_at")}
+              />
             </div>
           )}
         </Section>
 
-        {/* Finances */}
+        {/* FINANCIERO */}
         <Section
           icon={DollarSign}
-          title={isPlanning ? "METRICAS_FINANCIERAS_ESTIMADAS" : "FLUJO_DE_CAJA_Y_RENTABILIDAD"}
-          description={isPlanning
-            ? "Proyección de costos pre-lanzamiento"
-            : "Lecturas financieras reales del periodo"}
-          color={isPlanning ? "amber" : "emerald"}
+          title={isPlanning ? "FINANCIERO_ESTIMADO" : "FLUJO_FINANCIERO"}
+          description={isPlanning ? "Proyección de costos pre-lanzamiento" : "Ingresos y egresos reales del periodo"}
+          variant={isPlanning ? "amber" : "emerald"}
         >
           {isPlanning ? (
             <>
               <NumberInput
                 label="OPEX Mensual ($)"
-                help="Servidores, dominios, APIs estimadas..."
+                help="Servidores, dominios, APIs estimadas…"
                 placeholder="50.00"
                 register={reg} name="monthly_costs" errors={errors}
+                badge="score"
               />
               <NumberInput
                 label="CAPEX Inicial ($)"
-                help="Inversión requerida para construir y lanzar MVP"
+                help="Inversión requerida para construir y lanzar el MVP"
                 placeholder="500.00"
                 register={reg} name="custom_metrics.initial_investment_estimated" errors={errors}
+                badge="optional"
               />
               <NumberInput
                 label="Time-to-Market (Meses)"
-                help="Tiempo estimado hasta la v1"
+                help="Tiempo estimado hasta la primera versión"
                 placeholder="3"
-                register={reg} name="custom_metrics.time_to_mvp_months" errors={errors} integer
+                register={reg} name="custom_metrics.time_to_mvp_months" errors={errors}
+                integer badge="optional"
               />
               <NumberInput
-                label="Target Usuarios (Y1)"
-                help="Usuarios esperados año 1"
+                label="Target Usuarios (Año 1)"
+                help="Usuarios esperados durante el primer año"
                 placeholder="1000"
-                register={reg} name="custom_metrics.expected_users_year_1" errors={errors} integer
+                register={reg} name="custom_metrics.expected_users_year_1" errors={errors}
+                integer badge="optional"
               />
-              <div className="sm:col-span-2 mt-2">
-                <FieldLabel help="Anotaciones técnicas y financieras">Notas_Adicionales</FieldLabel>
-                <textarea
-                  rows={3}
-                  className="w-full rounded-[12px] border border-border/80 dark:border-border/40 bg-background/90 dark:bg-background/50 shadow-sm dark:shadow-none backdrop-blur-sm px-4 py-3.5 text-[13px] font-mono leading-relaxed placeholder:text-muted-foreground/30 outline-none transition-all focus:border-primary focus:bg-background focus:shadow-[0_0_20px_rgba(var(--primary),0.15)] hover:border-border resize-none"
-                  placeholder="> Ingresar detalles operativos..."
-                  {...reg("notes")}
-                />
-              </div>
             </>
           ) : (
             <>
-              <NumberInput label="MRR ($)" help="Ingreso Recurrente Mensual" placeholder="0.00" register={reg} name="mrr" errors={errors} />
-              <NumberInput label="Ingresos_Totales ($)" help="Flujo de entrada total" placeholder="0.00" register={reg} name="monthly_revenue" errors={errors} />
-              <NumberInput label="Gastos_Operativos ($)" help="Salida total de dinero" placeholder="0.00" register={reg} name="monthly_costs" errors={errors} />
-              <NumberInput label="Caja_Disponible ($)" help="Liquidez actual" placeholder="0.00" register={reg} name="cash_available" errors={errors} />
-              <NumberInput label="Marketing_Spend ($)" help="Gasto en adquisición" placeholder="0.00" register={reg} name="marketing_spend" errors={errors} />
+              <NumberInput
+                label="MRR ($)"
+                help="Ingreso Recurrente Mensual — base del análisis"
+                placeholder="0.00"
+                register={reg} name="mrr" errors={errors}
+                badge="score"
+              />
+              <NumberInput
+                label="Ingresos Totales ($)"
+                help="Flujo total de ingresos del periodo"
+                placeholder="0.00"
+                register={reg} name="monthly_revenue" errors={errors}
+                badge="score"
+              />
+              <NumberInput
+                label="Gastos Operativos ($)"
+                help="Total de egresos del mes"
+                placeholder="0.00"
+                register={reg} name="monthly_costs" errors={errors}
+                badge="score"
+              />
+              <NumberInput
+                label="Caja Disponible ($)"
+                help="Liquidez actual — calcula el Runway automáticamente"
+                placeholder="0.00"
+                register={reg} name="cash_available" errors={errors}
+                badge="derived"
+              />
             </>
           )}
         </Section>
 
-        {/* Users (only launched) */}
+        {/* USUARIOS Y RETENCIÓN (solo launched) */}
         {!isPlanning && (
-          <Section icon={Users} title="ADQUISICION_Y_RETENCION" description="Dinámica de base de usuarios" color="violet">
-            <NumberInput label="Usuarios_Totales" help="Cuentas registradas (histórico)" placeholder="0" register={reg} name="total_users" errors={errors} integer />
-            <NumberInput label="Usuarios_Activos (MAU)" help="Cuentas activas en el mes" placeholder="0" register={reg} name="active_users" errors={errors} integer />
-            <NumberInput label="Clientes_Pago" help="Suscripciones activas" placeholder="0" register={reg} name="paying_customers" errors={errors} integer />
-            <NumberInput label="Nuevos_Usuarios" help="Registros del mes" placeholder="0" register={reg} name="new_users" errors={errors} integer />
-            <NumberInput label="Nuevos_Clientes" help="Nuevas suscripciones" placeholder="0" register={reg} name="new_paying_customers" errors={errors} integer />
-            <NumberInput label="Churn (Clientes)" help="Suscripciones canceladas" placeholder="0" register={reg} name="churned_customers" errors={errors} integer />
-          </Section>
-        )}
-
-        {/* Product health (only launched) */}
-        {!isPlanning && (
-          <Section icon={Shield} title="SALUD_DEL_SISTEMA" description="Métricas técnicas y de calidad" color="primary">
-            <NumberInput label="NPS_Score" help="Net Promoter Score (-100 a 100)" placeholder="0" register={reg} name="nps" errors={errors} />
-            <NumberInput label="Tickets_Soporte" help="Volumen de incidencias" placeholder="0" register={reg} name="support_tickets" errors={errors} integer />
-            <NumberInput label="Bugs_Criticos" help="Errores severidad HIGH/CRITICAL" placeholder="0" register={reg} name="critical_bugs" errors={errors} integer />
-            <NumberInput label="Uptime (%)" help="Disponibilidad de servicio" placeholder="99.9" register={reg} name="uptime_percentage" errors={errors} />
-          </Section>
-        )}
-
-        {/* Notes (launched) */}
-        {!isPlanning && (
-          <Section icon={TerminalSquare} title="LOG_DE_SISTEMA" description="Eventos clave del periodo" color="primary">
+          <Section
+            icon={Users}
+            title="USUARIOS_Y_RETENCIÓN"
+            description="Base de usuarios — el sistema calcula Churn Rate y Conversión automáticamente"
+            variant="violet"
+          >
+            <NumberInput
+              label="Usuarios Totales"
+              help="Cuentas registradas acumuladas"
+              placeholder="0"
+              register={reg} name="total_users" errors={errors}
+              integer badge="score"
+            />
+            <NumberInput
+              label="Clientes Pagadores"
+              help="Suscripciones activas este mes"
+              placeholder="0"
+              register={reg} name="paying_customers" errors={errors}
+              integer badge="score"
+            />
+            <NumberInput
+              label="Nuevos Usuarios"
+              help="Registros del mes"
+              placeholder="0"
+              register={reg} name="new_users" errors={errors}
+              integer badge="optional"
+            />
+            <NumberInput
+              label="Nuevos Clientes"
+              help="Nuevas suscripciones este mes — calcula CAC si ingresas Marketing Spend"
+              placeholder="0"
+              register={reg} name="new_paying_customers" errors={errors}
+              integer badge="derived"
+            />
             <div className="sm:col-span-2">
-              <textarea
-                rows={3}
-                className="w-full rounded-[12px] border border-border/80 dark:border-border/40 bg-background/90 dark:bg-background/50 shadow-sm dark:shadow-none backdrop-blur-sm px-4 py-3.5 text-[13px] font-mono leading-relaxed placeholder:text-muted-foreground/30 outline-none transition-all focus:border-primary focus:bg-background focus:shadow-[0_0_20px_rgba(var(--primary),0.15)] hover:border-border resize-none"
-                placeholder="> Deploy v2.0 realizado. Incremento anormal en latencia de DB mitigado..."
-                {...reg("notes")}
+              <NumberInput
+                label="Clientes que Cancelaron"
+                help="Suscripciones canceladas este mes — el sistema deriva el Churn Rate automáticamente"
+                placeholder="0"
+                register={reg} name="churned_customers" errors={errors}
+                integer badge="derived"
               />
             </div>
           </Section>
         )}
 
-        {/* Submit */}
+        {/* ADQUISICIÓN (solo launched) */}
+        {!isPlanning && (
+          <Section
+            icon={TrendingUp}
+            title="ADQUISICIÓN"
+            description="Gasto en marketing — el sistema calcula el CAC automáticamente"
+            variant="default"
+          >
+            <div className="sm:col-span-2">
+              <NumberInput
+                label="Gasto en Marketing ($)"
+                help="Total invertido en adquisición este mes — junto con Nuevos Clientes, calcula el CAC"
+                placeholder="0.00"
+                register={reg} name="marketing_spend" errors={errors}
+                badge="derived"
+              />
+            </div>
+
+            {/* Info box sobre métricas auto-derivadas */}
+            <div className="sm:col-span-2 rounded-[8px] border-2 border-emerald-500/20 bg-emerald-500/5 p-4">
+              <p className="text-[9px] font-black uppercase tracking-widest text-emerald-400 font-mono mb-2">
+                /SYS_AUTO_DERIVATION
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[
+                  { label: "Churn Rate", formula: "Cancelados ÷ Clientes Pago" },
+                  { label: "CAC", formula: "Mktg Spend ÷ Nuevos Clientes" },
+                  { label: "Runway", formula: "Caja ÷ Gastos Operativos" },
+                ].map(({ label, formula }) => (
+                  <div key={label} className="flex items-start gap-2">
+                    <Zap className="h-3 w-3 text-emerald-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-emerald-400 font-mono">{label}</p>
+                      <p className="text-[9px] font-mono text-muted-foreground uppercase">{formula}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Section>
+        )}
+
+        {/* SALUD DEL PRODUCTO (opcional, ahora bien contextualizada) */}
+        {!isPlanning && (
+          <Section
+            icon={Shield}
+            title="SALUD_PRODUCTO"
+            description="Métricas de calidad — enriquecen el análisis pero son opcionales"
+            variant="slate"
+          >
+            <NumberInput
+              label="NPS Score"
+              help="Net Promoter Score (-100 a 100). Mide si tus usuarios te recomiendan."
+              placeholder="0"
+              register={reg} name="nps" errors={errors}
+              badge="score"
+            />
+            <NumberInput
+              label="Uptime (%)"
+              help="Disponibilidad del servicio este mes"
+              placeholder="99.9"
+              register={reg} name="uptime_percentage" errors={errors}
+              badge="optional"
+            />
+            <NumberInput
+              label="Bugs Críticos"
+              help="Errores de severidad alta reportados"
+              placeholder="0"
+              register={reg} name="critical_bugs" errors={errors}
+              integer badge="optional"
+            />
+            <NumberInput
+              label="Tickets Soporte"
+              help="Volumen de incidencias de usuarios"
+              placeholder="0"
+              register={reg} name="support_tickets" errors={errors}
+              integer badge="optional"
+            />
+          </Section>
+        )}
+
+        {/* NOTAS */}
+        <Section
+          icon={TerminalSquare}
+          title="LOG_SISTEMA"
+          description="Eventos y contexto del periodo"
+          variant="slate"
+          className="border-border/40"
+        >
+          <div className="sm:col-span-2">
+            <FieldLabel badge="optional">Notas del periodo</FieldLabel>
+            <textarea
+              rows={3}
+              className="w-full rounded-[8px] border-2 border-border/60 bg-background/60 backdrop-blur-sm px-4 py-3 text-[13px] font-mono leading-relaxed placeholder:text-muted-foreground/25 outline-none transition-all focus:border-primary focus:shadow-[4px_4px_0_rgba(var(--primary),0.15)] hover:border-primary/40 text-foreground resize-none"
+              placeholder={isPlanning
+                ? "> Contexto del equipo, supuestos de mercado, riesgos identificados..."
+                : "> Deploy v2.0 realizado. Campaña de marketing activa. Incidente de DB resuelto..."}
+              {...reg("notes")}
+            />
+          </div>
+        </Section>
+
+        {/* SUBMIT */}
         <button
           type="submit"
           disabled={mutation.isPending}
           className={cn(
-            "w-full flex items-center justify-center gap-3 rounded-[16px] py-5 text-[13px] font-black uppercase tracking-widest text-background transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed",
-            isPlanning
-              ? "bg-status-warning-fg shadow-[0_0_30px_rgba(245,158,11,0.2)] hover:shadow-[0_0_40px_rgba(245,158,11,0.4)]"
-              : "bg-primary shadow-[0_0_30px_rgba(var(--primary),0.2)] hover:shadow-[0_0_40px_rgba(var(--primary),0.4)]"
+            "w-full group relative flex items-center justify-center gap-3 rounded-[10px] border-2 border-primary py-4 text-[12px] font-black uppercase tracking-widest text-primary-foreground transition-all",
+            "bg-primary hover:bg-primary/90 active:translate-y-0.5",
+            "shadow-[6px_6px_0_rgba(var(--primary),0.3)] hover:shadow-[3px_3px_0_rgba(var(--primary),0.3)]",
+            "disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none",
+            isPlanning && "border-amber-500 bg-amber-500 hover:bg-amber-500/90 shadow-[6px_6px_0_rgba(245,158,11,0.3)] hover:shadow-[3px_3px_0_rgba(245,158,11,0.3)]"
           )}
         >
+          <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 rounded-[8px]" />
           {mutation.isPending ? (
-            <span className="flex items-center gap-3">
-              <span className="h-4 w-4 rounded-[4px] bg-background animate-pulse" />
-              EJECUTANDO_INYECCION...
+            <span className="relative z-10 flex items-center gap-2">
+              <span className="h-4 w-4 rounded-[3px] bg-primary-foreground/30 animate-pulse" />
+              EJECUTANDO_INYECCIÓN...
             </span>
           ) : (
-            <>
-              <TerminalSquare className="h-5 w-5" />
+            <span className="relative z-10 flex items-center gap-2">
+              <Cpu className="h-4 w-4" />
               {isPlanning ? "INJECT_ESTIMATIONS()" : "INJECT_SNAPSHOT()"}
-            </>
+            </span>
           )}
         </button>
       </form>

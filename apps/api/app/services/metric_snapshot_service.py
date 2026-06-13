@@ -85,6 +85,21 @@ def _auto_fill_derived_metrics(data: dict) -> dict:
         if burn_rate > Decimal("0"):
             d["runway_months"] = (cash_available / burn_rate).quantize(Decimal("0.01"))
 
+    # 6. churn_rate = churned_customers / paying_customers
+    # churned_customers comes from the frontend as a raw count (not a DB column, lands in 'd' before _pack_custom_metrics)
+    if d.get('churn_rate') is None:
+        churned = _to_decimal(d.get('churned_customers'))
+        paying_for_churn = _to_decimal(d.get('paying_customers'))
+        if churned is not None and paying_for_churn is not None and paying_for_churn > Decimal('0'):
+            d['churn_rate'] = (churned / paying_for_churn).quantize(Decimal('0.0001'))
+
+    # 7. cac = marketing_spend / new_paying_customers
+    if d.get('cac') is None:
+        marketing = _to_decimal(d.get('marketing_spend'))
+        new_paying = _to_decimal(d.get('new_paying_customers'))
+        if marketing is not None and new_paying is not None and new_paying > Decimal('0'):
+            d['cac'] = (marketing / new_paying).quantize(Decimal('0.01'))
+
     return d
 
 
