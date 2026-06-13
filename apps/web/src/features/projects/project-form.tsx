@@ -171,6 +171,21 @@ export function ProjectForm() {
     setStep((s) => Math.min(s + 1, 3));
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    // Only intercept Enter if it's not a textarea (which needs Enter for newlines)
+    if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") {
+      e.preventDefault();
+      if (step === 0) setStep(1);
+      else if (step < 3) nextStep();
+      else {
+        // If step 3, we can submit
+        form.handleSubmit((values) => {
+          mutation.mutate({ ...values, country_focus: "Peru", pricing_notes: "", is_public_sample: false });
+        })();
+      }
+    }
+  };
+
   return (
     <div className="mx-auto max-w-3xl">
       {/* Step progress bar */}
@@ -184,7 +199,7 @@ export function ProjectForm() {
 
       {mutation.isError ? <div className="mb-6"><ErrorState message={getApiErrorMessage(mutation.error)} /></div> : null}
 
-      <form onSubmit={onSubmit}>
+      <form onSubmit={onSubmit} onKeyDown={handleKeyDown}>
         {/* Step 0: Tipo de proyecto */}
         {step === 0 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
@@ -434,7 +449,7 @@ export function ProjectForm() {
               <p className="text-[10px] font-black uppercase tracking-widest text-primary font-mono">STEP 04/04</p>
               <h2 className="text-2xl md:text-3xl font-display font-black uppercase tracking-tight text-foreground">PARAMETRIZACIÓN FINANCIERA</h2>
               <p className="text-muted-foreground text-[11px] font-mono uppercase">
-                &gt; Vías de monetización.
+                &gt; Vías de monetización y métricas base.
               </p>
             </div>
 
