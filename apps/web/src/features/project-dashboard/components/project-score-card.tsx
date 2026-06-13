@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Gauge, Sparkles, TerminalSquare, AlertTriangle, ShieldCheck } from "lucide-react";
+import { ArrowRight, Gauge, Sparkles, TerminalSquare, AlertTriangle, ShieldCheck, HelpCircle } from "lucide-react";
 import { formatEnum } from "@/lib/utils";
 import { MaybeNumber, ProjectDashboardResponse } from "@/types/api";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,17 @@ function toPercent(value: MaybeNumber) {
   const numeric = Number(value ?? 0);
   if (Number.isNaN(numeric)) return 0;
   return Math.max(0, Math.min(100, numeric));
+}
+
+function Tooltip({ text }: { text: string }) {
+  return (
+    <span className="group relative inline-block ml-1.5 align-top mt-[-1px]">
+      <HelpCircle className="h-3 w-3 text-muted-foreground/50 hover:text-primary cursor-help inline transition-colors" />
+      <span className="pointer-events-none absolute left-0 bottom-full mb-2 z-50 hidden w-56 rounded-[8px] border-2 border-border/60 bg-card p-3 text-[10px] font-mono uppercase text-muted-foreground shadow-[4px_4px_0_rgba(0,0,0,0.4)] group-hover:block whitespace-normal leading-relaxed before:content-[''] before:absolute before:-bottom-1.5 before:left-2 before:w-2.5 before:h-2.5 before:bg-card before:border-b-2 before:border-r-2 before:border-border/60 before:rotate-45">
+        <span className="text-primary mr-1">&gt;</span>{text}
+      </span>
+    </span>
+  );
 }
 
 function DigitalMeter({ score, color }: { score: number; color: string }) {
@@ -105,20 +116,20 @@ export function ProjectScoreCard({
 
   const colorHex = isGood ? "#22C55E" : isWarn ? "#F59E0B" : "#EF4444";
   const statusColor = isGood ? "text-emerald-500" : isWarn ? "text-amber-500" : "text-destructive";
-  const badgeColor = isGood ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500" : isWarn ? "bg-amber-500/10 border-amber-500/30 text-amber-500" : "bg-destructive/10 border-destructive/30 text-destructive";
 
   return (
     <div className={cn(
-      "relative overflow-hidden rounded-[24px] border border-border/60 bg-card/40 backdrop-blur-xl p-6 shadow-sm",
+      "relative overflow-visible rounded-[24px] border border-border/60 bg-card/40 backdrop-blur-xl p-6 shadow-sm",
     )}>
       {/* Grid background */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none rounded-[24px] overflow-hidden" />
 
       <div className="relative z-10 flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Gauge className={cn("h-4 w-4", isPlanning ? "text-status-warning-fg" : "text-primary")} />
-          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center overflow-visible">
             {isPlanning ? "SYS_VIABILITY" : "SYS_HEURISTIC"}
+            <Tooltip text={isPlanning ? "Diagnóstico de IA basado en la propuesta de valor y modelo, sin usar datos transaccionales." : "Diagnóstico basado en algoritmos usando tus métricas reales y benchmarks de la industria."} />
           </p>
         </div>
         <Link
@@ -135,7 +146,10 @@ export function ProjectScoreCard({
         
         <div className="min-w-0 flex-1 space-y-4 w-full">
           <div className="rounded-[12px] bg-background/50 border border-border/40 p-3">
-            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">RATING</p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1 flex items-center overflow-visible">
+              RATING
+              <Tooltip text="Nivel de sostenibilidad y salud del proyecto según sus resultados." />
+            </p>
             <div className="flex items-center gap-2">
               {isGood ? <ShieldCheck className="h-4 w-4 text-emerald-500" /> : <AlertTriangle className={cn("h-4 w-4", statusColor)} />}
               <span className={cn("text-xs font-bold uppercase tracking-wider", statusColor)}>
@@ -145,7 +159,10 @@ export function ProjectScoreCard({
           </div>
           
           <div className="rounded-[12px] bg-background/50 border border-border/40 p-3">
-            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">OUTPUT</p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1 flex items-center overflow-visible">
+              OUTPUT
+              <Tooltip text="Decisión recomendada por el sistema según el análisis global." />
+            </p>
             <p className="text-xs font-bold text-foreground uppercase tracking-wider">{rec}</p>
           </div>
         </div>
@@ -154,15 +171,18 @@ export function ProjectScoreCard({
       {/* Quick sub-score bars - Terminal style */}
       <div className="relative z-10 space-y-3 pt-4 border-t border-border/40">
         {[
-          { label: "FIN_METRICS", value: score.financial_score },
-          { label: "GRW_METRICS", value: score.growth_score },
-          { label: "RET_METRICS", value: score.retention_score },
-        ].map(({ label, value }) => {
+          { label: "FIN_METRICS", value: score.financial_score, tooltip: "Puntuación de finanzas y rentabilidad (MRR, Costos, Burn rate)." },
+          { label: "GRW_METRICS", value: score.growth_score, tooltip: "Puntuación de adquisición y crecimiento de base de usuarios." },
+          { label: "RET_METRICS", value: score.retention_score, tooltip: "Puntuación de fidelidad y prevención de abandono (Churn)." },
+        ].map(({ label, value, tooltip }) => {
           const v = toPercent(value);
           const barColor = v >= 75 ? "bg-emerald-500" : v >= 50 ? "bg-amber-500" : "bg-destructive";
           return (
             <div key={label} className="flex items-center gap-3">
-              <span className="text-[10px] font-mono font-bold text-muted-foreground w-[85px] shrink-0 uppercase">{label}</span>
+              <span className="text-[10px] font-mono font-bold text-muted-foreground w-[95px] shrink-0 uppercase flex items-center overflow-visible">
+                {label}
+                <Tooltip text={tooltip} />
+              </span>
               <div className="flex-1 flex gap-0.5 h-2">
                 {Array.from({ length: 20 }).map((_, i) => (
                   <div 
