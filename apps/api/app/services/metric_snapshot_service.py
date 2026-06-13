@@ -86,15 +86,14 @@ def _auto_fill_derived_metrics(data: dict) -> dict:
             d["runway_months"] = (cash_available / burn_rate).quantize(Decimal("0.01"))
 
     # 6. churn_rate = churned_customers / paying_customers
-    # churned_customers comes from the frontend as a raw count (not a DB column, lands in 'd' before _pack_custom_metrics)
-    if d.get('churn_rate') is None:
+    if d.get('churn_rate') is None or 'churn_rate' in force:
         churned = _to_decimal(d.get('churned_customers'))
         paying_for_churn = _to_decimal(d.get('paying_customers'))
         if churned is not None and paying_for_churn is not None and paying_for_churn > Decimal('0'):
             d['churn_rate'] = (churned / paying_for_churn).quantize(Decimal('0.0001'))
 
     # 7. cac = marketing_spend / new_paying_customers
-    if d.get('cac') is None:
+    if d.get('cac') is None or 'cac' in force:
         marketing = _to_decimal(d.get('marketing_spend'))
         new_paying = _to_decimal(d.get('new_paying_customers'))
         if marketing is not None and new_paying is not None and new_paying > Decimal('0'):
@@ -221,10 +220,46 @@ class MetricSnapshotService:
         data = payload.model_dump(exclude_unset=True)
         if "captured_at" in data:
             data["captured_at"] = self._normalize_captured_at(data["captured_at"])
-        # Auto-calcular métricas derivadas también en actualizaciones
-        data = _auto_fill_derived_metrics(data)
-        data = _pack_custom_metrics(data)
-        return await self.metric_snapshot_repository.update(snapshot=snapshot, data=data)
+
+        force_recalc = []
+        if "churned_customers" in data or "paying_customers" in data:
+            force_recalc.append("churn_rate")
+        if "marketing_spend" in data or "new_paying_customers" in data:
+            force_recalc.append("cac")
+
+        # 1. Base the full context on existing data
+        full_data = {
+            "period_label": snapshot.period_label,
+            "captured_at": snapshot.captured_at,
+            "mrr": snapshot.mrr,
+            "monthly_costs": snapshot.monthly_costs,
+            "total_users": snapshot.total_users,
+            "paying_customers": snapshot.paying_customers,
+            "cac": snapshot.cac,
+            "churn_rate": snapshot.churn_rate,
+            "notes": snapshot.notes,
+        }
+
+        # 2. Add existing custom metrics
+        if snapshot.custom_metrics:
+            for k, v in snapshot.custom_metrics.items():
+                full_data[k] = v
+
+        # 3. Overlay the incoming updates
+        for k, v in data.items():
+            if k == "custom_metrics" and isinstance(v, dict):
+                for ck, cv in v.items():
+                    full_data[ck] = cv
+            else:
+                full_data[k] = v
+
+        # 4. Auto-calcular métricas derivadas en la vista completa
+        full_data = _auto_fill_derived_metrics(full_data, force_recalc=force_recalc)
+        
+        # 5. Empaquetar todo lo que no es columna oficial
+        full_data = _pack_custom_metrics(full_data)
+        
+        return await self.metric_snapshot_repository.update(snapshot=snapshot, data=full_data)
 
     async def delete_snapshot(
         self,

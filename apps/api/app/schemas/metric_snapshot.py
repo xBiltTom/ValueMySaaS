@@ -14,6 +14,20 @@ class MetricSnapshotBase(BaseModel):
     paying_customers: int | None = Field(default=None, ge=0)
     cac: Decimal | None = Field(default=None, ge=0)
     churn_rate: Decimal | None = None
+    
+    # Extra fields sent by frontend (moved to custom_metrics by service)
+    monthly_revenue: Decimal | None = None
+    cash_available: Decimal | None = None
+    marketing_spend: Decimal | None = None
+    active_users: int | None = None
+    new_users: int | None = None
+    new_paying_customers: int | None = None
+    churned_customers: int | None = None
+    nps: int | None = None
+    support_tickets: int | None = None
+    critical_bugs: int | None = None
+    uptime_percentage: Decimal | None = None
+
     custom_metrics: dict[str, Any] | None = None
     notes: str | None = None
 
