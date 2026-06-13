@@ -592,7 +592,7 @@ export function MetricSnapshotForm({
             type="submit"
             disabled={mutation.isPending}
             className={cn(
-              "group relative flex items-center justify-center gap-3 rounded-[10px] border-2 border-primary py-4 text-[12px] font-black uppercase tracking-widest text-primary-foreground transition-all",
+              "group overflow-hidden relative flex items-center justify-center gap-3 rounded-[10px] border-2 border-primary py-4 text-[12px] font-black uppercase tracking-widest text-primary-foreground transition-all",
               editingSnapshot ? "w-full sm:w-2/3" : "w-full",
               "bg-primary hover:bg-primary/90 active:translate-y-0.5",
               "shadow-[6px_6px_0_rgba(var(--primary),0.3)] hover:shadow-[3px_3px_0_rgba(var(--primary),0.3)]",
