@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import HTTPException, status
 
-from app.core.security import create_access_token, hash_password, verify_password
+from app.core.security import create_access_token, hash_password_async, verify_password_async
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
 from app.schemas.auth import Token, UserRegister
@@ -28,16 +28,25 @@ class AuthService:
                     detail="Username is already registered",
                 )
 
+        hashed_password = await hash_password_async(payload.password)
         return await self.user_repository.create(
             email=payload.email,
             username=payload.username,
             full_name=payload.full_name,
-            hashed_password=hash_password(payload.password),
+            hashed_password=hashed_password,
         )
 
     async def authenticate_user(self, email: str, password: str) -> User:
         user = await self.user_repository.get_by_email(email)
-        if user is None or not verify_password(password, user.hashed_password):
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        is_valid = await verify_password_async(password, user.hashed_password)
+        if not is_valid:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect email or password",
@@ -55,7 +64,14 @@ class AuthService:
     async def login(self, email: str, password: str) -> Token:
         user = await self.authenticate_user(email, password)
         await self.user_repository.update_last_login_at(user_id=user.id)
-        return Token(access_token=create_access_token(user.id))
+        
+        token = create_access_token(
+            subject=user.id,
+            email=user.email,
+            is_active=user.is_active,
+            role=user.role.name if hasattr(user.role, "name") else user.role
+        )
+        return Token(access_token=token)
 
     async def get_active_user(self, user_id: UUID) -> User:
         user = await self.user_repository.get_by_id(user_id)

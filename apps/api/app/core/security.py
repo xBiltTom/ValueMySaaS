@@ -1,7 +1,8 @@
+import asyncio
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from jose import jwt
+import jwt
 from passlib.context import CryptContext
 from cryptography.fernet import Fernet, InvalidToken
 
@@ -18,11 +19,31 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 
-def create_access_token(subject: Any, expires_delta: timedelta | None = None) -> str:
+async def hash_password_async(plain_password: str) -> str:
+    return await asyncio.to_thread(hash_password, plain_password)
+
+
+async def verify_password_async(plain_password: str, hashed_password: str) -> bool:
+    return await asyncio.to_thread(verify_password, plain_password, hashed_password)
+
+
+def create_access_token(
+    subject: Any,
+    email: str | None = None,
+    is_active: bool = True,
+    role: str = "USER",
+    expires_delta: timedelta | None = None
+) -> str:
     expire = datetime.now(timezone.utc) + (
         expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
-    payload = {"sub": str(subject), "exp": expire}
+    payload = {
+        "sub": str(subject),
+        "email": email,
+        "is_active": is_active,
+        "role": role,
+        "exp": expire
+    }
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
 

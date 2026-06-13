@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError
+import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import decode_access_token
@@ -282,7 +282,6 @@ def get_admin_service(
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
-    auth_service: AuthService = Depends(get_auth_service),
 ) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -295,8 +294,35 @@ async def get_current_user(
         subject = payload.get("sub")
         if subject is None:
             raise credentials_exception
+            
         user_id = UUID(str(subject))
-    except (JWTError, ValueError):
+        email = payload.get("email", "")
+        is_active = payload.get("is_active", True)
+        role_str = payload.get("role", "USER")
+        
+        if not is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Inactive user",
+            )
+            
+        from app.models.enums import UserRole
+        from datetime import datetime, timezone
+        
+        # Construir usuario en memoria para evitar SELECT a DB en cada request
+        # Agregamos campos por defecto para evitar errores de validación de Pydantic
+        # con tokens legacy o endpoints que serializan el current_user
+        user = User(
+            id=user_id,
+            email=email if email and "@" in email else "legacy@example.com",
+            is_active=is_active,
+            role=UserRole[role_str] if isinstance(role_str, str) and role_str in UserRole.__members__ else UserRole.USER,
+            is_verified=payload.get("is_verified", False),
+            ai_credits=payload.get("ai_credits", 0),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        )
+        return user
+        
+    except (jwt.PyJWTError, ValueError):
         raise credentials_exception from None
-
-    return await auth_service.get_active_user(user_id)

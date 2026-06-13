@@ -26,5 +26,8 @@ async def login(
 
 
 @router.get("/me", response_model=UserRead)
-async def me(current_user: User = Depends(get_current_user)) -> User:
-    return current_user
+async def me(
+    current_user: User = Depends(get_current_user),
+    auth_service: AuthService = Depends(get_auth_service),
+) -> User:
+    return await auth_service.get_active_user(current_user.id)
