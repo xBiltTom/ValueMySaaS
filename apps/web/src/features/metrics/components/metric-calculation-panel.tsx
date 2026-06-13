@@ -273,7 +273,7 @@ export function MetricCalculationPanel({
 
       {/* Metrics grid */}
       {metrics.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           {metrics.map(([key, metric]) => {
             const dict = metricDictionary[key] ?? {
               label: formatEnum(key),
@@ -288,22 +288,22 @@ export function MetricCalculationPanel({
               <div
                 key={key}
                 className={cn(
-                  "group relative rounded-[10px] border-2 bg-card p-5 transition-all",
+                  "group relative rounded-[10px] border-2 bg-card p-4 transition-all flex flex-col",
                   "hover:shadow-[4px_4px_0_rgba(0,0,0,0.15)] hover:-translate-y-0.5",
                   s.border
                 )}
               >
                 {/* Top row */}
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <p className="text-[9px] font-black uppercase tracking-widest text-primary font-mono">
+                <div className="flex items-start justify-between mb-3 gap-1">
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-primary font-mono truncate">
                       [{dict.short}]
                     </p>
-                    <p className="text-[10px] font-black uppercase text-muted-foreground mt-0.5">
+                    <p className="text-[10px] font-black uppercase text-muted-foreground mt-0.5 leading-tight line-clamp-2">
                       {dict.label}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex flex-col items-end gap-1.5 shrink-0">
                     {metric.source === "calculated" && (
                       <span title="Calculado automáticamente">
                         <Zap className="h-3 w-3 text-emerald-400" />
@@ -322,7 +322,7 @@ export function MetricCalculationPanel({
 
                 {/* Value */}
                 <p className={cn(
-                  "text-3xl font-mono font-black tracking-tighter leading-none mb-3",
+                  "text-2xl sm:text-3xl font-mono font-black tracking-tighter leading-none mb-3 mt-auto break-words",
                   s.value
                 )}>
                   {formattedValue}
@@ -330,12 +330,12 @@ export function MetricCalculationPanel({
 
                 {/* Explanation */}
                 {metric.explanation && (
-                  <div className="border-t-2 border-dashed border-border/30 pt-3">
+                  <div className="border-t-2 border-dashed border-border/30 pt-2 mt-auto">
                     <p className="text-[9px] font-mono leading-relaxed text-muted-foreground uppercase flex gap-1.5 items-start">
                       <span className="text-primary shrink-0">&gt;</span>
-                      {metric.formula
-                        ? <span>{metric.formula}</span>
-                        : <span>{metric.explanation}</span>}
+                      <span className="line-clamp-2" title={metric.formula || metric.explanation}>
+                        {metric.formula ? metric.formula : metric.explanation}
+                      </span>
                     </p>
                   </div>
                 )}
@@ -352,17 +352,17 @@ export function MetricCalculationPanel({
       )}
 
       {/* Source summary */}
-      <div className="flex gap-4 text-[9px] font-mono uppercase text-muted-foreground border-t-2 border-border/40 pt-4">
+      <div className="flex flex-wrap gap-x-4 gap-y-2 text-[9px] font-mono uppercase text-muted-foreground border-t-2 border-border/40 pt-4">
         <span className="flex items-center gap-1">
-          <span className="h-1.5 w-1.5 rounded-full bg-primary inline-block" />
+          <span className="h-1.5 w-1.5 rounded-full bg-primary inline-block shrink-0" />
           {calculation.summary.provided_metrics_count} ingresados
         </span>
         <span className="flex items-center gap-1">
-          <Zap className="h-2.5 w-2.5 text-emerald-400" />
+          <Zap className="h-2.5 w-2.5 text-emerald-400 shrink-0" />
           {calculation.summary.calculated_metrics_count} auto-calculados
         </span>
         <span className="flex items-center gap-1">
-          <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30 inline-block" />
+          <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30 inline-block shrink-0" />
           {calculation.summary.missing_metrics_count} faltantes
         </span>
       </div>

@@ -125,7 +125,7 @@ export default function ProjectMetricsPage() {
           
           {isPlanning && snapshotsQuery.data?.items.length ? (
             <div className="mt-8">
-              <MetricSnapshotList snapshots={snapshotsQuery.data} />
+              <MetricSnapshotList snapshots={snapshotsQuery.data} projectId={projectId} />
             </div>
           ) : null}
         </div>
@@ -168,7 +168,7 @@ export default function ProjectMetricsPage() {
               </div>
 
               <div className="space-y-6 h-full overflow-y-auto xl:overflow-visible custom-scrollbar pb-24 xl:pb-0 pr-2 xl:pr-4">
-                {snapshotsQuery.data ? <MetricSnapshotList snapshots={snapshotsQuery.data} /> : null}
+                {snapshotsQuery.data ? <MetricSnapshotList snapshots={snapshotsQuery.data} projectId={projectId} /> : null}
                 {calculationQuery.data ? (
                   <MetricCalculationPanel calculation={calculationQuery.data} projectStage={project?.stage} />
                 ) : null}
