@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Lightbulb, BarChart3, Info, Database, X } from "lucide-react";
 import { useState, useEffect } from "react";
+import { MetricSnapshot } from "@/features/metrics/types";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingState } from "@/components/shared/loading-state";
@@ -20,7 +21,7 @@ export default function ProjectMetricsPage() {
   const params = useParams<{ id: string }>();
   const projectId = params.id;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
+  const [editingSnapshot, setEditingSnapshot] = useState<MetricSnapshot | null>(null);
   // Prevent background scrolling when mobile sidebar is open
   useEffect(() => {
     if (isSidebarOpen) {
@@ -120,12 +121,21 @@ export default function ProjectMetricsPage() {
         {/* Left Column (Inputs) */}
         <div className="flex-1 w-full xl:max-h-[calc(100vh-280px)] xl:overflow-y-auto xl:pr-4 custom-scrollbar xl:sticky xl:top-6">
           {project ? (
-            <MetricSnapshotForm projectId={projectId} projectStage={project.stage} />
+            <MetricSnapshotForm 
+              projectId={projectId} 
+              projectStage={project.stage} 
+              editingSnapshot={editingSnapshot}
+              onCancelEdit={() => setEditingSnapshot(null)}
+            />
           ) : <div />}
           
           {isPlanning && snapshotsQuery.data?.items.length ? (
             <div className="mt-8">
-              <MetricSnapshotList snapshots={snapshotsQuery.data} projectId={projectId} />
+              <MetricSnapshotList 
+                snapshots={snapshotsQuery.data} 
+                projectId={projectId} 
+                onEdit={(snapshot) => setEditingSnapshot(snapshot)}
+              />
             </div>
           ) : null}
         </div>
@@ -168,7 +178,17 @@ export default function ProjectMetricsPage() {
               </div>
 
               <div className="space-y-6 h-full overflow-y-auto xl:overflow-visible custom-scrollbar pb-24 xl:pb-0 pr-2 xl:pr-4">
-                {snapshotsQuery.data ? <MetricSnapshotList snapshots={snapshotsQuery.data} projectId={projectId} /> : null}
+                {snapshotsQuery.data ? (
+                  <MetricSnapshotList 
+                    snapshots={snapshotsQuery.data} 
+                    projectId={projectId} 
+                    onEdit={(snapshot) => {
+                      setEditingSnapshot(snapshot);
+                      setIsSidebarOpen(false); // Close sidebar on mobile
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                  />
+                ) : null}
                 {calculationQuery.data ? (
                   <MetricCalculationPanel calculation={calculationQuery.data} projectStage={project?.stage} />
                 ) : null}

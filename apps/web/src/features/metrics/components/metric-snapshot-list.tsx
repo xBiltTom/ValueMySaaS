@@ -14,187 +14,7 @@ import { updateMetricSnapshot, deleteMetricSnapshot } from "@/features/metrics/a
 import { metricSnapshotSchema, MetricSnapshotFormValues } from "@/features/metrics/schemas";
 import { cn } from "@/lib/utils";
 
-// ─── Edit form (inline) ───────────────────────────────────────────────────────
 
-function InlineField({
-  label, name, register, errors, integer = false, step = "0.01",
-}: {
-  label: string; name: any; register: any; errors: any;
-  integer?: boolean; step?: string;
-}) {
-  const hasError = !!errors[name];
-  return (
-    <div>
-      <label className="block text-[9px] font-black uppercase tracking-widest text-muted-foreground font-mono mb-1.5">
-        <span className="text-primary mr-1">&gt;</span>{label}
-      </label>
-      <input
-        type="number"
-        step={integer ? "1" : step}
-        min="0"
-        className={cn(
-          "w-full rounded-[6px] border-2 bg-background/70 px-3 py-2 text-[13px] font-mono font-bold text-foreground",
-          "outline-none transition-all placeholder:text-muted-foreground/30",
-          "focus:border-primary focus:shadow-[3px_3px_0_rgba(var(--primary),0.15)]",
-          hasError ? "border-red-500/60" : "border-border/60 hover:border-primary/40"
-        )}
-        {...register(name, {
-          setValueAs: (v: string) =>
-            v === "" ? undefined : integer ? parseInt(v, 10) : parseFloat(v),
-        })}
-      />
-      {hasError && (
-        <p className="mt-1 text-[9px] font-mono uppercase text-red-400">
-          {errors[name]?.message}
-        </p>
-      )}
-    </div>
-  );
-}
-
-function EditSnapshotForm({
-  snapshot,
-  projectId,
-  onClose,
-}: {
-  snapshot: MetricSnapshot;
-  projectId: string;
-  onClose: () => void;
-}) {
-  const queryClient = useQueryClient();
-
-  const form = useForm<MetricSnapshotFormValues>({
-    resolver: zodResolver(metricSnapshotSchema),
-    defaultValues: {
-      period_label: snapshot.period_label ?? "",
-      mrr: snapshot.mrr !== null ? Number(snapshot.mrr) : undefined,
-      monthly_costs: snapshot.monthly_costs !== null ? Number(snapshot.monthly_costs) : undefined,
-      total_users: snapshot.total_users ?? undefined,
-      paying_customers: snapshot.paying_customers ?? undefined,
-      notes: snapshot.notes ?? "",
-    },
-  });
-
-  const mutation = useMutation({
-    mutationFn: (values: MetricSnapshotFormValues) => {
-      // strip undefined so PATCH only sends changed fields
-      const clean = Object.fromEntries(
-        Object.entries(values).filter(([, v]) => v !== undefined && v !== "")
-      );
-      return updateMetricSnapshot(projectId, snapshot.id, clean);
-    },
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["metric-snapshots", projectId] }),
-        queryClient.invalidateQueries({ queryKey: ["project-dashboard", projectId] }),
-        queryClient.invalidateQueries({ queryKey: ["metric-calculations", projectId, "latest"] }),
-      ]);
-      onClose();
-    },
-  });
-
-  const errors = form.formState.errors;
-  const reg = form.register;
-
-  return (
-    <form
-      onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
-      className="mt-4 pt-4 border-t-2 border-dashed border-primary/30 space-y-4 animate-in slide-in-from-top-2 duration-200"
-    >
-      <p className="text-[9px] font-black uppercase tracking-widest text-primary font-mono flex items-center gap-1.5">
-        <Pencil className="h-3 w-3" /> EDIT_MODE — modifica los campos y guarda
-      </p>
-
-      {/* Error global */}
-      {mutation.isError && (
-        <div className="flex items-start gap-2 rounded-[6px] border-2 border-red-500/30 bg-red-500/5 px-3 py-2">
-          <AlertTriangle className="h-3.5 w-3.5 text-red-400 shrink-0 mt-0.5" />
-          <p className="text-[10px] font-mono text-red-400 uppercase">
-            Error al guardar. Verifica los datos e intenta de nuevo.
-          </p>
-        </div>
-      )}
-
-      {/* Period label */}
-      <div>
-        <label className="block text-[9px] font-black uppercase tracking-widest text-muted-foreground font-mono mb-1.5">
-          <span className="text-primary mr-1">&gt;</span>Nombre del periodo
-        </label>
-        <input
-          className={cn(
-            "w-full rounded-[6px] border-2 bg-background/70 px-3 py-2 text-[13px] font-mono font-bold text-foreground",
-            "outline-none transition-all",
-            "focus:border-primary focus:shadow-[3px_3px_0_rgba(var(--primary),0.15)] border-border/60 hover:border-primary/40"
-          )}
-          {...reg("period_label")}
-        />
-        {errors.period_label && (
-          <p className="mt-1 text-[9px] font-mono uppercase text-red-400">
-            {errors.period_label.message}
-          </p>
-        )}
-      </div>
-
-      {/* Financial row */}
-      <div className="grid grid-cols-2 gap-3">
-        <InlineField label="MRR ($)" name="mrr" register={reg} errors={errors} />
-        <InlineField label="Gastos Operativos ($)" name="monthly_costs" register={reg} errors={errors} />
-      </div>
-
-      {/* Users row */}
-      <div className="grid grid-cols-2 gap-3">
-        <InlineField label="Usuarios Totales" name="total_users" register={reg} errors={errors} integer />
-        <InlineField label="Clientes Pagadores" name="paying_customers" register={reg} errors={errors} integer />
-      </div>
-
-      {/* Churn / CAC row (direct override) */}
-      <div className="grid grid-cols-2 gap-3">
-        <InlineField label="Clientes Cancelaron" name="churned_customers" register={reg} errors={errors} integer />
-        <InlineField label="Gasto en Marketing ($)" name="marketing_spend" register={reg} errors={errors} />
-      </div>
-
-      {/* Notes */}
-      <div>
-        <label className="block text-[9px] font-black uppercase tracking-widest text-muted-foreground font-mono mb-1.5">
-          <span className="text-primary mr-1">&gt;</span>Notas
-        </label>
-        <textarea
-          rows={2}
-          className="w-full rounded-[6px] border-2 border-border/60 bg-background/70 px-3 py-2 text-[12px] font-mono text-foreground outline-none transition-all focus:border-primary hover:border-primary/40 resize-none"
-          {...reg("notes")}
-        />
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center gap-3 pt-1">
-        <button
-          type="submit"
-          disabled={mutation.isPending}
-          className={cn(
-            "flex items-center gap-2 rounded-[6px] border-2 border-primary bg-primary px-4 py-2",
-            "text-[10px] font-black uppercase tracking-widest text-primary-foreground",
-            "shadow-[3px_3px_0_rgba(var(--primary),0.3)] hover:shadow-[1px_1px_0_rgba(var(--primary),0.3)]",
-            "transition-all active:translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-          )}
-        >
-          {mutation.isPending
-            ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            : <Check className="h-3.5 w-3.5" />}
-          {mutation.isPending ? "Guardando..." : "Guardar"}
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          disabled={mutation.isPending}
-          className="flex items-center gap-2 rounded-[6px] border-2 border-border/60 bg-card px-4 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:border-border hover:text-foreground disabled:opacity-50"
-        >
-          <X className="h-3.5 w-3.5" />
-          Cancelar
-        </button>
-      </div>
-    </form>
-  );
-}
 
 // ─── Delete confirmation ──────────────────────────────────────────────────────
 
@@ -264,19 +84,20 @@ function SnapshotCard({
   snapshot,
   index,
   projectId,
+  onEdit,
 }: {
   snapshot: MetricSnapshot;
   index: number;
   projectId: string;
+  onEdit: () => void;
 }) {
-  const [mode, setMode] = useState<"view" | "edit" | "delete">("view");
+  const [mode, setMode] = useState<"view" | "delete">("view");
   const [expanded, setExpanded] = useState(false);
 
   return (
     <div
       className={cn(
         "relative overflow-hidden rounded-[12px] border-2 bg-card transition-all duration-200",
-        mode === "edit" && "border-primary/40 shadow-[4px_4px_0_rgba(var(--primary),0.08)]",
         mode === "delete" && "border-red-500/40 shadow-[4px_4px_0_rgba(239,68,68,0.08)]",
         mode === "view" && "border-border/50 hover:border-border"
       )}
@@ -306,7 +127,7 @@ function SnapshotCard({
           {mode === "view" && (
             <div className="flex items-center gap-1.5 shrink-0 ml-2">
               <button
-                onClick={() => { setMode("edit"); setExpanded(true); }}
+                onClick={onEdit}
                 title="Editar snapshot"
                 className="group flex items-center justify-center rounded-[6px] border-2 border-border/50 bg-card p-1.5 text-muted-foreground transition-all hover:border-primary/50 hover:text-primary hover:bg-primary/5"
               >
@@ -373,14 +194,7 @@ function SnapshotCard({
           </div>
         )}
 
-        {/* Edit form */}
-        {mode === "edit" && (
-          <EditSnapshotForm
-            snapshot={snapshot}
-            projectId={projectId}
-            onClose={() => setMode("view")}
-          />
-        )}
+
 
         {/* Delete confirmation */}
         {mode === "delete" && (
@@ -400,9 +214,11 @@ function SnapshotCard({
 export function MetricSnapshotList({
   snapshots,
   projectId,
+  onEdit,
 }: {
   snapshots: MetricSnapshotListResponse;
   projectId: string;
+  onEdit: (snapshot: MetricSnapshot) => void;
 }) {
   if (!snapshots.items.length) {
     return (
@@ -437,6 +253,7 @@ export function MetricSnapshotList({
             snapshot={snapshot}
             index={i}
             projectId={projectId}
+            onEdit={() => onEdit(snapshot)}
           />
         ))}
       </div>

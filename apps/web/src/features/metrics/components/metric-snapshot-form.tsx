@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
+import { useEffect } from "react";
 import {
   Lightbulb, TrendingUp, Users, Shield, CheckCircle2,
   Info, DollarSign, BarChart3, HelpCircle, TerminalSquare,
@@ -10,8 +11,9 @@ import {
 } from "lucide-react";
 import { ErrorState } from "@/components/shared/error-state";
 import { getApiErrorMessage } from "@/lib/api-client";
-import { createMetricSnapshot } from "@/features/metrics/api";
+import { createMetricSnapshot, updateMetricSnapshot } from "@/features/metrics/api";
 import { metricSnapshotSchema, MetricSnapshotFormValues } from "@/features/metrics/schemas";
+import { MetricSnapshot } from "@/features/metrics/types";
 import { cn } from "@/lib/utils";
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -133,9 +135,13 @@ function Section({
 export function MetricSnapshotForm({
   projectId,
   projectStage = "LAUNCHED",
+  editingSnapshot,
+  onCancelEdit,
 }: {
   projectId: string;
   projectStage?: string;
+  editingSnapshot?: MetricSnapshot | null;
+  onCancelEdit?: () => void;
 }) {
   const queryClient = useQueryClient();
   const form = useForm<MetricSnapshotFormValues>({
@@ -148,24 +154,76 @@ export function MetricSnapshotForm({
     },
   });
 
+  useEffect(() => {
+    if (editingSnapshot) {
+      form.reset({
+        period_label: editingSnapshot.period_label || "",
+        captured_at: editingSnapshot.captured_at ? new Date(editingSnapshot.captured_at).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16),
+        notes: editingSnapshot.notes || "",
+        mrr: editingSnapshot.mrr !== null ? Number(editingSnapshot.mrr) : undefined,
+        monthly_costs: editingSnapshot.monthly_costs !== null ? Number(editingSnapshot.monthly_costs) : undefined,
+        total_users: editingSnapshot.total_users ?? undefined,
+        paying_customers: editingSnapshot.paying_customers ?? undefined,
+        cash_available: editingSnapshot.cash_available !== null ? Number(editingSnapshot.cash_available) : undefined,
+        marketing_spend: editingSnapshot.custom_metrics?.marketing_spend !== undefined ? Number(editingSnapshot.custom_metrics.marketing_spend) : undefined,
+        churned_customers: editingSnapshot.custom_metrics?.churned_customers !== undefined ? Number(editingSnapshot.custom_metrics.churned_customers) : undefined,
+        new_users: editingSnapshot.custom_metrics?.new_users !== undefined ? Number(editingSnapshot.custom_metrics.new_users) : undefined,
+        new_paying_customers: editingSnapshot.custom_metrics?.new_paying_customers !== undefined ? Number(editingSnapshot.custom_metrics.new_paying_customers) : undefined,
+        monthly_revenue: editingSnapshot.custom_metrics?.monthly_revenue !== undefined ? Number(editingSnapshot.custom_metrics.monthly_revenue) : undefined,
+        nps: editingSnapshot.custom_metrics?.nps !== undefined ? Number(editingSnapshot.custom_metrics.nps) : undefined,
+        uptime_percentage: editingSnapshot.custom_metrics?.uptime_percentage !== undefined ? Number(editingSnapshot.custom_metrics.uptime_percentage) : undefined,
+        critical_bugs: editingSnapshot.custom_metrics?.critical_bugs !== undefined ? Number(editingSnapshot.custom_metrics.critical_bugs) : undefined,
+        support_tickets: editingSnapshot.custom_metrics?.support_tickets !== undefined ? Number(editingSnapshot.custom_metrics.support_tickets) : undefined,
+        custom_metrics: {
+          initial_investment_estimated: editingSnapshot.custom_metrics?.initial_investment_estimated,
+          time_to_mvp_months: editingSnapshot.custom_metrics?.time_to_mvp_months,
+          expected_users_year_1: editingSnapshot.custom_metrics?.expected_users_year_1,
+        }
+      });
+    } else {
+      form.reset({
+        period_label: "",
+        captured_at: new Date().toISOString().slice(0, 16),
+        notes: "",
+        custom_metrics: {},
+      });
+    }
+  }, [editingSnapshot, form]);
+
   const isPlanning = projectStage === "PLANNING" || projectStage === "IDEA";
   const errors = form.formState.errors;
   const reg = form.register;
 
   const mutation = useMutation({
-    mutationFn: (values: MetricSnapshotFormValues) =>
-      createMetricSnapshot(projectId, {
+    mutationFn: (values: MetricSnapshotFormValues) => {
+      const payload = {
         ...values,
         captured_at: values.captured_at
           ? new Date(values.captured_at).toISOString()
           : new Date().toISOString(),
-      }),
+      };
+      
+      if (editingSnapshot) {
+        // Strip undefined values for PATCH
+        const cleanPayload = Object.fromEntries(
+          Object.entries(payload).filter(([, v]) => v !== undefined && v !== "")
+        );
+        return updateMetricSnapshot(projectId, editingSnapshot.id, cleanPayload);
+      }
+      return createMetricSnapshot(projectId, payload);
+    },
     onSuccess: async () => {
-      form.reset({
-        period_label: "",
-        captured_at: new Date().toISOString().slice(0, 16),
-        notes: "",
-      });
+      if (!editingSnapshot) {
+        form.reset({
+          period_label: "",
+          captured_at: new Date().toISOString().slice(0, 16),
+          notes: "",
+          custom_metrics: {},
+        });
+      }
+      if (editingSnapshot && onCancelEdit) {
+        onCancelEdit();
+      }
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["metric-snapshots", projectId] }),
         queryClient.invalidateQueries({ queryKey: ["project-dashboard", projectId] }),
@@ -196,13 +254,15 @@ export function MetricSnapshotForm({
           </div>
           <div>
             <p className={cn("text-[10px] font-black uppercase tracking-widest mb-1 font-mono", isPlanning ? "text-amber-400" : "text-primary")}>
-              {isPlanning ? "MODO: PLANEACIÓN" : "MODO: OPERATIVO"}
+              {editingSnapshot ? "MODO: EDICIÓN" : isPlanning ? "MODO: PLANEACIÓN" : "MODO: OPERATIVO"}
             </p>
             <h2 className="text-lg font-display font-black uppercase tracking-tight text-foreground">
-              {isPlanning ? "Registrar Proyecciones" : "Registrar Snapshot"}
+              {editingSnapshot ? "Actualizar Snapshot" : isPlanning ? "Registrar Proyecciones" : "Registrar Snapshot"}
             </h2>
             <p className="text-[11px] font-mono text-muted-foreground mt-1 uppercase">
-              {isPlanning
+              {editingSnapshot
+                ? "> Editando los datos del periodo. Algunos campos forzarán recálculo."
+                : isPlanning
                 ? "> Estima costos y proyecciones para evaluar viabilidad con IA."
                 : "> Captura el estado real del periodo para diagnóstico y seguimiento."}
             </p>
@@ -218,7 +278,7 @@ export function MetricSnapshotForm({
           <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0 mt-0.5" />
           <div>
             <p className="text-[11px] font-black uppercase tracking-widest text-emerald-400 font-mono">
-              {isPlanning ? "SYS_STATUS: ESTIMACIONES_OK" : "SYS_STATUS: SNAPSHOT_INYECTADO"}
+              {editingSnapshot ? "SYS_STATUS: SNAPSHOT_ACTUALIZADO" : isPlanning ? "SYS_STATUS: ESTIMACIONES_OK" : "SYS_STATUS: SNAPSHOT_INYECTADO"}
             </p>
             <p className="text-[10px] font-mono text-emerald-400/70 uppercase mt-1">
               {isPlanning
@@ -475,31 +535,43 @@ export function MetricSnapshotForm({
           </div>
         </Section>
 
-        {/* SUBMIT */}
-        <button
-          type="submit"
-          disabled={mutation.isPending}
-          className={cn(
-            "w-full group relative flex items-center justify-center gap-3 rounded-[10px] border-2 border-primary py-4 text-[12px] font-black uppercase tracking-widest text-primary-foreground transition-all",
-            "bg-primary hover:bg-primary/90 active:translate-y-0.5",
-            "shadow-[6px_6px_0_rgba(var(--primary),0.3)] hover:shadow-[3px_3px_0_rgba(var(--primary),0.3)]",
-            "disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none",
-            isPlanning && "border-amber-500 bg-amber-500 hover:bg-amber-500/90 shadow-[6px_6px_0_rgba(245,158,11,0.3)] hover:shadow-[3px_3px_0_rgba(245,158,11,0.3)]"
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
+          {editingSnapshot && onCancelEdit && (
+            <button
+              type="button"
+              onClick={onCancelEdit}
+              disabled={mutation.isPending}
+              className="w-full sm:w-1/3 rounded-[10px] border-2 border-border/60 bg-card py-4 text-[12px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:border-border hover:text-foreground disabled:opacity-50"
+            >
+              Cancelar Edición
+            </button>
           )}
-        >
-          <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 rounded-[8px]" />
-          {mutation.isPending ? (
-            <span className="relative z-10 flex items-center gap-2">
-              <span className="h-4 w-4 rounded-[3px] bg-primary-foreground/30 animate-pulse" />
-              EJECUTANDO_INYECCIÓN...
-            </span>
-          ) : (
-            <span className="relative z-10 flex items-center gap-2">
-              <Cpu className="h-4 w-4" />
-              {isPlanning ? "INJECT_ESTIMATIONS()" : "INJECT_SNAPSHOT()"}
-            </span>
-          )}
-        </button>
+          <button
+            type="submit"
+            disabled={mutation.isPending}
+            className={cn(
+              "group relative flex items-center justify-center gap-3 rounded-[10px] border-2 border-primary py-4 text-[12px] font-black uppercase tracking-widest text-primary-foreground transition-all",
+              editingSnapshot ? "w-full sm:w-2/3" : "w-full",
+              "bg-primary hover:bg-primary/90 active:translate-y-0.5",
+              "shadow-[6px_6px_0_rgba(var(--primary),0.3)] hover:shadow-[3px_3px_0_rgba(var(--primary),0.3)]",
+              "disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none",
+              isPlanning && "border-amber-500 bg-amber-500 hover:bg-amber-500/90 shadow-[6px_6px_0_rgba(245,158,11,0.3)] hover:shadow-[3px_3px_0_rgba(245,158,11,0.3)]"
+            )}
+          >
+            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 rounded-[8px]" />
+            {mutation.isPending ? (
+              <span className="relative z-10 flex items-center gap-2">
+                <span className="h-4 w-4 rounded-[3px] bg-primary-foreground/30 animate-pulse" />
+                EJECUTANDO...
+              </span>
+            ) : (
+              <span className="relative z-10 flex items-center gap-2">
+                <Cpu className="h-4 w-4" />
+                {editingSnapshot ? "UPDATE_SNAPSHOT()" : isPlanning ? "INJECT_ESTIMATIONS()" : "INJECT_SNAPSHOT()"}
+              </span>
+            )}
+          </button>
+        </div>
       </form>
     </div>
   );
