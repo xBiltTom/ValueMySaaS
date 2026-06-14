@@ -67,6 +67,7 @@ type EditProjectFormValues = {
   target_audience: string;
   main_problem: string;
   value_proposition: string;
+  pricing_notes: string;
   current_price: number;
   currency: string;
 };
@@ -92,6 +93,7 @@ export function EditProjectModal({
       target_audience: project.target_audience || "",
       main_problem: project.main_problem || "",
       value_proposition: project.value_proposition || "",
+      pricing_notes: project.pricing_notes || "",
       current_price: typeof project.current_price === "number" ? project.current_price : (parseFloat(project.current_price as string) || 0),
       currency: project.currency || "USD",
     },
@@ -192,6 +194,13 @@ export function EditProjectModal({
                 <div className="md:col-span-2">
                   <Label>PROPUESTA DE SOLUCIÓN</Label>
                   <BrutalistTextarea {...form.register("value_proposition")} rows={2} />
+                </div>
+                <div className="md:col-span-2 rounded-[8px] border-2 border-primary/50 bg-primary/5 p-4 mt-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="bg-primary px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-primary-foreground font-mono">CLAVE</span>
+                    <Label>VENTAJA DIFERENCIAL / MOAT</Label>
+                  </div>
+                  <BrutalistTextarea {...form.register("pricing_notes")} rows={2} placeholder="¿Por qué tu solución es difícil de copiar?" />
                 </div>
               </div>
             </div>
