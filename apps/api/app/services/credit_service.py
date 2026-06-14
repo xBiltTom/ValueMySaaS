@@ -17,6 +17,7 @@ from app.models.user import User
 from app.repositories.ai_key_repository import AiProviderKeyRepository
 from app.repositories.credit_transaction_repository import CreditTransactionRepository
 from app.repositories.system_ai_key_repository import SystemAiKeyRepository
+from app.repositories.system_config_repository import SystemConfigRepository
 from app.repositories.user_repository import UserRepository
 
 
@@ -44,11 +45,13 @@ class CreditService:
         ai_key_repository: AiProviderKeyRepository,
         system_ai_key_repository: SystemAiKeyRepository,
         credit_transaction_repository: CreditTransactionRepository,
+        system_config_repository: SystemConfigRepository,
     ) -> None:
         self.user_repository = user_repository
         self.ai_key_repository = ai_key_repository
         self.system_ai_key_repository = system_ai_key_repository
         self.credit_transaction_repository = credit_transaction_repository
+        self.system_config_repository = system_config_repository
 
     async def resolve_llm_credentials(
         self,
@@ -95,6 +98,13 @@ class CreditService:
             )
 
         # --- Caso 2: Créditos del sistema ---
+        system_credits_enabled = await self.system_config_repository.get_value("system_credits_enabled")
+        if system_credits_enabled != "true":
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail="El sistema de créditos está temporalmente desactivado por el administrador. Por favor, configura tu propia API Key.",
+            )
+
         if user.ai_credits > 0:
             system_keys = await self.system_ai_key_repository.get_all_active_ordered()
             if not system_keys:

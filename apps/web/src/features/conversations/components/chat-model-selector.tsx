@@ -3,6 +3,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { AiKey } from "@/features/ai-keys/types";
 import { listAiKeyModels } from "@/features/ai-keys/api";
+import { getPublicConfig } from "@/features/admin/api";
+import { useCurrentUser } from "@/features/auth/use-auth";
 import { providerLabels, providerModels } from "@/features/ai-keys/constants";
 import { maskedKey } from "@/features/ai-keys/utils";
 import { Cpu, Zap, ChevronDown, Check } from "lucide-react";
@@ -66,13 +68,15 @@ function CustomDropdown({
           {options.map((opt) => (
             <button
               key={opt.value}
+              disabled={(opt as any).disabled}
               onClick={() => {
                 onChange(opt.value);
                 setIsOpen(false);
               }}
               className={cn(
                 "group flex items-center justify-between w-full px-3 py-2 text-left text-[11px] font-black uppercase tracking-widest transition-colors relative outline-none",
-                value === opt.value ? "bg-primary/20 text-primary" : "hover:bg-muted/80 text-foreground/80"
+                value === opt.value ? "bg-primary/20 text-primary" : "hover:bg-muted/80 text-foreground/80",
+                (opt as any).disabled && "opacity-50 cursor-not-allowed hover:bg-transparent"
               )}
             >
               <div className="flex flex-col min-w-0 pr-4">
@@ -106,6 +110,11 @@ export function ChatModelSelector({
   setSelectedModel: (val: string) => void;
 }) {
   const selectedKey = activeKeys.find((k) => k.id === selectedKeyId);
+  const { data: currentUser } = useCurrentUser();
+  const configQuery = useQuery({ queryKey: ["public-config"], queryFn: getPublicConfig });
+  
+  const systemCreditsEnabled = configQuery.data?.system_credits_enabled ?? true;
+  const hasCredits = (currentUser?.ai_credits ?? 0) > 0;
 
   const dynamicModelsQuery = useQuery({
     queryKey: ["ai-key-models", selectedKeyId],
@@ -119,13 +128,25 @@ export function ChatModelSelector({
     : [];
 
   const keyOptions = [
-    { label: "USAR CRÉDITOS", value: "CREDITS", desc: "BALANCE INTERNO DE SISTEMA" },
+    ...(hasCredits ? [{
+      label: systemCreditsEnabled ? `USAR CRÉDITOS (${currentUser?.ai_credits ?? 0})` : "CRÉDITOS DESACTIVADOS",
+      value: "CREDITS",
+      desc: systemCreditsEnabled ? "BALANCE INTERNO DE SISTEMA" : "TEMPORALMENTE DESACTIVADO",
+      disabled: !systemCreditsEnabled,
+    }] : []),
     ...activeKeys.map((key) => ({
       label: providerLabels[key.provider],
       value: key.id,
       desc: `KEY: ***${maskedKey(key.key_last_four)}`,
     }))
   ];
+
+  // Si seleccionaste una clave desactivada o "CREDITS" y está desactivado, cámbiala a la primera disponible.
+  useEffect(() => {
+    if (selectedKeyId === "CREDITS" && !systemCreditsEnabled && activeKeys.length > 0) {
+      setSelectedKeyId(activeKeys[0].id);
+    }
+  }, [selectedKeyId, systemCreditsEnabled, activeKeys, setSelectedKeyId]);
 
   const modelOptions = [
     { label: "AUTO-DETECTAR", value: "" },

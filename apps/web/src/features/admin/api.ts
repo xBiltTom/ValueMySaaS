@@ -49,9 +49,18 @@ export interface AnnouncementResponse {
   has_announcement: boolean;
 }
 
+export interface PublicConfigResponse {
+  system_credits_enabled: boolean;
+}
+
 // ---- Stats ----
 export async function getAdminStats(): Promise<AdminStats> {
   const { data } = await apiClient.get<AdminStats>("/admin/stats");
+  return data;
+}
+
+export async function getPublicConfig(): Promise<PublicConfigResponse> {
+  const { data } = await apiClient.get<PublicConfigResponse>("/admin/public/config");
   return data;
 }
 

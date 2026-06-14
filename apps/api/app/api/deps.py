@@ -65,6 +65,7 @@ def get_credit_service(db: AsyncSession = Depends(get_db)) -> CreditService:
         ai_key_repository=AiProviderKeyRepository(db),
         system_ai_key_repository=SystemAiKeyRepository(db),
         credit_transaction_repository=CreditTransactionRepository(db),
+        system_config_repository=SystemConfigRepository(db),
     )
 
 

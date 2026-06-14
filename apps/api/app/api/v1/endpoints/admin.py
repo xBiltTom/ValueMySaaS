@@ -276,3 +276,13 @@ async def get_announcement(
     """Endpoint público. Devuelve el anuncio activo para mostrar al iniciar sesión."""
     text = await admin_service.get_announcement()
     return {"announcement": text, "has_announcement": bool(text.strip())}
+
+@router.get("/public/config")
+async def get_public_config(
+    admin_service: AdminService = Depends(get_admin_service),
+):
+    """Endpoint público. Devuelve configuración global visible a todos."""
+    credits_enabled = await admin_service.get_system_credits_enabled()
+    return {
+        "system_credits_enabled": credits_enabled,
+    }

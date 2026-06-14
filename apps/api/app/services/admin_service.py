@@ -174,3 +174,7 @@ class AdminService:
 
     async def get_announcement(self) -> str:
         return await self.system_config_repository.get_value("login_announcement")
+
+    async def get_system_credits_enabled(self) -> bool:
+        value = await self.system_config_repository.get_value("system_credits_enabled")
+        return value.lower() == "true"

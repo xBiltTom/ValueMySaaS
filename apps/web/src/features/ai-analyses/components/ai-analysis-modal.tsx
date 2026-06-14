@@ -12,6 +12,7 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { listAiKeys, listAiKeyModels } from "@/features/ai-keys/api";
 import { listAiAnalyses } from "@/features/ai-analyses/api";
+import { getPublicConfig } from "@/features/admin/api";
 import { useQuery } from "@tanstack/react-query";
 import { useCurrentUser } from "@/features/auth/use-auth";
 import { AiKey } from "@/features/ai-keys/types";
@@ -38,9 +39,11 @@ export function AiAnalysisModal({
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   const keysQuery = useQuery({ queryKey: ["ai-keys"], queryFn: listAiKeys, enabled: isOpen });
+  const configQuery = useQuery({ queryKey: ["public-config"], queryFn: getPublicConfig, enabled: isOpen });
   const { data: currentUser } = useCurrentUser();
   const activeKeys = keysQuery.data?.items.filter((key) => key.is_active) ?? [];
 
+  const systemCreditsEnabled = configQuery.data?.system_credits_enabled ?? true;
   const hasCredits = (currentUser?.ai_credits ?? 0) > 0;
   const firstKey = activeKeys[0];
   const isPlanning = projectStage === "PLANNING" || projectStage === "IDEA";
@@ -95,20 +98,22 @@ export function AiAnalysisModal({
     router.push(`/projects/${projectId}/ai-analysis/${analysisId}?${params.toString()}`);
   };
 
-  if (keysQuery.isLoading) {
+  if (keysQuery.isLoading || configQuery.isLoading) {
     return null; // Or a simple loading spinner dialog
   }
 
-  // No BYOK keys and no credits → show BYOK onboarding
-  if (!activeKeys.length && keysQuery.isSuccess && !hasCredits) {
+  // No BYOK keys and no credits (or credits disabled) → show BYOK onboarding
+  if (!activeKeys.length && keysQuery.isSuccess && (!hasCredits || !systemCreditsEnabled)) {
     return (
       <>
         <Dialog open={isOpen && !showOnboarding} onOpenChange={(open) => !open && onClose()}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Créditos agotados</DialogTitle>
+              <DialogTitle>{systemCreditsEnabled ? "Créditos agotados" : "Créditos desactivados"}</DialogTitle>
               <DialogDescription>
-                No tienes créditos disponibles ni una API Key configurada. Activa tu propia key gratuita en minutos.
+                {systemCreditsEnabled 
+                  ? "No tienes créditos disponibles ni una API Key configurada. Activa tu propia key gratuita en minutos."
+                  : "El sistema de créditos está temporalmente desactivado y no tienes una API Key configurada. Activa tu propia key gratuita en minutos."}
               </DialogDescription>
             </DialogHeader>
             <div className="flex justify-end gap-3 mt-4">
@@ -186,8 +191,10 @@ export function AiAnalysisModal({
               </span>
               <Select className="w-full" {...form.register("ai_key_id")}>
                 {hasCredits && (
-                  <option value="">
-                    Créditos del sistema ({currentUser?.ai_credits ?? 0} restantes)
+                  <option value="" disabled={!systemCreditsEnabled}>
+                    {systemCreditsEnabled 
+                      ? `Créditos del sistema (${currentUser?.ai_credits ?? 0} restantes)` 
+                      : `Créditos desactivados temporalmente`}
                   </option>
                 )}
                 {activeKeys.map((key) => (
@@ -197,29 +204,32 @@ export function AiAnalysisModal({
                 ))}
               </Select>
             </label>
-            <label className="block">
-              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground font-mono mb-1.5 flex items-center gap-1.5">
-                <span className="text-primary">&gt;</span> Modelo (opcional)
-              </span>
-              {dynamicModelsQuery.isLoading ? (
-                <div className="h-10 w-full rounded-[6px] border-2 border-border/60 bg-background/50 px-3 flex items-center text-[10px] font-mono text-muted-foreground uppercase">
-                  Cargando modelos...
-                </div>
-              ) : selectedKey && (dynamicModelsQuery.data?.items?.length || providerModels[selectedKey.provider]?.length > 0) ? (
-                <Select className="w-full" {...form.register("model_name")}>
-                  <option value="">-- Autoselección --</option>
-                  {((dynamicModelsQuery.data?.items?.length ? dynamicModelsQuery.data.items : null) || providerModels[selectedKey.provider]).map((model) => (
-                    <option key={model.id} value={model.id}>{model.name}</option>
-                  ))}
-                </Select>
-              ) : (
-                <Input
-                  className="w-full"
-                  placeholder={selectedKey ? providerHints[selectedKey.provider] : ""}
-                  {...form.register("model_name")}
-                />
-              )}
-            </label>
+
+            {selectedKeyId !== "" && (
+              <label className="block">
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground font-mono mb-1.5 flex items-center gap-1.5">
+                  <span className="text-primary">&gt;</span> Modelo (opcional)
+                </span>
+                {dynamicModelsQuery.isLoading ? (
+                  <div className="h-10 w-full rounded-[6px] border-2 border-border/60 bg-background/50 px-3 flex items-center text-[10px] font-mono text-muted-foreground uppercase">
+                    Cargando modelos...
+                  </div>
+                ) : selectedKey && (dynamicModelsQuery.data?.items?.length || providerModels[selectedKey.provider]?.length > 0) ? (
+                  <Select className="w-full" {...form.register("model_name")}>
+                    <option value="">-- Autoselección --</option>
+                    {((dynamicModelsQuery.data?.items?.length ? dynamicModelsQuery.data.items : null) || providerModels[selectedKey.provider]).map((model) => (
+                      <option key={model.id} value={model.id}>{model.name}</option>
+                    ))}
+                  </Select>
+                ) : (
+                  <Input
+                    className="w-full"
+                    placeholder={selectedKey ? providerHints[selectedKey.provider] : ""}
+                    {...form.register("model_name")}
+                  />
+                )}
+              </label>
+            )}
           </div>
 
           <div className="flex justify-end gap-3 pt-3">
