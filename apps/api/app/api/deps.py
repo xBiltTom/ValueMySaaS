@@ -45,7 +45,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 # ---------------------------------------------------------------------------
 
 def get_auth_service(db: AsyncSession = Depends(get_db)) -> AuthService:
-    return AuthService(UserRepository(db))
+    return AuthService(
+        user_repository=UserRepository(db),
+        system_config_repository=SystemConfigRepository(db),
+    )
 
 
 def get_llm_client_service() -> LlmClientService:

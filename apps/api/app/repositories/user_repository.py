@@ -36,12 +36,14 @@ class UserRepository:
         hashed_password: str,
         username: str | None = None,
         full_name: str | None = None,
+        ai_credits: int = 0,
     ) -> User:
         user = User(
             email=email.lower(),
             username=username,
             full_name=full_name,
             hashed_password=hashed_password,
+            ai_credits=ai_credits,
         )
         self.db.add(user)
         await self.db.flush()

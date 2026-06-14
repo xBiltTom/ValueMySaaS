@@ -21,6 +21,19 @@ export default function AdminPage() {
 
   const isAdmin = userQuery.data?.role === "ADMIN";
 
+  if (userQuery.isLoading) {
+    return (
+      <DashboardShell>
+        <LoadingState label="Verificando permisos..." />
+      </DashboardShell>
+    );
+  }
+
+  if (!isAdmin) {
+    // Return null to prevent the admin UI from flashing before the redirect happens
+    return null;
+  }
+
   return (
     <DashboardShell>
       <div className="relative animate-in fade-in slide-in-from-bottom-6 duration-500">
@@ -40,15 +53,7 @@ export default function AdminPage() {
         </div>
 
         {/* Content */}
-        {userQuery.isLoading && <LoadingState label="Verificando permisos..." />}
-        {isAdmin && <AdminPanel />}
-        {userQuery.data && !isAdmin && (
-          <div className="border-2 border-destructive/30 bg-destructive/5 p-8 text-center">
-            <Shield className="h-12 w-12 text-destructive/40 mx-auto mb-4" />
-            <p className="font-bold text-destructive uppercase tracking-wide">Acceso Denegado</p>
-            <p className="text-sm text-muted-foreground mt-1">No tienes permisos de administrador.</p>
-          </div>
-        )}
+        <AdminPanel />
       </div>
     </DashboardShell>
   );

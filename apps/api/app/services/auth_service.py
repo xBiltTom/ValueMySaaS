@@ -4,13 +4,19 @@ from fastapi import HTTPException, status
 
 from app.core.security import create_access_token, hash_password_async, verify_password_async
 from app.models.user import User
+from app.repositories.system_config_repository import SystemConfigRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.auth import Token, UserRegister
 
 
 class AuthService:
-    def __init__(self, user_repository: UserRepository) -> None:
+    def __init__(
+        self,
+        user_repository: UserRepository,
+        system_config_repository: SystemConfigRepository,
+    ) -> None:
         self.user_repository = user_repository
+        self.system_config_repository = system_config_repository
 
     async def register_user(self, payload: UserRegister) -> User:
         existing_email = await self.user_repository.get_by_email(payload.email)
@@ -29,11 +35,20 @@ class AuthService:
                 )
 
         hashed_password = await hash_password_async(payload.password)
+        
+        # Obtener créditos iniciales de la configuración
+        default_credits_str = await self.system_config_repository.get_value("default_initial_credits")
+        try:
+            initial_credits = int(default_credits_str)
+        except ValueError:
+            initial_credits = 5
+
         return await self.user_repository.create(
             email=payload.email,
             username=payload.username,
             full_name=payload.full_name,
             hashed_password=hashed_password,
+            ai_credits=initial_credits,
         )
 
     async def authenticate_user(self, email: str, password: str) -> User:
