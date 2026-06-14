@@ -181,11 +181,20 @@ export default function ProjectDashboardPage() {
           {/* Main content grid: Score + KPIs */}
           {dashboard.latest_snapshot && (
             <div className="space-y-5">
-              <div className="flex items-start gap-3 rounded-[12px] border border-primary/20 bg-primary/5 px-4 py-3 shadow-inner">
-                <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <div className={cn("flex items-start gap-3 rounded-[12px] border px-4 py-3 shadow-inner", isPlanning ? "border-amber-500/20 bg-amber-500/5" : "border-primary/20 bg-primary/5")}>
+                <Info className={cn("h-4 w-4 shrink-0 mt-0.5", isPlanning ? "text-amber-500" : "text-primary")} />
                 <p className="text-[11px] font-mono text-muted-foreground uppercase leading-relaxed">
-                  <strong className="text-primary font-black">SYS_INFO:</strong> Mostrando evaluación basada en el snapshot del periodo <span className="text-foreground font-bold bg-background/50 px-1.5 py-0.5 rounded-[4px] border border-border/50">{dashboard.latest_snapshot.period_label || new Date(dashboard.latest_snapshot.captured_at).toLocaleDateString()}</span>. 
-                  <span className="opacity-80 ml-1">Excepción: Métricas de tendencia (como MRR Growth) evalúan todo el historial disponible para otorgar puntos extra.</span>
+                  <strong className={cn("font-black", isPlanning ? "text-amber-500" : "text-primary")}>SYS_INFO:</strong>
+                  {isPlanning ? (
+                    <>
+                      {" "}Mostrando viabilidad construida a partir del <span className="text-foreground font-bold bg-background/50 px-1.5 py-0.5 rounded-[4px] border border-border/50">último análisis IA</span> y las <span className="text-foreground font-bold bg-background/50 px-1.5 py-0.5 rounded-[4px] border border-border/50">estimaciones más recientes</span> ingresadas.
+                    </>
+                  ) : (
+                    <>
+                      {" "}Mostrando evaluación basada en el snapshot del periodo <span className="text-foreground font-bold bg-background/50 px-1.5 py-0.5 rounded-[4px] border border-border/50">{dashboard.latest_snapshot.period_label || new Date(dashboard.latest_snapshot.captured_at).toLocaleDateString()}</span>. 
+                      <span className="opacity-80 ml-1">Excepción: Métricas de tendencia (como MRR Growth) evalúan todo el historial disponible para otorgar puntos extra.</span>
+                    </>
+                  )}
                 </p>
               </div>
 
