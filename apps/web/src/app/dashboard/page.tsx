@@ -36,8 +36,8 @@ export default function DashboardPage() {
             Command Center
           </h1>
           <p className="mt-4 text-sm font-mono font-medium text-muted-foreground max-w-2xl border-l-2 border-primary/30 pl-4">
-            \u003E INICIALIZANDO REPORTE GLOBAL...<br/>
-            \u003E MONITOREANDO MÉTRICAS DE PORTAFOLIO EN TIEMPO REAL.
+            &gt; INICIALIZANDO REPORTE GLOBAL...<br/>
+            &gt; MONITOREANDO MÉTRICAS DE PORTAFOLIO EN TIEMPO REAL.
           </p>
         </div>
 

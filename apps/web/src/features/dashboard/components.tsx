@@ -122,7 +122,7 @@ export function PortfolioDashboard({ data }: { data: PortfolioDashboardResponse 
                     {item.title}
                   </h3>
                   <p className="mt-2 text-xs leading-relaxed text-muted-foreground border-l-2 border-border pl-3">
-                    \u003E {item.message}
+                    &gt; {item.message}
                   </p>
                 </div>
               ))

@@ -50,16 +50,23 @@ class DashboardService:
         projects = await self.saas_project_repository.list_all_for_owner(owner_id=owner_id)
         latest_scores: dict[UUID, SaasScore | None] = {}
         projects_without_snapshots = 0
+        projects_without_scores = 0
 
         for project in projects:
+            stage = project.stage if hasattr(project.stage, "value") else SaasStage(project.stage)
+            
             latest_scores[project.id] = await self.saas_score_repository.get_latest_by_project(
                 saas_project_id=project.id,
             )
             latest_snapshot = await self.metric_snapshot_repository.get_latest_by_project(
                 saas_project_id=project.id,
             )
-            if latest_snapshot is None:
-                projects_without_snapshots += 1
+            
+            if stage not in {SaasStage.IDEA, SaasStage.PLANNING}:
+                if latest_snapshot is None:
+                    projects_without_snapshots += 1
+                if latest_scores[project.id] is None:
+                    projects_without_scores += 1
 
         scores = [score for score in latest_scores.values() if score is not None]
         score_values = [Decimal(str(score.overall_score)) for score in scores]
@@ -109,7 +116,7 @@ class DashboardService:
             global_recommendations=self._global_recommendations(
                 projects=projects,
                 projects_without_snapshots=projects_without_snapshots,
-                projects_without_scores=len(projects) - len(scores),
+                projects_without_scores=projects_without_scores,
                 scores=scores,
             ),
         )
