@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { X, Clock, BrainCircuit, Activity, ChevronRight, Zap, Trash2 } from "lucide-react";
 import { formatDateTime } from "@/lib/formatters";
@@ -22,6 +22,7 @@ export function AiAnalysisHistorySidebar({
   currentAnalysisId?: string;
 }) {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const projectId = params.id;
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
@@ -31,20 +32,30 @@ export function AiAnalysisHistorySidebar({
     enabled: isOpen,
   });
 
+  const analyses = analysesQuery.data?.items ?? [];
+
   const queryClient = useQueryClient();
 
   const deleteMutation = useMutation({
     mutationFn: (analysisId: string) => deleteAiAnalysis(projectId, analysisId),
-    onSuccess: () => {
+    onSuccess: (_, deletedId) => {
       queryClient.invalidateQueries({ queryKey: ["ai-analyses", projectId] });
       toast.success("Análisis eliminado");
+
+      // Redirect if the deleted analysis is the one currently being viewed
+      if (deletedId === currentAnalysisId) {
+        const remainingAnalyses = analyses.filter(a => a.id !== deletedId);
+        if (remainingAnalyses.length > 0) {
+          router.push(`/projects/${projectId}/ai-analysis/${remainingAnalyses[0].id}`);
+        } else {
+          router.push(`/projects/${projectId}`);
+        }
+      }
     },
     onError: () => {
       toast.error("Error al eliminar el análisis");
     }
   });
-
-  const analyses = analysesQuery.data?.items ?? [];
 
   // Handle escape key to close
   useEffect(() => {
