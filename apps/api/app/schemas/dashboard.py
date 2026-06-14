@@ -128,6 +128,7 @@ class MetricCards(BaseModel):
     # Planning-specific
     cash_available: Decimal | int | str | None = None
     burn_rate: Decimal | int | str | None = None
+    monthly_costs: Decimal | int | str | None = None
 
 
 class SeriesPoint(BaseModel):

@@ -199,6 +199,23 @@ class DashboardService:
                     message="Lanza un diagnóstico de IA para evaluar la viabilidad de tu idea y obtener próximos pasos concretos.",
                 ))
 
+            # Build historical overall_score series from AI analyses
+            overall_score_series = []
+            if self.ai_analysis_repository is not None:
+                ai_history = await self.ai_analysis_repository.list_by_project(
+                    saas_project_id=project_id,
+                    limit=20,
+                )
+                for ai in reversed(ai_history):
+                    parsed = self._planning_ai_output(ai)
+                    overall_score_series.append(
+                        SeriesPoint(
+                            date=ai.created_at,
+                            label=ai.created_at.strftime("%d %b"),
+                            value=parsed.overall_score if parsed else None
+                        )
+                    )
+
             return ProjectDashboardResponse(
                 project=self._project_summary(project),
                 latest_snapshot=self._latest_snapshot_summary(latest_snapshot),
@@ -219,7 +236,7 @@ class DashboardService:
                     paying_customers=[],
                     active_users=[],
                     churn_rate=[],
-                    overall_score=[],
+                    overall_score=overall_score_series,
                 ),
                 planning_ai_output=planning_ai_output,
             )

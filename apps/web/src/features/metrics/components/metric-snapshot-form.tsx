@@ -182,7 +182,7 @@ export function MetricSnapshotForm({
         critical_bugs: editingSnapshot.custom_metrics?.critical_bugs !== undefined ? Number(editingSnapshot.custom_metrics.critical_bugs) : undefined,
         support_tickets: editingSnapshot.custom_metrics?.support_tickets !== undefined ? Number(editingSnapshot.custom_metrics.support_tickets) : undefined,
         custom_metrics: {
-          initial_investment_estimated: editingSnapshot.custom_metrics?.initial_investment_estimated,
+
           time_to_mvp_months: editingSnapshot.custom_metrics?.time_to_mvp_months,
           expected_users_year_1: editingSnapshot.custom_metrics?.expected_users_year_1,
           estimated_cac: editingSnapshot.custom_metrics?.estimated_cac,
@@ -210,7 +210,7 @@ export function MetricSnapshotForm({
         critical_bugs: "" as any,
         support_tickets: "" as any,
         custom_metrics: {
-          initial_investment_estimated: "" as any,
+
           time_to_mvp_months: "" as any,
           expected_users_year_1: "" as any,
           estimated_cac: "" as any,
@@ -274,7 +274,7 @@ export function MetricSnapshotForm({
           critical_bugs: "" as any,
           support_tickets: "" as any,
           custom_metrics: {
-            initial_investment_estimated: "" as any,
+
             time_to_mvp_months: "" as any,
             expected_users_year_1: "" as any,
             estimated_cac: "" as any,
@@ -389,10 +389,10 @@ export function MetricSnapshotForm({
                 register={reg} name="monthly_costs" errors={errors}
               />
               <NumberInput
-                label="Inversión Inicial ($)"
-                help="Capital total necesario para construir y lanzar el MVP. Incluye desarrollo, diseño e infraestructura inicial."
-                placeholder="500.00"
-                register={reg} name="custom_metrics.initial_investment_estimated" errors={errors}
+                label="Caja Disponible ($)"
+                help="Capital inicial o inversión disponible para construir el MVP y mantener las operaciones. Se usa para calcular el Runway."
+                placeholder="5000.00"
+                register={reg} name="cash_available" errors={errors}
               />
               <NumberInput
                 label="Time-to-Market (Meses)"
