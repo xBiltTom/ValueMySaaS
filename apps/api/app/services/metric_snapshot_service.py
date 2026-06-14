@@ -71,8 +71,10 @@ def _auto_fill_derived_metrics(data: dict, force_recalc: list[str] | None = None
             d["arr"] = (mrr * Decimal("12")).quantize(Decimal("0.01"))
 
     # 3. gross_profit = monthly_revenue - monthly_costs
-    if d.get("gross_profit") is None and monthly_revenue is not None and monthly_costs is not None:
-        d["gross_profit"] = (monthly_revenue - monthly_costs).quantize(Decimal("0.01"))
+    rev_for_calc = monthly_revenue or Decimal("0")
+    cost_for_calc = monthly_costs or Decimal("0")
+    if d.get("gross_profit") is None and (monthly_revenue is not None or monthly_costs is not None):
+        d["gross_profit"] = (rev_for_calc - cost_for_calc).quantize(Decimal("0.01"))
 
     gross_profit = _to_decimal(d.get("gross_profit"))
 
@@ -82,10 +84,10 @@ def _auto_fill_derived_metrics(data: dict, force_recalc: list[str] | None = None
 
     burn_rate = _to_decimal(d.get("burn_rate"))
 
-    # 5. runway_months = cash_available / burn_rate (solo si burn_rate > 0)
-    if d.get("runway_months") is None and cash_available is not None and burn_rate is not None:
-        if burn_rate > Decimal("0"):
-            d["runway_months"] = (cash_available / burn_rate).quantize(Decimal("0.01"))
+    # 5. runway_months = cash_available / monthly_costs
+    if d.get("runway_months") is None and cash_available is not None and monthly_costs is not None:
+        if monthly_costs > Decimal("0"):
+            d["runway_months"] = (cash_available / monthly_costs).quantize(Decimal("0.01"))
 
     # 6. churn_rate = churned_customers / paying_customers
     if d.get('churn_rate') is None or 'churn_rate' in force:

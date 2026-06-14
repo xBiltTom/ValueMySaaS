@@ -25,6 +25,11 @@ METRIC_KEYS = [
     "arr",
     "monthly_revenue",
     "active_users",
+    "cash_available",
+    "burn_rate",
+    "runway_months",
+    "retention_rate",
+    "uptime_percentage",
 ]
 
 CALCULATED_KEYS = [
@@ -45,6 +50,8 @@ MONEY_METRICS = {
     "ltv",
     "arr",
     "monthly_revenue",
+    "cash_available",
+    "burn_rate",
 }
 
 RATIO_METRICS = {
