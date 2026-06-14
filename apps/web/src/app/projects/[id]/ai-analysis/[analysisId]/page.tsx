@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, BrainCircuit, LayoutDashboard, Activity } from "lucide-react";
+import { ArrowLeft, BrainCircuit, LayoutDashboard, Activity, Clock } from "lucide-react";
 import { useCompletion } from "@ai-sdk/react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ErrorState } from "@/components/shared/error-state";
@@ -14,6 +14,7 @@ import { getAuthToken } from "@/lib/auth-token";
 import { getProject } from "@/features/project-dashboard/api";
 import { getAiAnalysis } from "@/features/ai-analyses/api";
 import { AiAnalysisDetail } from "@/features/ai-analyses/components/ai-analysis-detail";
+import { AiAnalysisHistorySidebar } from "@/features/ai-analyses/components/ai-analysis-history-sidebar";
 import { AiAnalysisModal } from "@/features/ai-analyses/components/ai-analysis-modal";
 import { AiAnalysis, AiAnalysisType } from "@/features/ai-analyses/types";
 
@@ -26,6 +27,7 @@ export default function AiAnalysisDetailPage() {
   const projectId = params.id;
   const analysisId = params.analysisId;
   const [showAiModal, setShowAiModal] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
 
   const isStreaming = searchParams.get("stream") === "true";
   const keyId = searchParams.get("keyId");
@@ -107,10 +109,6 @@ export default function AiAnalysisDetailPage() {
     <DashboardShell>
       <div className="mb-6 flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
         <div className="space-y-2">
-          <Link href={`/projects/${projectId}/ai-analysis`} className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors bg-background/50 border border-border/40 px-3 py-1.5 rounded-[8px]">
-            <ArrowLeft className="h-3 w-3" />
-            Volver a análisis
-          </Link>
           <div className="flex items-center gap-3">
             <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">
@@ -127,6 +125,15 @@ export default function AiAnalysisDetailPage() {
             {isLoading ? <Activity className="h-4 w-4 animate-spin" /> : <BrainCircuit className="h-4 w-4" />}
             {isLoading ? "Generando..." : "Ejecutar de nuevo"}
           </button>
+          
+          <button 
+            onClick={() => setShowSidebar(true)} 
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-[12px] border border-border/60 bg-card/50 backdrop-blur-md px-6 text-[11px] font-black uppercase tracking-widest transition-all hover:bg-card hover:border-primary/50 hover:scale-[1.02] active:scale-95"
+          >
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            Historial IA
+          </button>
+
           <Link href={`/projects/${projectId}`} className="inline-flex h-12 items-center justify-center gap-2 rounded-[12px] border border-border/60 bg-card/50 backdrop-blur-md px-6 text-[11px] font-black uppercase tracking-widest transition-all hover:bg-card hover:scale-[1.02] active:scale-95">
             <LayoutDashboard aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
             Dashboard
@@ -161,6 +168,12 @@ export default function AiAnalysisDetailPage() {
         </div>
       ) : null}
 
+      <AiAnalysisHistorySidebar 
+        isOpen={showSidebar}
+        onClose={() => setShowSidebar(false)}
+        currentAnalysisId={analysisId}
+      />
+      
       {projectQuery.data && (
         <AiAnalysisModal 
           isOpen={showAiModal} 
