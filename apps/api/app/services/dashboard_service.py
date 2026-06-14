@@ -70,14 +70,15 @@ class DashboardService:
                 rounding=ROUND_HALF_UP,
             )
 
-        healthiest_project = self._score_project_summary(
-            projects,
-            max(scores, key=lambda score: score.overall_score) if scores else None,
-        )
-        riskiest_project = self._score_project_summary(
-            projects,
-            min(scores, key=lambda score: score.overall_score) if scores else None,
-        )
+        healthiest_score = max(scores, key=lambda score: score.overall_score) if scores else None
+        riskiest_score = min(scores, key=lambda score: score.overall_score) if scores else None
+        
+        # Don't show the same project as both healthiest and riskiest
+        if healthiest_score and riskiest_score and healthiest_score.saas_project_id == riskiest_score.saas_project_id:
+            riskiest_score = None
+
+        healthiest_project = self._score_project_summary(projects, healthiest_score)
+        riskiest_project = self._score_project_summary(projects, riskiest_score)
 
         scores_by_sustainability = {level.value: 0 for level in SustainabilityLevel}
         for score in scores:

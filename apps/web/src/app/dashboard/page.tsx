@@ -25,18 +25,19 @@ export default function DashboardPage() {
 
         <div className="mb-10 relative">
           <div className="mb-4 inline-flex items-center gap-2.5 rounded-xl border border-border/60 bg-card/40 backdrop-blur-md px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest text-muted-foreground shadow-sm">
-            <div className="flex h-2 w-2 items-center justify-center">
+            <div className="flex h-2 w-2 items-center justify-center relative">
               <span className="absolute h-2 w-2 animate-ping rounded-full bg-accent opacity-75"></span>
               <span className="relative h-2 w-2 rounded-full bg-accent"></span>
             </div>
-            System Status: Online
+            SYS_OPERATIONAL // GLOBAL
           </div>
-          <h1 className="font-display text-4xl font-black tracking-tight text-foreground sm:text-5xl md:text-6xl flex items-center gap-4">
+          <h1 className="font-display text-4xl font-black tracking-tight text-foreground sm:text-5xl md:text-6xl flex items-center gap-4 uppercase">
             <Cpu className="h-10 w-10 sm:h-12 sm:w-12 text-primary opacity-80" />
-            Control Panel
+            Command Center
           </h1>
-          <p className="mt-4 text-base font-medium text-muted-foreground max-w-2xl">
-            Métricas globales de tu portafolio de productos. Analiza la viabilidad, el código y las alertas críticas en tiempo real.
+          <p className="mt-4 text-sm font-mono font-medium text-muted-foreground max-w-2xl border-l-2 border-primary/30 pl-4">
+            \u003E INICIALIZANDO REPORTE GLOBAL...<br/>
+            \u003E MONITOREANDO MÉTRICAS DE PORTAFOLIO EN TIEMPO REAL.
           </p>
         </div>
 
@@ -48,7 +49,7 @@ export default function DashboardPage() {
         {dashboardQuery.data && dashboardQuery.data.total_projects === 0 ? (
           <div className="mt-12 relative overflow-hidden rounded-[32px] border border-border/40 bg-card/30 backdrop-blur-xl p-1 shadow-[0_0_40px_rgba(0,0,0,0.03)] group">
             <div className="absolute -right-20 -top-20 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity duration-700 pointer-events-none">
-              <TerminalSquare className="w-96 h-96" />
+              <TerminalSquare className="w-96 h-96 text-primary" />
             </div>
             <div className="bg-background/80 rounded-[28px] p-8 sm:p-16">
               <EmptyState
@@ -56,7 +57,7 @@ export default function DashboardPage() {
                 title="SISTEMA VACÍO"
                 description="No tienes ningún micro-SaaS desplegado en el sistema. Inicializa un nuevo proyecto para empezar a medir valor, código y mercado."
                 actionHref="/projects/new"
-                actionLabel="Inicializar Primer Proyecto"
+                actionLabel="[ INICIALIZAR ]"
               />
             </div>
           </div>
