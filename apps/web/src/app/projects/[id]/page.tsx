@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BrainCircuit, Database, MessageSquareText, PlusCircle,
-  Rocket, Sparkles, TrendingUp, Terminal, ChevronLeft
+  Rocket, Sparkles, TrendingUp, Terminal, ChevronLeft, Info
 } from "lucide-react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ErrorState } from "@/components/shared/error-state";
@@ -180,10 +180,19 @@ export default function ProjectDashboardPage() {
 
           {/* Main content grid: Score + KPIs */}
           {dashboard.latest_snapshot && (
-            <div className={cn(
-              "grid gap-5",
-              isPlanning ? "xl:grid-cols-[0.9fr_1.1fr]" : "xl:grid-cols-[0.8fr_1.2fr]"
-            )}>
+            <div className="space-y-5">
+              <div className="flex items-start gap-3 rounded-[12px] border border-primary/20 bg-primary/5 px-4 py-3 shadow-inner">
+                <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                <p className="text-[11px] font-mono text-muted-foreground uppercase leading-relaxed">
+                  <strong className="text-primary font-black">SYS_INFO:</strong> Mostrando evaluación basada en el snapshot del periodo <span className="text-foreground font-bold bg-background/50 px-1.5 py-0.5 rounded-[4px] border border-border/50">{dashboard.latest_snapshot.period_label || new Date(dashboard.latest_snapshot.captured_at).toLocaleDateString()}</span>. 
+                  <span className="opacity-80 ml-1">Excepción: Métricas de tendencia (como MRR Growth) evalúan todo el historial disponible para otorgar puntos extra.</span>
+                </p>
+              </div>
+
+              <div className={cn(
+                "grid gap-5",
+                isPlanning ? "xl:grid-cols-[0.9fr_1.1fr]" : "xl:grid-cols-[0.8fr_1.2fr]"
+              )}>
               <ProjectScoreCard
                 projectId={projectId}
                 score={dashboard.latest_score}
@@ -195,6 +204,7 @@ export default function ProjectDashboardPage() {
                 score={dashboard.latest_score?.overall_score}
                 isPlanning={isPlanning}
               />
+            </div>
             </div>
           )}
 
