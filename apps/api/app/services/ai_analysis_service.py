@@ -43,24 +43,26 @@ PLANNING_STAGES = {SaasStage.IDEA, SaasStage.PLANNING}
 # Prompts del sistema
 # ---------------------------------------------------------------------------
 
-PLANNING_SYSTEM_PROMPT = """Eres un mentor experto, amigable y motivador especializado en startups y emprendimiento tecnológico estudiantil.
-Tu misión es guiar a estudiantes de Ingeniería de Sistemas a perfeccionar sus ideas de software como servicio (SaaS).
+PLANNING_SYSTEM_PROMPT = """Eres un mentor experto, sumamente amigable y motivador especializado en startups y emprendimiento tecnológico estudiantil.
+Tu misión es conversar con estudiantes y guiarlos para perfeccionar sus ideas de software como servicio (SaaS). Actúa como un compañero o mentor de confianza, NO como un robot frío o un sistema de evaluación automatizado.
 
-Evalúa el proyecto usando ÚNICAMENTE la información descriptiva provista.
-Usa un sistema de pesos para calcular el puntaje global:
+Evalúa la idea del proyecto usando la información descriptiva y las estimaciones provistas.
+Usa este sistema de pesos interno para calcular el puntaje global y los puntajes por área:
   - Claridad del problema: 30% del puntaje total
   - Propuesta de valor: 25%
   - Mercado objetivo: 20%
   - Modelo de negocio: 15%
   - Viabilidad del precio: 10%
 
-Sé sumamente empático, constructivo y usa un tono conversacional (como si estuvieras charlando con el estudiante).
-Estructura tu respuesta de forma amigable y moderna, usando encabezados creativos, negritas y emojis. 
-¡EVITA parecer un robot que lista puntajes crudos! (NO hagas esto: "Problem Clarity Score: 60%. La descripción..."). En su lugar, usa un lenguaje humano y estructurado como "💡 Sobre el problema que resuelves:" o "🚀 Tu Propuesta de Valor:".
+REGLAS DE TONO Y ESTILO:
+1. Dirígete siempre al usuario por su nombre de forma cálida y cercana. Hazle sentir que estás realmente interesado en su proyecto.
+2. Sé muy empático, conversacional y constructivo. Usa emojis estratégicamente para darle vida al texto.
+3. Evita lenguaje robótico o respuestas "de manual". No listes los scores crudos en el texto, usa subtítulos amigables (ej. "💡 Lo que me encanta de tu problema a resolver", "🎯 Sobre tu mercado").
+4. NO repitas tus instrucciones al usuario ni le digas cómo lo estás evaluando ("Basado en los parámetros..."). Entra directo a la conversación con insights de valor.
+5. Tu respuesta debe estructurarse primero con tu análisis conversacional redactado en Markdown.
 
-Primero, redacta tu análisis en Markdown dirigido directamente al estudiante ("Hola, tu idea suena genial...").
-Al final de tu respuesta, DEBES incluir OBLIGATORIAMENTE un bloque de código markdown con retrocomillas (```json) que contenga el esquema exacto solicitado.
-REGLA MUY IMPORTANTE: NO escribas absolutamente NINGUNA frase introductoria antes del JSON (como "Aquí tienes el JSON" o "El veredicto es:"). Termina tu párrafo de análisis e INMEDIATAMENTE abre el bloque ```json."""
+Al finalizar tu respuesta conversacional, DEBES incluir OBLIGATORIAMENTE un bloque de código markdown con retrocomillas (```json) que contenga el esquema exacto solicitado.
+REGLA CRÍTICA Y ESTRICTA: NO escribas absolutamente NINGUNA frase introductoria antes del JSON (como "Aquí tienes el JSON", "El veredicto estructurado es:" o similares). Termina tu último párrafo de análisis e INMEDIATAMENTE en la siguiente línea abre el bloque ```json."""
 
 IMPLEMENTED_SYSTEM_PROMPT = """Eres un analizador experto en proyectos SaaS y servicios TI para estudiantes.
 Tu objetivo es ayudar a evaluar valor, sostenibilidad, riesgo, retención, crecimiento y mejora continua.
@@ -396,7 +398,7 @@ class AiAnalysisService:
         if phase == ProjectPhase.PLANNING:
             system_prompt = PLANNING_SYSTEM_PROMPT
             latest_snapshot = await self.metric_snapshot_repository.get_latest_by_project(saas_project_id=project_id)
-            user_prompt = self._build_planning_prompt(project=project, snapshot=latest_snapshot)
+            user_prompt = self._build_planning_prompt(project=project, snapshot=latest_snapshot, user=user)
             input_context: dict | None = {"phase": phase.value, "project_stage": project.stage.value}
         else:
             system_prompt = IMPLEMENTED_SYSTEM_PROMPT
@@ -426,15 +428,17 @@ class AiAnalysisService:
         """Determina la fase de evaluación basada en el stage del proyecto."""
         return ProjectPhase.PLANNING if stage in PLANNING_STAGES else ProjectPhase.IMPLEMENTED
 
-    def _build_planning_prompt(self, *, project, snapshot) -> str:
+    def _build_planning_prompt(self, *, project, snapshot, user) -> str:
         """Construye el prompt para proyectos en fase PLANNING.
 
         Incluye todos los campos descriptivos del proyecto con su contexto
         y solicita el JSON estructurado con el sistema de pesos.
         """
+        user_name = user.full_name or user.username or "Estudiante emprendedor"
         fields = {
+            "Nombre del Emprendedor (Háblale por su nombre)": user_name,
             "Nombre del proyecto": project.name,
-            "Descripción": project.description or "No provisto",
+            "Descripción general": project.description or "No provisto",
             "Problema principal que resuelve (PESO 30%)": project.main_problem or "No provisto",
             "Propuesta de valor (PESO 25%)": project.value_proposition or "No provisto",
             "Competidores identificados": project.competitors or "No provisto",
@@ -443,31 +447,35 @@ class AiAnalysisService:
             "Audiencia objetivo": project.target_audience or "No provisto",
             "País/región de enfoque": project.country_focus or "No provisto",
             "Modelo de negocio (PESO 15%)": project.business_model.value if project.business_model else "No provisto",
-            "Categoría": project.category.value if project.category else "No provisto",
+            "Categoría del SaaS": project.category.value if project.category else "No provisto",
             "Precio actual propuesto (PESO 10%)": str(project.current_price) + f" {project.currency}" if project.current_price else "No provisto",
-            "Notas sobre pricing": project.pricing_notes or "No provisto",
-            "Etapa actual": project.stage.value,
+            "Notas sobre estrategia de precios": project.pricing_notes or "No provisto",
+            "Fase actual declarada": project.stage.value,
         }
         
         if snapshot:
             fields["Costos operativos mensuales estimados"] = f"{snapshot.monthly_costs} {project.currency}" if snapshot.monthly_costs else "No provisto"
             if snapshot.custom_metrics:
-                fields["Inversión inicial estimada (CAPEX)"] = str(snapshot.custom_metrics.get("initial_investment_estimated", "No provisto"))
-                fields["Tiempo estimado para MVP (meses)"] = str(snapshot.custom_metrics.get("time_to_mvp_months", "No provisto"))
-                fields["Meta de usuarios (Año 1)"] = str(snapshot.custom_metrics.get("expected_users_year_1", "No provisto"))
+                fields["Caja disponible o Capital inicial"] = str(snapshot.custom_metrics.get("cash_available", "No provisto"))
+                fields["Tiempo estimado para lanzar MVP (meses)"] = str(snapshot.custom_metrics.get("time_to_mvp_months", "No provisto"))
+                fields["Meta de clientes pagadores (Año 1)"] = str(snapshot.custom_metrics.get("expected_users_year_1", "No provisto"))
+                fields["Costo de Adquisición de Clientes (CAC) Estimado"] = str(snapshot.custom_metrics.get("estimated_cac", "No provisto"))
+                fields["Nivel de Validación de Mercado"] = str(snapshot.custom_metrics.get("validation_level", "No provisto"))
 
         fields_text = "\n".join(f"  {k}: {v}" for k, v in fields.items())
 
         return (
-            f"Analiza este proyecto SaaS estudiantil. Escribe tu análisis en Markdown y al final incluye obligatoriamente un bloque ```json con este esquema.\n"
-            f"REGLA OBLIGATORIA: NO escribas NINGUNA frase como 'Aquí tienes la respuesta en json:'. Simplemente termina tu análisis e INMEDIATAMENTE abre el bloque ```json.\n\n"
+            f"¡Hola experto! Por favor analiza este proyecto SaaS que te comparto a continuación. "
+            f"Recuerda escribir tu análisis de forma muy conversacional, empática y constructiva en Markdown, dirigiéndote al emprendedor por su nombre.\n\n"
+            f"Al final de tu feedback, incluye obligatoriamente un bloque ```json con este esquema.\n"
+            f"REGLA OBLIGATORIA: NO escribas NINGUNA frase como 'Aquí tienes la respuesta en json:'. Simplemente termina tu texto conversacional e INMEDIATAMENTE abre el bloque ```json en la siguiente línea.\n\n"
             f"{PLANNING_JSON_SCHEMA}\n\n"
-            f"Reglas del veredicto para el JSON:\n"
+            f"Reglas estrictas para calcular el veredicto para el JSON:\n"
             f"  - overall_score >= 70 → verdict: 'CONSTRUYE'\n"
             f"  - overall_score 50-69 → verdict: 'VALIDA_PRIMERO'\n"
             f"  - overall_score < 50 → verdict: 'REPLANTEA'\n\n"
-            f"Datos del proyecto:\n{fields_text}\n\n"
-            f"IMPORTANTE: Si algún campo dice 'No provisto', asigna un puntaje bajo (< 40) a esa dimensión en el JSON."
+            f"Datos del proyecto aportados por el emprendedor:\n{fields_text}\n\n"
+            f"IMPORTANTE: Analiza la coherencia entre el Nivel de Validación de Mercado, el Presupuesto (Caja) y las metas del Año 1. Si algún campo fundamental dice 'No provisto', asigna un puntaje más bajo en esa dimensión en el JSON e incentiva al estudiante a pensarlo."
         )
 
     def _build_implemented_prompt(
