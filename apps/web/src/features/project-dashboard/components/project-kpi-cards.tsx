@@ -95,7 +95,7 @@ export function ProjectKpiCards({
       <KpiCard icon={Banknote} label="Revenue mensual" value={display(metrics.monthly_revenue)} tooltip="Total de ingresos del mes, incluyendo ventas únicas, setup fees y suscripciones." />
       <KpiCard icon={Users} label="Clientes pagos" value={display(metrics.paying_customers)} tooltip="Total de usuarios distintos que tienen una suscripción activa o han realizado pagos." />
       <KpiCard icon={Activity} label="Usuarios activos" value={display(metrics.active_users)} tooltip="Número de usuarios únicos que interactúan con tu aplicación de manera frecuente." />
-      <KpiCard icon={TrendingDown} label="Churn rate" value={metrics.churn_rate !== null && metrics.churn_rate !== undefined ? `${Number(metrics.churn_rate).toFixed(1)}%` : "—"} accent="text-destructive" tooltip="Porcentaje de clientes o ingresos que se pierden o cancelan durante un periodo determinado." />
+      <KpiCard icon={TrendingDown} label="Churn rate" value={metrics.churn_rate !== null && metrics.churn_rate !== undefined ? `${(Number(metrics.churn_rate) * 100).toFixed(1)}%` : "—"} accent="text-destructive" tooltip="Porcentaje de clientes o ingresos que se pierden o cancelan durante un periodo determinado." />
       <KpiCard icon={TerminalSquare} label="Score general" value={score !== undefined && score !== null ? `${Number(score).toFixed(0)}/100` : "—"} accent="text-primary" tooltip="Puntuación heurística de salud basada en métricas reales de crecimiento, retención y finanzas." />
     </div>
   );

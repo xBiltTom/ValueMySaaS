@@ -170,7 +170,8 @@ export function MetricSnapshotForm({
         monthly_costs: editingSnapshot.monthly_costs !== null ? Number(editingSnapshot.monthly_costs) : undefined,
         total_users: editingSnapshot.total_users ?? undefined,
         paying_customers: editingSnapshot.paying_customers ?? undefined,
-        cash_available: editingSnapshot.cash_available !== null ? Number(editingSnapshot.cash_available) : undefined,
+        cash_available: editingSnapshot.custom_metrics?.cash_available !== undefined ? Number(editingSnapshot.custom_metrics.cash_available) : undefined,
+        active_users: editingSnapshot.custom_metrics?.active_users !== undefined ? Number(editingSnapshot.custom_metrics.active_users) : undefined,
         marketing_spend: editingSnapshot.custom_metrics?.marketing_spend !== undefined ? Number(editingSnapshot.custom_metrics.marketing_spend) : undefined,
         churned_customers: editingSnapshot.custom_metrics?.churned_customers !== undefined ? Number(editingSnapshot.custom_metrics.churned_customers) : undefined,
         new_users: editingSnapshot.custom_metrics?.new_users !== undefined ? Number(editingSnapshot.custom_metrics.new_users) : undefined,
@@ -196,6 +197,7 @@ export function MetricSnapshotForm({
         total_users: "" as any,
         paying_customers: "" as any,
         cash_available: "" as any,
+        active_users: "" as any,
         marketing_spend: "" as any,
         churned_customers: "" as any,
         new_users: "" as any,
@@ -257,6 +259,7 @@ export function MetricSnapshotForm({
           total_users: "" as any,
           paying_customers: "" as any,
           cash_available: "" as any,
+          active_users: "" as any,
           marketing_spend: "" as any,
           churned_customers: "" as any,
           new_users: "" as any,
@@ -443,6 +446,13 @@ export function MetricSnapshotForm({
               help="Cuentas registradas acumuladas"
               placeholder="0"
               register={reg} name="total_users" errors={errors}
+              integer
+            />
+            <NumberInput
+              label="Usuarios Activos"
+              help="Usuarios que interactuaron en este periodo"
+              placeholder="0"
+              register={reg} name="active_users" errors={errors}
               integer
             />
             <NumberInput

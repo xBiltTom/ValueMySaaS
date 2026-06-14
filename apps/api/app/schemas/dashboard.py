@@ -88,8 +88,10 @@ class LatestScoreSummary(BaseModel):
 class MetricCards(BaseModel):
     mrr: Decimal | int | str | None = None
     arr: Decimal | int | str | None = None
+    monthly_revenue: Decimal | int | str | None = None
     paying_customers: Decimal | int | str | None = None
     total_users: Decimal | int | str | None = None
+    active_users: Decimal | int | str | None = None
     conversion_rate: Decimal | int | str | None = None
     churn_rate: Decimal | int | str | None = None
     retention_rate: Decimal | int | str | None = None

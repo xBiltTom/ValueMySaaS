@@ -22,6 +22,9 @@ METRIC_KEYS = [
     "paying_customers",
     "cac",
     "churn_rate",
+    "arr",
+    "monthly_revenue",
+    "active_users",
 ]
 
 CALCULATED_KEYS = [
@@ -40,6 +43,8 @@ MONEY_METRICS = {
     "net_profit",
     "arpu",
     "ltv",
+    "arr",
+    "monthly_revenue",
 }
 
 RATIO_METRICS = {
@@ -137,6 +142,8 @@ class MetricCalculationService:
         # Load provided metrics
         for key in METRIC_KEYS:
             value = getattr(snapshot, key, None)
+            if value is None and snapshot.custom_metrics:
+                value = snapshot.custom_metrics.get(key)
             values[key] = value
             if value is not None:
                 metrics[key] = CalculatedMetric(

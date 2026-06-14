@@ -366,8 +366,10 @@ class DashboardService:
         return MetricCards(
             mrr=self._metric_value(calculation, "mrr"),
             arr=self._metric_value(calculation, "arr"),
+            monthly_revenue=self._metric_value(calculation, "monthly_revenue"),
             paying_customers=self._metric_value(calculation, "paying_customers"),
             total_users=self._metric_value(calculation, "total_users"),
+            active_users=self._metric_value(calculation, "active_users"),
             conversion_rate=self._metric_value(calculation, "conversion_rate"),
             churn_rate=self._metric_value(calculation, "churn_rate"),
             retention_rate=self._metric_value(calculation, "retention_rate"),
@@ -401,15 +403,20 @@ class DashboardService:
         )
 
     def _snapshot_series(self, snapshots: list, field: str) -> list[SeriesPoint]:
-        return [
-            SeriesPoint(
-                date=snapshot.captured_at,
-                label=snapshot.period_label,
-                value=getattr(snapshot, field),
-            )
-            for snapshot in snapshots
-            if getattr(snapshot, field, None) is not None
-        ]
+        points = []
+        for snapshot in snapshots:
+            val = getattr(snapshot, field, None)
+            if val is None and snapshot.custom_metrics:
+                val = snapshot.custom_metrics.get(field)
+            if val is not None:
+                points.append(
+                    SeriesPoint(
+                        date=snapshot.captured_at,
+                        label=snapshot.period_label,
+                        value=val,
+                    )
+                )
+        return points
 
     def _metric_value(self, calculation: MetricCalculationResponse, key: str):
         metric = calculation.metrics.get(key)
