@@ -512,14 +512,17 @@ export function MetricSnapshotForm({
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[
-                  { label: "Churn Rate", formula: "Cancelados ÷ Clientes Pago" },
-                  { label: "CAC", formula: "Mktg Spend ÷ Nuevos Clientes" },
-                  { label: "Runway", formula: "Caja ÷ Gastos Operativos" },
-                ].map(({ label, formula }) => (
+                  { label: "Churn Rate", formula: "Cancelados ÷ Clientes Pago", help: "Mide la tasa a la que los clientes cancelan su suscripción. Crítico para predecir LTV." },
+                  { label: "CAC", formula: "Mktg Spend ÷ Nuevos Clientes", help: "Costo de Adquisición de Clientes. Cuánto dinero en marketing toma conseguir un cliente nuevo." },
+                  { label: "Runway", formula: "Caja ÷ Gastos Operativos", help: "Estimación de los meses de vida que le quedan a la startup operando en pérdidas constantes." },
+                ].map(({ label, formula, help }) => (
                   <div key={label} className="flex items-start gap-2">
                     <Zap className="h-3 w-3 text-emerald-400 shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-[9px] font-black uppercase tracking-widest text-emerald-400 font-mono">{label}</p>
+                      <p className="flex items-center text-[9px] font-black uppercase tracking-widest text-emerald-400 font-mono">
+                        {label}
+                        <FieldHelp text={help} />
+                      </p>
                       <p className="text-[9px] font-mono text-muted-foreground uppercase">{formula}</p>
                     </div>
                   </div>

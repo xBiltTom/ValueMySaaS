@@ -1,4 +1,4 @@
-import { AlertTriangle, TrendingUp, TrendingDown, Cpu, Info, Zap, Minus } from "lucide-react";
+import { AlertTriangle, TrendingUp, TrendingDown, Cpu, Info, Zap, Minus, HelpCircle } from "lucide-react";
 import { formatEnum } from "@/lib/utils";
 import { MetricCalculationResponse } from "@/features/metrics/types";
 import { cn } from "@/lib/utils";
@@ -171,6 +171,17 @@ function TrendIcon({ value, unit, good }: { value: any; unit?: string; good?: "h
   return <Minus className="h-3 w-3 text-muted-foreground" />;
 }
 
+function FieldHelp({ text }: { text: string }) {
+  return (
+    <span className="group relative inline-block ml-1.5 align-middle">
+      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/60 cursor-help transition-colors group-hover:text-primary" />
+      <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 hidden w-56 rounded-[8px] border-2 border-primary/30 bg-card/98 backdrop-blur-md p-3 text-[9px] font-mono leading-relaxed text-foreground shadow-[4px_4px_0_rgba(0,0,0,0.3)] group-hover:block uppercase whitespace-normal">
+        {text}
+      </span>
+    </span>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 const LAUNCHED_METRICS = [
@@ -296,9 +307,12 @@ export function MetricCalculationPanel({
                 {/* Top row */}
                 <div className="flex items-start justify-between mb-3 gap-1">
                   <div className="min-w-0">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-primary font-mono truncate">
-                      [{dict.short}]
-                    </p>
+                    <div className="flex items-center">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-primary font-mono truncate">
+                        [{dict.short}]
+                      </p>
+                      {dict.tooltip && <FieldHelp text={dict.tooltip} />}
+                    </div>
                     <p className="text-[10px] font-black uppercase text-muted-foreground mt-0.5 leading-tight line-clamp-2">
                       {dict.label}
                     </p>
