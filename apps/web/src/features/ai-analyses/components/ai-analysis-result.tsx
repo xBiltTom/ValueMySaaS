@@ -40,18 +40,21 @@ function PlanningAnalysisRenderer({ data }: { data: any }) {
               <span>OUTPUT_VERDICT</span>
               <span className="h-2 w-px bg-border/50"></span>
               <span className={cn(
-                data.verdict === "BUILD" ? "text-emerald-500" :
-                data.verdict === "VALIDATE_MORE" ? "text-amber-500" : "text-destructive"
+                data.overall_score >= 75 ? "text-emerald-500" :
+                data.overall_score >= 50 ? "text-amber-500" : "text-destructive"
               )}>
-                {data.verdict}
+                {data.overall_score >= 75 ? "VIABLE" : data.overall_score >= 50 ? "AJUSTAR" : "RIESGO"}
               </span>
             </div>
-            <h2 className="font-display text-4xl font-black text-foreground uppercase tracking-tight leading-none">
-              {data.verdict === "BUILD" ? "¡Construye esto!" : 
-               data.verdict === "VALIDATE_MORE" ? "Valida un poco más" : "Pivota la idea"}
+            <h2 className={cn(
+              "font-display text-4xl font-black uppercase tracking-tight leading-none",
+              data.overall_score >= 75 ? "text-emerald-500" :
+              data.overall_score >= 50 ? "text-amber-500" : "text-destructive"
+            )}>
+              {data.verdict}
             </h2>
             <p className="text-[13px] font-mono leading-relaxed text-muted-foreground">
-              {data.reasoning}
+              {data.verdict_rationale || data.reasoning}
             </p>
           </div>
           
