@@ -76,21 +76,6 @@ export function AiAnalysisModal({
   });
 
   const onSubmit = (values: AiAnalysisFormValues) => {
-    // Evitar generar un análisis repetido si ya existe para este snapshot (o para el proyecto en planeación)
-    if (values.analysis_type !== "CUSTOM" && analysesQuery.data) {
-      const existing = analysesQuery.data.items.find((a) => {
-        if (a.analysis_type !== values.analysis_type) return false;
-        if (isPlanning) return true; // En planeación, cualquier análisis previo del mismo tipo es válido
-        // En implementación, solo reutilizar si es del mismo snapshot
-        return a.metric_snapshot_id === latestSnapshotId;
-      });
-
-      if (existing) {
-        onClose();
-        router.push(`/projects/${projectId}/ai-analysis/${existing.id}`);
-        return;
-      }
-    }
 
     // Generar el ID desde el cliente para navegar inmediatamente
     const analysisId = crypto.randomUUID();

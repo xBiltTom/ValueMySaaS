@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { listAiAnalyses } from "@/features/ai-analyses/api";
 import {
   Rocket, BarChart3, BrainCircuit, MessageSquareText,
   FileText, PlusCircle, Sparkles, ArrowRight, ChevronRight,
@@ -59,9 +62,25 @@ export function ProjectHeader({
   const isPlanning = project.stage === "PLANNING" || project.stage === "IDEA";
 
   const [showAiModal, setShowAiModal] = useState(false);
+  const router = useRouter();
+
+  const aiAnalysesQuery = useQuery({
+    queryKey: ["ai-analyses", project.id],
+    queryFn: () => listAiAnalyses(project.id),
+  });
+
+  const handleAiAnalysisClick = () => {
+    // Check if there is ANY existing analysis, and route to the most recent one
+    if (aiAnalysesQuery.data?.items && aiAnalysesQuery.data.items.length > 0) {
+      const latestAnalysis = aiAnalysesQuery.data.items[0];
+      router.push(`/projects/${project.id}/ai-analysis/${latestAnalysis.id}`);
+      return;
+    }
+    setShowAiModal(true);
+  };
 
   const planningActions = [
-    { type: 'button', onClick: () => setShowAiModal(true), icon: BrainCircuit, title: "Diagnóstico IA", desc: "Evalúa viabilidad", color: "text-accent" },
+    { type: 'button', onClick: handleAiAnalysisClick, icon: BrainCircuit, title: "Diagnóstico IA", desc: "Evalúa viabilidad", color: "text-accent" },
     { type: 'link', href: `/projects/${project.id}/score`, icon: BarChart3, title: "Ver Score", desc: "Resultados del test", color: "text-primary" },
     { type: 'link', href: `/projects/${project.id}/chat`, icon: MessageSquareText, title: "Tutor IA", desc: "Asesoría experta", color: "text-muted-foreground" },
     { type: 'link', href: `/projects/${project.id}/reports`, icon: FileText, title: "Reportes", desc: "Exporta datos", color: "text-status-success-fg" },
@@ -70,7 +89,7 @@ export function ProjectHeader({
   const launchedActions = [
     { type: 'link', href: `/projects/${project.id}/metrics`, icon: PlusCircle, title: "Data Input", desc: "Ingresa métricas", color: "text-primary" },
     { type: 'link', href: `/projects/${project.id}/score`, icon: BarChart3, title: "Heurística", desc: "Score del sistema", color: "text-primary" },
-    { type: 'button', onClick: () => setShowAiModal(true), icon: BrainCircuit, title: "Análisis IA", desc: "Revisión profunda", color: "text-accent" },
+    { type: 'button', onClick: handleAiAnalysisClick, icon: BrainCircuit, title: "Análisis IA", desc: "Revisión profunda", color: "text-accent" },
     { type: 'link', href: `/projects/${project.id}/reports`, icon: FileText, title: "Reportes", desc: "Informes listos", color: "text-status-success-fg" },
     { type: 'link', href: `/projects/${project.id}/chat`, icon: MessageSquareText, title: "Chat", desc: "Habla con tu SaaS", color: "text-muted-foreground" },
   ];
