@@ -145,6 +145,7 @@ export function ProjectForm() {
       target_market: "", target_audience: "",
       main_problem: "", value_proposition: "",
       competitors: "", acquisition_strategy: "",
+      pricing_notes: "",
       current_price: 0, currency: "USD",
     },
   });
@@ -166,7 +167,7 @@ export function ProjectForm() {
   });
 
   const onSubmit = form.handleSubmit((values) => {
-    mutation.mutate({ ...values, country_focus: "Peru", pricing_notes: "", is_public_sample: false });
+    mutation.mutate({ ...values, country_focus: "Peru", pricing_notes: values.pricing_notes || "", is_public_sample: false });
   });
 
   const nextStep = async () => {
@@ -424,30 +425,50 @@ export function ProjectForm() {
                 </div>
 
                 {isPlanning && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t-2 border-border/60">
-                    <div>
-                      <Label>
-                        COMPETENCIA (WIP)
-                        <Tooltip text="QUÉ ALTERNATIVAS USAN HOY. EJ: HOJAS DE CÁLCULO" />
-                      </Label>
-                      <BrutalistTextarea
-                        rows={3}
-                        placeholder="EJ: EXCEL, SISTEMAS LEGACY..."
-                        {...form.register("competitors")}
-                      />
-                      <FieldError message={form.formState.errors.competitors?.message} />
+                  <div className="space-y-6 pt-4 border-t-2 border-border/60">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <Label>
+                          ALTERNATIVAS ACTUALES
+                          <Tooltip text="QUÉ USAN HOY TUS USUARIOS. EJ: EXCEL, SISTEMAS LEGACY, APPS RIVALES" />
+                        </Label>
+                        <BrutalistTextarea
+                          rows={3}
+                          placeholder="EJ: EXCEL, GOOGLE SHEETS, SOFTWARE LEGACY..."
+                          {...form.register("competitors")}
+                        />
+                        <FieldError message={form.formState.errors.competitors?.message} />
+                      </div>
+                      <div>
+                        <Label>
+                          ESTRATEGIA GTM
+                          <Tooltip text="CÓMO CONSEGUIRÁS TUS PRIMEROS CLIENTES. EJ: LINKEDIN OUTBOUND, REFERIDOS" />
+                        </Label>
+                        <BrutalistTextarea
+                          rows={3}
+                          placeholder="EJ: OUTBOUND SALES, ADS, COMUNIDADES..."
+                          {...form.register("acquisition_strategy")}
+                        />
+                        <FieldError message={form.formState.errors.acquisition_strategy?.message} />
+                      </div>
                     </div>
-                    <div>
-                      <Label>
-                        ESTRATEGIA GTM
-                        <Tooltip text="CÓMO CONSEGUIRÁS TUS PRIMEROS CLIENTES. EJ: LINKEDIN OUTBOUND" />
-                      </Label>
-                      <BrutalistTextarea
-                        rows={3}
-                        placeholder="EJ: OUTBOUND SALES, ADS..."
-                        {...form.register("acquisition_strategy")}
-                      />
-                      <FieldError message={form.formState.errors.acquisition_strategy?.message} />
+                    {/* Ventaja diferencial — campo clave para evaluar defensibilidad */}
+                    <div className="relative">
+                      <div className="absolute -top-2 left-4 z-10">
+                        <span className="bg-primary px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-primary-foreground font-mono">CLAVE</span>
+                      </div>
+                      <div className="rounded-[8px] border-2 border-primary/50 bg-primary/5 p-4 pt-5">
+                        <Label>
+                          VENTAJA DIFERENCIAL
+                          <Tooltip text="¿POR QUÉ TU SOLUCIÓN ES DIFÍCIL DE COPIAR? EJ: TECNOLOGÍA PROPIA, RED DE USUARIOS, DATOS EXCLUSIVOS, KNOW-HOW DE INDUSTRIA" />
+                        </Label>
+                        <BrutalistTextarea
+                          rows={2}
+                          placeholder="EJ: INTEGRACIÓN NATIVA CON SISTEMAS PERUANOS QUE COMPETIDORES IGNORAN..."
+                          {...form.register("pricing_notes")}
+                        />
+                        <p className="mt-2 text-[9px] font-mono uppercase text-primary/70">&gt; ESTE DATO IMPACTA DIRECTAMENTE EN EL SCORE DE DEFENSIBILIDAD DEL PROYECTO.</p>
+                      </div>
                     </div>
                   </div>
                 )}

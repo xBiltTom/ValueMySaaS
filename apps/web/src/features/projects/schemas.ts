@@ -28,6 +28,7 @@ export const createProjectSchema = z.object({
   value_proposition: z.string().min(8, "Describe la propuesta de valor."),
   competitors: z.string().optional(),
   acquisition_strategy: z.string().optional(),
+  pricing_notes: z.string().optional(),
   current_price: z.number().min(0, "El precio no puede ser negativo.").optional(),
   currency: z.string().min(3).max(10),
 });

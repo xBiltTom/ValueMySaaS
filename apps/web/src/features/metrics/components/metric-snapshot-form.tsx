@@ -185,6 +185,8 @@ export function MetricSnapshotForm({
           initial_investment_estimated: editingSnapshot.custom_metrics?.initial_investment_estimated,
           time_to_mvp_months: editingSnapshot.custom_metrics?.time_to_mvp_months,
           expected_users_year_1: editingSnapshot.custom_metrics?.expected_users_year_1,
+          estimated_cac: editingSnapshot.custom_metrics?.estimated_cac,
+          validation_level: editingSnapshot.custom_metrics?.validation_level,
         }
       });
     } else {
@@ -211,6 +213,8 @@ export function MetricSnapshotForm({
           initial_investment_estimated: "" as any,
           time_to_mvp_months: "" as any,
           expected_users_year_1: "" as any,
+          estimated_cac: "" as any,
+          validation_level: undefined,
         },
       });
     }
@@ -273,6 +277,8 @@ export function MetricSnapshotForm({
             initial_investment_estimated: "" as any,
             time_to_mvp_months: "" as any,
             expected_users_year_1: "" as any,
+            estimated_cac: "" as any,
+            validation_level: undefined,
           },
         });
       }
@@ -378,30 +384,89 @@ export function MetricSnapshotForm({
             <>
               <NumberInput
                 label="OPEX Mensual ($)"
-                help="Servidores, dominios, APIs estimadas…"
+                help="Gastos operativos mensuales estimados: servidores, dominio, APIs, licencias de software, etc."
                 placeholder="50.00"
                 register={reg} name="monthly_costs" errors={errors}
               />
               <NumberInput
-                label="CAPEX Inicial ($)"
-                help="Inversión requerida para construir y lanzar el MVP"
+                label="Inversión Inicial ($)"
+                help="Capital total necesario para construir y lanzar el MVP. Incluye desarrollo, diseño e infraestructura inicial."
                 placeholder="500.00"
                 register={reg} name="custom_metrics.initial_investment_estimated" errors={errors}
               />
               <NumberInput
                 label="Time-to-Market (Meses)"
-                help="Tiempo estimado hasta la primera versión"
+                help="¿En cuántos meses estiman tener la primera versión funcionando en manos de usuarios reales?"
                 placeholder="3"
                 register={reg} name="custom_metrics.time_to_mvp_months" errors={errors}
                 integer
               />
               <NumberInput
-                label="Target Usuarios (Año 1)"
-                help="Usuarios esperados durante el primer año"
-                placeholder="1000"
+                label="Clientes Pagadores Esperados Año 1"
+                help="¿Cuántos clientes PAGADORES esperan tener al finalizar el primer año? (No usuarios gratuitos). Con el precio definido, el sistema calcula el MRR proyectado."
+                placeholder="100"
                 register={reg} name="custom_metrics.expected_users_year_1" errors={errors}
                 integer
               />
+              <div className="sm:col-span-2">
+                <NumberInput
+                  label="CAC Estimado ($)"
+                  help="¿Cuánto dinero creen que costará conseguir cada cliente pagador? Pueden estimarlo dividiendo su presupuesto de marketing mensual entre los clientes que esperan conseguir. Clave para evaluar viabilidad comercial."
+                  placeholder="25.00"
+                  register={reg} name="custom_metrics.estimated_cac" errors={errors}
+                />
+              </div>
+
+              {/* Nivel de validación — brutalist button selector */}
+              <div className="sm:col-span-2">
+                <div className="flex items-center mb-3">
+                  <span className="flex items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    <span className="text-amber-400 mr-2">&gt;</span>
+                    Nivel de Validación de Mercado
+                    <FieldHelp text="¿Han salido a hablar con usuarios potenciales? La validación es el factor que más diferencia una idea de papel de un proyecto viable. Incluso 5 entrevistas marcan la diferencia." />
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { value: "none", label: "Sin validación", sublabel: "Solo idea", icon: "0" },
+                    { value: "few", label: "1-5 entrevistas", sublabel: "Inicio", icon: "5" },
+                    { value: "medium", label: "6-20 entrevistas", sublabel: "En marcha", icon: "20" },
+                    { value: "strong", label: "Piloto activo", sublabel: "Usuarios reales", icon: "★" },
+                  ].map(({ value, label, sublabel, icon }) => {
+                    const fieldValue = form.watch("custom_metrics")?.validation_level;
+                    const isSelected = fieldValue === value;
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => form.setValue("custom_metrics", { ...form.getValues("custom_metrics"), validation_level: value })}
+                        className={cn(
+                          "relative flex flex-col items-center rounded-[8px] border-2 p-3 text-center transition-all duration-150 cursor-pointer select-none",
+                          isSelected
+                            ? "border-amber-500 bg-amber-500/10 shadow-[4px_4px_0_rgba(245,158,11,0.3)] -translate-y-0.5"
+                            : "border-border/60 bg-background/50 hover:border-amber-500/40 hover:bg-amber-500/5"
+                        )}
+                      >
+                        <span className={cn(
+                          "text-[18px] font-black font-mono leading-none mb-1",
+                          isSelected ? "text-amber-400" : "text-muted-foreground"
+                        )}>{icon}</span>
+                        <span className={cn(
+                          "text-[9px] font-black uppercase tracking-widest leading-tight",
+                          isSelected ? "text-amber-300" : "text-foreground"
+                        )}>{label}</span>
+                        <span className="text-[8px] font-mono text-muted-foreground uppercase mt-0.5">{sublabel}</span>
+                        {isSelected && (
+                          <span className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 rounded-full bg-amber-500 flex items-center justify-center">
+                            <span className="text-[7px] font-black text-background">✓</span>
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="mt-2 text-[9px] font-mono uppercase text-muted-foreground/60">&gt; UN MAYOR NIVEL DE VALIDACIÓN MEJORA EL SCORE DE VIABILIDAD COMERCIAL.</p>
+              </div>
             </>
           ) : (
             <>
