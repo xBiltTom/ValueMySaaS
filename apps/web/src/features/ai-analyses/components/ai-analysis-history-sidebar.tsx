@@ -23,6 +23,7 @@ export function AiAnalysisHistorySidebar({
 }) {
   const params = useParams<{ id: string }>();
   const projectId = params.id;
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const analysesQuery = useQuery({
     queryKey: ["ai-analyses", projectId],
@@ -150,9 +151,7 @@ export function AiAnalysisHistorySidebar({
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            if (window.confirm("¿Seguro que deseas eliminar este análisis?")) {
-                              deleteMutation.mutate(analysis.id);
-                            }
+                            setDeleteConfirmId(analysis.id);
                           }}
                           className="flex h-6 w-6 items-center justify-center rounded-full transition-colors hover:bg-status-destructive-bg hover:text-status-destructive-fg"
                           title="Eliminar análisis"
@@ -186,6 +185,62 @@ export function AiAnalysisHistorySidebar({
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal (Retro-Futuristic) */}
+      {deleteConfirmId && (
+        <div 
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-background/40 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={() => setDeleteConfirmId(null)}
+        >
+          <div 
+            className="relative w-full max-w-sm overflow-hidden rounded-[0px] border-4 border-red-500 bg-background p-6 shadow-[16px_16px_0_rgba(239,68,68,0.2)] animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Warning header strip */}
+            <div className="absolute top-0 left-0 flex h-4 w-full items-center bg-red-500 px-2 overflow-hidden">
+              <span className="text-[9px] font-mono font-black uppercase text-white tracking-widest whitespace-nowrap animate-pulse">
+                // CRITICAL_WARNING // PURGE_DATA_PROTOCOL_INITIATED // CRITICAL_WARNING //
+              </span>
+            </div>
+            
+            <div className="mt-4 flex items-center gap-3 mb-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-none bg-red-500/10 border-2 border-red-500">
+                <Trash2 className="h-6 w-6 text-red-500" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-widest text-foreground">SYS_WARN: Purga de Datos</h3>
+                <p className="text-[10px] font-mono text-muted-foreground uppercase">Proceso irreversible</p>
+              </div>
+            </div>
+            
+            <p className="mb-6 text-xs text-muted-foreground leading-relaxed font-mono">
+              ¿Confirmas la eliminación permanente de este diagnóstico IA? Esta acción destruirá los registros del análisis y no podrá deshacerse.
+            </p>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirmId(null)}
+                className="flex-1 rounded-none border-2 border-border/50 bg-background px-4 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-foreground hover:text-background transition-colors"
+                disabled={deleteMutation.isPending}
+              >
+                ABORTAR
+              </button>
+              <button
+                onClick={() => {
+                  deleteMutation.mutate(deleteConfirmId, {
+                    onSuccess: () => setDeleteConfirmId(null)
+                  });
+                }}
+                className="flex-1 rounded-none border-2 border-red-500 bg-red-500/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center gap-2"
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? <Activity className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                PURGAR
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
