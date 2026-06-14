@@ -110,7 +110,7 @@ export default function ProjectMetricsPage() {
 
       <div className={cn(
         "flex flex-col xl:flex-row gap-8 items-start relative w-full",
-        (hasSnapshots && !isPlanning) ? "" : "max-w-5xl mx-auto"
+        hasSnapshots ? "" : "max-w-5xl mx-auto"
       )}>
         {/* Left Column (Inputs) */}
         <div className="flex-1 w-full xl:max-h-[calc(100vh-280px)] xl:overflow-y-auto xl:pr-4 custom-scrollbar xl:sticky xl:top-6">
@@ -122,20 +122,10 @@ export default function ProjectMetricsPage() {
               onCancelEdit={() => setEditingSnapshot(null)}
             />
           ) : <div />}
-          
-          {isPlanning && hasSnapshots ? (
-            <div className="mt-8">
-              <MetricSnapshotList 
-                snapshots={snapshotsQuery.data!} 
-                projectId={projectId} 
-                onEdit={(snapshot) => setEditingSnapshot(snapshot)}
-              />
-            </div>
-          ) : null}
         </div>
 
         {/* Right Column (DATA_LOG_HISTORY & Calc) */}
-        {!isPlanning && hasSnapshots && (
+        {hasSnapshots && (
           <>
             {/* Mobile Toggle Button */}
             <button
