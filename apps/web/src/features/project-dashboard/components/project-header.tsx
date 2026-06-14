@@ -82,8 +82,8 @@ export function ProjectHeader({
   };
 
   const planningActions = [
+    { type: 'link', href: `/projects/${project.id}/metrics`, icon: PlusCircle, title: "Estimaciones", desc: "Ingresa proyecciones", color: "text-primary" },
     { type: 'button', onClick: handleAiAnalysisClick, icon: BrainCircuit, title: "Diagnóstico IA", desc: "Evalúa viabilidad", color: "text-accent" },
-    { type: 'link', href: `/projects/${project.id}/score`, icon: BarChart3, title: "Ver Score", desc: "Resultados del test", color: "text-primary" },
     { type: 'link', href: `/projects/${project.id}/chat`, icon: MessageSquareText, title: "Tutor IA", desc: "Asesoría experta", color: "text-muted-foreground" },
     { type: 'link', href: `/projects/${project.id}/reports`, icon: FileText, title: "Reportes", desc: "Exporta datos", color: "text-status-success-fg" },
   ];
