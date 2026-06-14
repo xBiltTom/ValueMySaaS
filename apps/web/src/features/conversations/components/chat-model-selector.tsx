@@ -10,6 +10,7 @@ import { maskedKey } from "@/features/ai-keys/utils";
 import { Cpu, Zap, ChevronDown, Check } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { CreditIndicator } from "@/components/shared/credit-indicator";
 
 function CustomDropdown({
   value,
@@ -170,7 +171,7 @@ export function ChatModelSelector({
         alignRight={selectedKeyId === "CREDITS"}
       />
 
-      {selectedKeyId !== "CREDITS" && (
+      {selectedKeyId !== "CREDITS" ? (
         <>
           <div className="w-px h-6 bg-border/60 mx-0.5"></div>
           <CustomDropdown
@@ -182,6 +183,11 @@ export function ChatModelSelector({
             isLoading={dynamicModelsQuery.isLoading}
             alignRight={true}
           />
+        </>
+      ) : (
+        <>
+          <div className="w-px h-6 bg-border/60 mx-0.5"></div>
+          <CreditIndicator className="h-8 sm:h-9" />
         </>
       )}
     </div>

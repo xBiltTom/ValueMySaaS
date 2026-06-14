@@ -205,13 +205,15 @@ export default function ConversationPage() {
                 </span>
               </div>
             </div>
-            <ChatModelSelector
-              activeKeys={activeKeys}
-              selectedKeyId={selectedKeyId}
-              setSelectedKeyId={handleKeyChange}
-              selectedModel={selectedModel}
-              setSelectedModel={handleModelChange}
-            />
+            <div className="flex items-center gap-3">
+              <ChatModelSelector
+                activeKeys={activeKeys}
+                selectedKeyId={selectedKeyId}
+                setSelectedKeyId={handleKeyChange}
+                selectedModel={selectedModel}
+                setSelectedModel={handleModelChange}
+              />
+            </div>
           </header>
 
           {/* Messages Scroll Area */}

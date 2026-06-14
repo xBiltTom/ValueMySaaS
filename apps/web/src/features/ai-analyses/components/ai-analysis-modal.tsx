@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { listAiKeys, listAiKeyModels } from "@/features/ai-keys/api";
 import { listAiAnalyses } from "@/features/ai-analyses/api";
 import { getPublicConfig } from "@/features/admin/api";
+import { CreditIndicator } from "@/components/shared/credit-indicator";
 import { useQuery } from "@tanstack/react-query";
 import { useCurrentUser } from "@/features/auth/use-auth";
 import { AiKey } from "@/features/ai-keys/types";
@@ -133,8 +134,8 @@ export function AiAnalysisModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <div className="flex items-center gap-3">
-            <div className="rounded-[8px] border-2 border-primary/30 bg-primary/10 p-2.5 text-primary shadow-[4px_4px_0_rgba(var(--primary),0.1)]">
+          <div className="flex items-center gap-3 pr-6">
+            <div className="rounded-[8px] border-2 border-primary/30 bg-primary/10 p-2.5 text-primary shadow-[4px_4px_0_rgba(var(--primary),0.1)] shrink-0">
               <BrainCircuit className="h-5 w-5" />
             </div>
             <div>
@@ -144,7 +145,7 @@ export function AiAnalysisModal({
               <DialogDescription className="text-sm mt-1">
                 {isPlanning 
                   ? "¿Listo para que la IA evalúe la viabilidad de tu idea?" 
-                  : "Usa tus métricas reales para obtener insights con IA."}
+                  : "Obtén un diagnóstico accionable de las métricas de tu SaaS."}
               </DialogDescription>
             </div>
           </div>
@@ -205,7 +206,7 @@ export function AiAnalysisModal({
               </Select>
             </label>
 
-            {selectedKeyId !== "" && (
+            {selectedKeyId !== "" ? (
               <label className="block">
                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground font-mono mb-1.5 flex items-center gap-1.5">
                   <span className="text-primary">&gt;</span> Modelo (opcional)
@@ -229,6 +230,13 @@ export function AiAnalysisModal({
                   />
                 )}
               </label>
+            ) : (
+              <div className="block">
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground font-mono mb-1.5 flex items-center gap-1.5">
+                  <span className="text-primary">&gt;</span> Recursos del Sistema
+                </span>
+                <CreditIndicator className="h-10 w-full justify-between px-3" />
+              </div>
             )}
           </div>
 
