@@ -45,7 +45,7 @@ class AiContextService:
         
         user = await self.user_repository.get_by_id(owner_id)
 
-        # Fetch FULL history: all snapshots and all scores (up to 50 each to stay within token limits)
+        # Fetch FULL history: all snapshots and all scores (up to 50 each to provide maximum context to powerful models)
         all_snapshots = await self.metric_snapshot_repository.list_by_project(
             saas_project_id=project_id,
             limit=50,

@@ -106,6 +106,21 @@ class LlmClientService:
                     try_provider,
                 )
                 continue
+            except ValueError as e:
+                if "request_too_large" in str(e) or "context_length_exceeded" in str(e):
+                    raise HTTPException(
+                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                        detail="El historial del proyecto es demasiado extenso para el límite de memoria (tokens) de este modelo pequeño. Intenta usar un modelo de mayor capacidad (ej. Claude 3.5 Sonnet, GPT-4o o Gemini 1.5 Pro).",
+                    )
+                raise
+            except Exception as e:
+                err_str = str(e).lower()
+                if "context_length_exceeded" in err_str or "maximum context length" in err_str:
+                    raise HTTPException(
+                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                        detail="El historial del proyecto es demasiado extenso para el límite de memoria (tokens) de este modelo pequeño. Intenta usar un modelo de mayor capacidad.",
+                    )
+                raise
 
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -155,8 +170,17 @@ class LlmClientService:
                             delta = chunk.choices[0].delta.content or ""
                             if delta:
                                 yield delta
+                    except ValueError as e:
+                        if "request_too_large" in str(e) or "context_length_exceeded" in str(e):
+                            yield "\n\n⚠️ **Error de Capacidad del Modelo**\nEl historial del proyecto es demasiado extenso para el límite de memoria (tokens) de este modelo pequeño.\nPor favor, intenta usar un modelo de mayor capacidad (ej. Claude 3.5 Sonnet, Gemini 1.5 Pro, o GPT-4o) para proyectos con mucho historial."
+                        else:
+                            yield f"\n[Error de generación: {str(e)}]"
                     except Exception as e:
-                        yield f"\n[Error de generación: {str(e)}]"
+                        err_str = str(e).lower()
+                        if "context_length_exceeded" in err_str or "maximum context length" in err_str:
+                            yield "\n\n⚠️ **Error de Capacidad del Modelo**\nEl historial del proyecto es demasiado extenso para el límite de memoria (tokens) de este modelo. Por favor, intenta usar un modelo de mayor capacidad."
+                        else:
+                            yield f"\n[Error de generación: {str(e)}]"
 
                 return resolved, event_generator()
             except (RateLimitError, AuthenticationError) as exc:
