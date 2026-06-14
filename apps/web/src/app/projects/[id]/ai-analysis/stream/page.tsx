@@ -4,13 +4,17 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Sparkles, Activity, CheckCircle2, KeyRound, RotateCcw, LayoutDashboard } from "lucide-react";
+import { ArrowLeft, Activity, CheckCircle2, KeyRound, LayoutDashboard } from "lucide-react";
 import { useCompletion } from "@ai-sdk/react";
 import { getAuthToken } from "@/lib/auth-token";
 import { API_BASE_URL } from "@/lib/api-client";
 import { getProject } from "@/features/project-dashboard/api";
 import { ByokOnboardingModal } from "@/features/ai-keys/components/byok-onboarding-modal";
 import { Streamdown } from "streamdown";
+import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { analysisTypeLabel } from "@/features/ai-analyses/utils";
+import { AiAnalysisType } from "@/features/ai-analyses/types";
+import { Button } from "@/components/ui/button";
 
 export default function AiAnalysisStreamPage() {
   const params = useParams<{ id: string }>();
@@ -77,140 +81,130 @@ export default function AiAnalysisStreamPage() {
 
   useEffect(() => {
     if (isFinished) {
+      // Invalidate to fetch the newly created analysis
       queryClient.invalidateQueries({ queryKey: ["ai-analyses", projectId] });
+      // Redirect to the latest analysis (since it was just created)
+      const redirectTimer = setTimeout(() => {
+        router.replace(`/projects/${projectId}/ai-analysis`);
+      }, 1500); // Pequeño delay para que el usuario vea el "Completado"
+      return () => clearTimeout(redirectTimer);
     }
-  }, [isFinished, projectId, queryClient]);
+  }, [isFinished, projectId, queryClient, router]);
 
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-background relative selection:bg-foreground selection:text-background font-sans">
-      {/* Background Atmosphere */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/10 blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-rose-200/20 blur-[120px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay" />
-      </div>
-
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-card/40 backdrop-blur-md border-b border-border/30">
-        <Link 
-          href={`/projects/${projectId}/ai-analysis`} 
-          className="group flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-black transition-colors"
-        >
-          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-black/5 group-hover:bg-black/10 transition-colors">
-            <ArrowLeft className="h-4 w-4" />
+    <DashboardShell>
+      <div className="mb-6 flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
+        <div className="space-y-2">
+          <Link href={`/projects/${projectId}/ai-analysis`} className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors bg-background/50 border border-border/40 px-3 py-1.5 rounded-[8px]">
+            <ArrowLeft className="h-3 w-3" />
+            Cancelar Stream
+          </Link>
+          <div className="flex items-center gap-3">
+            <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">
+              NODE: {projectQuery.data?.name || "PROJECT"}
+            </p>
           </div>
-          Volver a Análisis
-        </Link>
-
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card shadow-sm border border-border">
+        </div>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-[8px] bg-card shadow-sm border border-border/60">
           {isLoading ? (
             <>
               <div className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/60 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
               </div>
-              <span className="text-xs font-medium text-zinc-600 tracking-wide uppercase">Procesando</span>
+              <span className="text-[10px] font-black tracking-widest uppercase text-muted-foreground">Procesando</span>
             </>
           ) : isFinished ? (
             <>
-              <CheckCircle2 className="h-3 w-3 text-status-success-fg" />
-              <span className="text-xs font-medium text-zinc-600 tracking-wide uppercase">Completado</span>
+              <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+              <span className="text-[10px] font-black tracking-widest uppercase text-emerald-500">Guardando...</span>
             </>
           ) : error ? (
             <>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-status-danger-fg"></span>
-              <span className="text-xs font-medium text-zinc-600 tracking-wide uppercase">Error</span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
+              <span className="text-[10px] font-black tracking-widest uppercase text-destructive">Error</span>
             </>
           ) : (
-            <span className="text-xs font-medium text-zinc-600 tracking-wide uppercase">Preparando</span>
+            <span className="text-[10px] font-black tracking-widest uppercase text-muted-foreground">Preparando</span>
           )}
         </div>
-      </nav>
+      </div>
 
-      {/* Main Content */}
-      <main className="relative z-10 pt-32 pb-40 px-6 max-w-4xl mx-auto min-h-screen flex flex-col">
-        {/* Header */}
-        <header className="mb-16 animate-in slide-in-from-bottom-4 fade-in duration-700">
-          <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-md bg-black text-white text-xs font-medium tracking-widest uppercase shadow-xl shadow-black/10">
-            <Sparkles className="h-3 w-3" />
-            Diagnóstico IA
-          </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-medium tracking-tight text-zinc-900 leading-[1.1]">
-            Análisis de viabilidad para <br />
-            <span className="text-zinc-400 italic font-serif">{projectQuery.data?.name || "tu proyecto"}</span>
-          </h1>
-        </header>
-
-        {/* Content Stream */}
-        <div className="flex-1 relative">
-          {error && !is402 && (
-            <div className="p-6 rounded-2xl bg-status-danger-bg border border-status-danger-border text-status-danger-text mb-8 animate-in fade-in">
-              <h3 className="font-semibold mb-2">Se interrumpió el análisis</h3>
-              <p className="text-sm opacity-80">{error.message}</p>
+      <div className="space-y-6">
+        <div className="relative overflow-hidden rounded-[24px] border border-border/60 bg-card/40 backdrop-blur-xl p-6 md:p-8 shadow-2xl">
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
+          <div className="relative z-10 flex flex-col justify-between gap-6 md:flex-row md:items-start">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-primary/50 animate-pulse"></span>
+                SYS_DIAGNOSTIC_LOG (STREAMING)
+              </p>
+              <h1 className="mt-3 font-display text-4xl font-black uppercase tracking-tight text-foreground">
+                {type ? analysisTypeLabel(type as AiAnalysisType) : "Generando Análisis"}
+              </h1>
+              <p className="mt-3 text-[12px] font-mono leading-relaxed text-muted-foreground uppercase max-w-xl">
+                &gt; Sintetizando respuesta del LLM en tiempo real...
+              </p>
             </div>
-          )}
+            <div className="flex flex-wrap gap-2 shrink-0">
+              <span className="inline-flex items-center rounded-[8px] bg-background/50 border border-border/40 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                {model || "DEFAULT_MODEL"}
+              </span>
+            </div>
+          </div>
+        </div>
 
-          {is402 && (
-            <div className="p-6 rounded-2xl bg-card border border-border mb-8 animate-in fade-in">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                  <KeyRound className="h-5 w-5" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-foreground mb-1">Créditos agotados</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Tus créditos del sistema se han agotado. Activa tu propia API key gratuita para continuar usando el análisis IA sin límites.
-                  </p>
-                  <button
-                    onClick={() => setShowByokOnboarding(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
-                  >
-                    <Sparkles className="h-4 w-4" />
-                    Cómo obtener una API Key gratis
-                  </button>
-                </div>
+        {error && !is402 && (
+          <div className="p-6 rounded-[16px] bg-destructive/10 border border-destructive/30 text-destructive mb-8 animate-in fade-in">
+            <h3 className="font-bold mb-2 uppercase text-xs tracking-widest">Error de sistema</h3>
+            <p className="text-sm font-mono">{error.message}</p>
+          </div>
+        )}
+
+        {is402 && (
+          <div className="p-6 rounded-[16px] bg-card border border-border/60 shadow-sm mb-8 animate-in fade-in">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-10 h-10 rounded-[12px] bg-primary/10 flex items-center justify-center text-primary">
+                <KeyRound className="h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-foreground mb-1 uppercase text-xs tracking-widest">Créditos agotados</h3>
+                <p className="text-xs font-mono leading-relaxed text-muted-foreground mb-4 max-w-2xl">
+                  &gt; Tus créditos del sistema se han agotado. Activa tu propia API key gratuita para continuar usando el análisis IA sin límites ni interrupciones.
+                </p>
+                <Button
+                  onClick={() => setShowByokOnboarding(true)}
+                  className="rounded-[12px] shadow-[0_0_15px_rgba(var(--primary),0.2)]"
+                >
+                  Configurar BYOK
+                </Button>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {completion ? (
-            <div className="prose prose-zinc prose-lg md:prose-xl max-w-none prose-p:leading-relaxed prose-headings:font-display prose-headings:font-medium prose-headings:tracking-tight prose-a:text-indigo-600 prose-a:underline-offset-4 hover:prose-a:text-indigo-800 prose-strong:font-semibold prose-blockquote:border-l-4 prose-blockquote:border-zinc-300 prose-blockquote:bg-zinc-100/50 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-xl prose-blockquote:italic prose-blockquote:text-zinc-600 prose-li:marker:text-zinc-400">
-              <Streamdown>{completion.replace(/```json[\s\S]*/i, "").replace(/\{\s*"problem_clarity_score"[\s\S]*/i, "")}</Streamdown>
-              <div ref={endRef} className="h-8" />
-            </div>
-          ) : isLoading ? (
-            <div className="flex flex-col items-center justify-center py-32 text-zinc-400 gap-6 animate-pulse">
-              <Activity className="h-12 w-12 text-zinc-300" />
-              <p className="text-lg font-medium tracking-tight">Interpretando métricas del sistema...</p>
-            </div>
-          ) : null}
-
-          {/* Completion Actions */}
-          {isFinished && (
-            <div className="mt-20 pt-10 border-t border-black/10 flex flex-col sm:flex-row items-center gap-4 animate-in slide-in-from-bottom-8 fade-in duration-1000 delay-300 fill-mode-both">
-              <button
-                onClick={() => router.push(`/projects/${projectId}/ai-analysis`)}
-                className="group relative flex w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-black px-8 py-4 text-sm font-medium text-white transition-all hover:scale-105 active:scale-95 shadow-xl shadow-black/10"
-              >
-                <RotateCcw className="h-4 w-4 transition-transform group-hover:-rotate-180 duration-500" />
-                Generar otro análisis
-              </button>
-              
-              <Link
-                href={`/projects/${projectId}`}
-                className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-card px-8 py-4 text-sm font-medium text-foreground shadow-sm border border-border transition-colors hover:bg-muted"
-              >
-                <LayoutDashboard className="h-4 w-4 text-zinc-400" />
-                Volver al dashboard
-              </Link>
-            </div>
-          )}
+        <div className="relative overflow-hidden rounded-[24px] border border-border/60 bg-card/40 backdrop-blur-xl p-6 shadow-sm min-h-[400px]">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none" />
+          <div className="relative z-10 prose prose-neutral dark:prose-invert max-w-none prose-headings:font-display prose-headings:font-black prose-headings:uppercase prose-headings:tracking-wider prose-p:leading-relaxed prose-p:font-medium prose-p:text-[13px] prose-li:leading-relaxed prose-li:text-[13px] prose-strong:text-accent">
+            {completion ? (
+              <>
+                <Streamdown>{completion.replace(/```json[\s\S]*/i, "").replace(/\{\s*"problem_clarity_score"[\s\S]*/i, "")}</Streamdown>
+                <div ref={endRef} className="h-8" />
+              </>
+            ) : isLoading ? (
+              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-4 animate-pulse">
+                <Activity className="h-8 w-8 text-primary" />
+                <p className="text-[10px] font-mono tracking-widest uppercase">Analizando historial del sistema...</p>
+              </div>
+            ) : null}
+          </div>
         </div>
-      </main>
-
+      </div>
+      
       <ByokOnboardingModal isOpen={showByokOnboarding} onClose={() => setShowByokOnboarding(false)} />
-    </div>
+    </DashboardShell>
   );
 }
