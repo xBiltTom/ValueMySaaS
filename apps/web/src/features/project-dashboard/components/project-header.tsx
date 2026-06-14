@@ -8,7 +8,7 @@ import { listAiAnalyses } from "@/features/ai-analyses/api";
 import {
   Rocket, BarChart3, BrainCircuit, MessageSquareText,
   FileText, PlusCircle, Sparkles, ArrowRight, ChevronRight,
-  Zap, TrendingUp, Shield, Target, CheckCircle2, Clock, Trash2, Terminal
+  Zap, TrendingUp, Shield, Target, CheckCircle2, Clock, Trash2, Terminal, Edit2
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { formatEnum } from "@/lib/utils";
 import { SaasProject } from "@/features/project-dashboard/types";
 import { AiAnalysisModal } from "@/features/ai-analyses/components/ai-analysis-modal";
+import { EditProjectModal } from "@/features/projects/components/edit-project-modal";
 
 const STAGE_LABELS: Record<string, string> = {
   IDEA: "Idea",
@@ -59,6 +60,7 @@ export function ProjectHeader({
 }) {
   const [showLaunchConfirm, setShowLaunchConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const isPlanning = project.stage === "PLANNING" || project.stage === "IDEA";
 
   const [showAiModal, setShowAiModal] = useState(false);
@@ -138,13 +140,22 @@ export function ProjectHeader({
               <h1 className="font-display text-2xl sm:text-3xl md:text-5xl font-black text-foreground tracking-tight uppercase leading-none break-words hyphens-auto flex-1 md:flex-none">
                 {project.name}
               </h1>
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="flex shrink-0 h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-[12px] bg-card/50 text-muted-foreground hover:bg-destructive hover:text-destructive-foreground hover:shadow-[0_0_15px_rgba(var(--destructive),0.3)] border border-border/40 transition-all hover:scale-110"
-                title="PURGAR SISTEMA"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowEditModal(true)}
+                  className="flex shrink-0 h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-[12px] bg-card/50 text-muted-foreground hover:bg-primary hover:text-primary-foreground hover:shadow-[0_0_15px_rgba(var(--primary),0.3)] border border-border/40 transition-all hover:scale-110"
+                  title="EDITAR PARÁMETROS"
+                >
+                  <Edit2 className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="flex shrink-0 h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-[12px] bg-card/50 text-muted-foreground hover:bg-destructive hover:text-destructive-foreground hover:shadow-[0_0_15px_rgba(var(--destructive),0.3)] border border-border/40 transition-all hover:scale-110"
+                  title="PURGAR SISTEMA"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             {project.description && (
@@ -356,6 +367,15 @@ export function ProjectHeader({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Modal */}
+      {showEditModal && (
+        <EditProjectModal
+          project={project}
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+        />
+      )}
     </div>
   );
 }
