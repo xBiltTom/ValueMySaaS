@@ -183,7 +183,7 @@ export function ProjectHeader({
 
           {/* Right: phase-specific CTA */}
           {isPlanning ? (
-            <div className="shrink-0 mt-2 md:mt-0 w-full md:w-auto">
+            <div className="shrink-0 mt-8 md:mt-8 lg:mt-12 lg:self-end w-full md:w-auto">
               {showLaunchConfirm ? (
                 <div className="rounded-[16px] border border-status-warning-border bg-card/80 backdrop-blur-md p-4 md:p-5 w-full md:max-w-xs space-y-4 shadow-[0_0_30px_rgba(245,158,11,0.15)] animate-in fade-in zoom-in-95">
                   <div className="flex items-center gap-3">
@@ -229,7 +229,7 @@ export function ProjectHeader({
               )}
             </div>
           ) : (
-            <div className="shrink-0 flex w-full md:w-auto md:flex-col items-center md:items-end justify-between md:justify-start gap-3 mt-2 md:mt-0">
+            <div className="shrink-0 flex w-full md:w-auto md:flex-col items-center md:items-end justify-between md:justify-start gap-3 mt-8 md:mt-8 lg:mt-12 lg:self-end">
               <div className="flex items-center gap-2 rounded-[12px] bg-background/50 border border-border/40 px-3 py-2">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
