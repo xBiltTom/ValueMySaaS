@@ -35,6 +35,7 @@ class AiAnalysisCreate(BaseModel):
     )
     custom_question: str | None = Field(default=None, max_length=2000)
     prompt: str | None = Field(default=None, description="Ignorado, pero requerido por Vercel AI SDK")
+    analysis_id: UUID | None = Field(default=None, description="ID pre-generado por el frontend para el análisis")
 
 
 # ---------------------------------------------------------------------------

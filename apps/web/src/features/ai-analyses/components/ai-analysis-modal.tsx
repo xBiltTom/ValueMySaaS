@@ -92,8 +92,12 @@ export function AiAnalysisModal({
       }
     }
 
-    // Redirect to the streaming chat view with query params
+    // Generar el ID desde el cliente para navegar inmediatamente
+    const analysisId = crypto.randomUUID();
+
+    // Redirect to the final view with stream=true
     const params = new URLSearchParams({
+      stream: "true",
       keyId: values.ai_key_id,
       type: isPlanning ? "FULL_DIAGNOSIS" : values.analysis_type,
     });
@@ -103,7 +107,7 @@ export function AiAnalysisModal({
     }
     
     onClose();
-    router.push(`/projects/${projectId}/ai-analysis/stream?${params.toString()}`);
+    router.push(`/projects/${projectId}/ai-analysis/${analysisId}?${params.toString()}`);
   };
 
   if (keysQuery.isLoading) {

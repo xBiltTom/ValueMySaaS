@@ -257,7 +257,6 @@ class AiAnalysisService:
                 yield f"\n[Error de generación: {str(e)}]"
                 return
 
-            # New session required: FastAPI closes the request session before the generator finishes.
             try:
                 async with AsyncSessionLocal() as session:
                     latest_snapshot = await MetricSnapshotRepository(session).get_latest_by_project(saas_project_id=project_id)
@@ -265,24 +264,45 @@ class AiAnalysisService:
 
                     output_json = self._parse_planning_output(full_text) if phase == ProjectPhase.PLANNING else None
 
-                    analysis = await AiAnalysisRepository(session).create(
-                        data={
-                            "saas_project_id": project_id,
-                            "metric_snapshot_id": latest_snapshot.id if latest_snapshot else None,
-                            "score_id": latest_score.id if latest_score else None,
-                            "user_id": owner_id,
-                            "provider": credentials.provider,
-                            "model_name": resolved_model,
-                            "analysis_type": payload.analysis_type,
-                            "prompt_version": PROMPT_VERSION,
-                            "input_context": input_context,
-                            "output_text": full_text,
-                            "output_json": output_json,
-                            "tokens_input": 0,
-                            "tokens_output": 0,
-                            "estimated_cost": Decimal("0"),
-                        }
-                    )
+                    tokens_input = 0
+                    tokens_output = 0
+                    est_cost = Decimal("0")
+                    try:
+                        import litellm
+                        messages = [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt}
+                        ]
+                        tokens_input = litellm.token_counter(model=resolved_model, messages=messages)
+                        tokens_output = litellm.token_counter(model=resolved_model, text=full_text)
+                        try:
+                            cost = litellm.completion_cost(completion_response={"model": resolved_model, "usage": {"prompt_tokens": tokens_input, "completion_tokens": tokens_output}})
+                            est_cost = Decimal(str(cost)) if cost else Decimal("0")
+                        except Exception:
+                            pass
+                    except Exception as e:
+                        logger.warning(f"Failed to calculate tokens/cost in stream: {e}")
+
+                    analysis_data = {
+                        "saas_project_id": project_id,
+                        "metric_snapshot_id": latest_snapshot.id if latest_snapshot else None,
+                        "score_id": latest_score.id if latest_score else None,
+                        "user_id": owner_id,
+                        "provider": credentials.provider,
+                        "model_name": resolved_model,
+                        "analysis_type": payload.analysis_type,
+                        "prompt_version": PROMPT_VERSION,
+                        "input_context": input_context,
+                        "output_text": full_text,
+                        "output_json": output_json,
+                        "tokens_input": tokens_input,
+                        "tokens_output": tokens_output,
+                        "estimated_cost": est_cost,
+                    }
+                    if payload.analysis_id:
+                        analysis_data["id"] = payload.analysis_id
+
+                    analysis = await AiAnalysisRepository(session).create(data=analysis_data)
                     await session.commit()
 
                     if credentials.credit_used:
@@ -299,9 +319,9 @@ class AiAnalysisService:
                             related_analysis_id=analysis.id,
                         )
                         await session.commit()
-            except Exception as db_e:
-                logger.error(f"Error in stream_analysis DB commit: {db_e}")
-                yield f"\n[Error interno guardando análisis: {str(db_e)}]"
+
+            except Exception as db_err:
+                logger.error(f"Error saving streamed analysis to DB: {db_err}")
 
         return event_generator()
 
