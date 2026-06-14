@@ -190,23 +190,42 @@ export default function ProjectDashboardPage() {
               </div>
 
               <div className={cn(
-                "grid gap-5",
+                "grid gap-5 items-stretch",
                 isPlanning ? "xl:grid-cols-[0.9fr_1.1fr]" : "xl:grid-cols-[0.8fr_1.2fr]"
               )}>
-              <ProjectScoreCard
-                projectId={projectId}
-                score={dashboard.latest_score}
-                isPlanning={isPlanning}
-                onAiAnalysis={handleAiAnalysisClick}
-                planningAiOutput={dashboard.planning_ai_output}
-              />
-              <ProjectKpiCards
-                metrics={dashboard.metric_cards}
-                score={dashboard.latest_score?.overall_score}
-                isPlanning={isPlanning}
-                planningAiOutput={dashboard.planning_ai_output}
-              />
-            </div>
+                <ProjectScoreCard
+                  projectId={projectId}
+                  score={dashboard.latest_score}
+                  isPlanning={isPlanning}
+                  onAiAnalysis={handleAiAnalysisClick}
+                  planningAiOutput={dashboard.planning_ai_output}
+                />
+                
+                {isPlanning ? (
+                  <div className="flex flex-col gap-5 h-full">
+                    <ProjectKpiCards
+                      metrics={dashboard.metric_cards}
+                      score={dashboard.latest_score?.overall_score}
+                      isPlanning={isPlanning}
+                      planningAiOutput={dashboard.planning_ai_output}
+                    />
+                    <ProjectHistoryChart
+                      title="Evolución del score de viabilidad"
+                      data={dashboard.series.overall_score}
+                      color="#f59e0b"
+                      isPlanning
+                      className="flex-1"
+                    />
+                  </div>
+                ) : (
+                  <ProjectKpiCards
+                    metrics={dashboard.metric_cards}
+                    score={dashboard.latest_score?.overall_score}
+                    isPlanning={isPlanning}
+                    planningAiOutput={dashboard.planning_ai_output}
+                  />
+                )}
+              </div>
             </div>
           )}
 
@@ -239,15 +258,7 @@ export default function ProjectDashboardPage() {
             </div>
           )}
 
-          {/* Planning: single score evolution chart */}
-          {dashboard.latest_snapshot && isPlanning && (
-            <ProjectHistoryChart
-              title="Evolución del score de viabilidad"
-              data={dashboard.series.overall_score}
-              color="#f59e0b"
-              isPlanning
-            />
-          )}
+
 
           {/* Diagnostic alerts and recommendations */}
           {dashboard.latest_snapshot && (

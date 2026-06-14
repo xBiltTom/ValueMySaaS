@@ -121,24 +121,15 @@ function PlanningKpiCards({
 
   return (
     <div className="space-y-5">
-      {/* Top row — financial estimates */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      {/* Financial estimates (3x2 grid on large screens) */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <KpiCard icon={CircleDollarSign} label="Caja disponible" value={display(metrics.cash_available)} isPlanning accent="text-status-success-fg" tooltip="Capital actual disponible para mantener el proyecto operando." />
         <KpiCard icon={Banknote} label="Costos mensuales" value={display(metrics.monthly_costs)} isPlanning accent="text-destructive" tooltip="Estimación de gastos operativos fijos y variables por mes (OPEX)." />
         <KpiCard icon={TrendingDown} label="Burn rate" value={display(metrics.burn_rate)} isPlanning accent="text-destructive" tooltip="Velocidad a la que se consumen las reservas de capital mensualmente. Igual a costos si no hay ingresos." />
         <KpiCard icon={Clock} label="Runway est." value={metrics.runway_months != null ? `${Number(metrics.runway_months).toFixed(1)} mo` : "—"} isPlanning accent="text-amber-400" tooltip="Meses estimados antes de quedarse sin caja, asumiendo burn rate constante." />
-      </div>
-
-      {/* Second row — derived estimates */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <KpiCard icon={Banknote} label="Net Profit proy." value={display(metrics.net_profit)} isPlanning tooltip="Ingreso mensual proyectado (clientes año 1 ÷ 12 × precio) menos costos mensuales." />
         <KpiCard icon={Coins} label="CAC estimado" value={display(metrics.cac)} isPlanning accent="text-amber-500" tooltip="Costo estimado para adquirir un cliente pagador. Clave para evaluar viabilidad comercial." />
-        {/* Spacers */}
-        <div />
-        <div />
       </div>
-
-
     </div>
   );
 }
