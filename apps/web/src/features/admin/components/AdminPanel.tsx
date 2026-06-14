@@ -21,6 +21,7 @@ import { getApiErrorMessage } from "@/lib/api-client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { providerModels, providerHints } from "@/features/ai-keys/constants";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -178,11 +179,19 @@ function UsersTab({ users, isLoading, onRefresh, queryClient }: {
     (u.full_name ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
+  const [grantMode, setGrantMode] = useState<"ADD" | "SUB" | "SET">("ADD");
+
   const grantMutation = useMutation({
-    mutationFn: () => grantCredits(grantTarget!.id, grantAmount, grantDesc),
+    mutationFn: () => {
+      let delta = grantAmount;
+      if (grantMode === "SUB") delta = -grantAmount;
+      if (grantMode === "SET") delta = grantAmount - (grantTarget?.ai_credits || 0);
+      return grantCredits(grantTarget!.id, delta, grantDesc);
+    },
     onSuccess: () => {
       setGrantTarget(null);
       setGrantAmount(10);
+      setGrantMode("ADD");
       queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
     },
@@ -218,36 +227,48 @@ function UsersTab({ users, isLoading, onRefresh, queryClient }: {
 
       {/* Grant Modal */}
       {grantTarget && (
-        <div className="border-2 border-primary/40 bg-primary/5 p-5 space-y-3">
-          <p className="text-xs font-bold uppercase tracking-widest text-primary">
-            Otorgar Créditos → {grantTarget.email}
-          </p>
-          <div className="flex gap-2">
+        <div className="border-2 border-primary/40 bg-primary/5 p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
+              Ajustar Créditos <span className="text-muted-foreground">|</span> {grantTarget.email} <span className="text-muted-foreground">|</span> Actual: <span className="text-foreground">{grantTarget.ai_credits}</span>
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={grantMode}
+              onChange={(e) => setGrantMode(e.target.value as any)}
+              className="h-9 px-3 border-2 border-border/60 bg-background text-xs font-mono uppercase focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-none"
+            >
+              <option value="ADD">Añadir</option>
+              <option value="SUB">Quitar</option>
+              <option value="SET">Establecer a</option>
+            </select>
             <Input
               type="number"
+              min="0"
               placeholder="Cantidad"
               value={grantAmount}
               onChange={(e) => setGrantAmount(Number(e.target.value))}
               className="rounded-none border-2 font-mono text-sm h-9 w-28"
             />
             <Input
-              placeholder="Descripción"
+              placeholder="Motivo (opcional)"
               value={grantDesc}
               onChange={(e) => setGrantDesc(e.target.value)}
-              className="rounded-none border-2 font-mono text-xs h-9 flex-1"
+              className="rounded-none border-2 font-mono text-xs h-9 flex-1 min-w-[200px]"
             />
             <Button
               size="sm"
-              disabled={grantMutation.isPending}
+              disabled={grantMutation.isPending || (grantMode === "SET" && grantAmount === grantTarget.ai_credits)}
               onClick={() => grantMutation.mutate()}
-              className="rounded-none h-9"
+              className="rounded-none h-9 whitespace-nowrap"
             >
-              {grantMutation.isPending ? "..." : "Otorgar"}
+              {grantMutation.isPending ? "Aplicando..." : "Aplicar Ajuste"}
             </Button>
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => setGrantTarget(null)}
+              onClick={() => { setGrantTarget(null); setGrantMode("ADD"); }}
               className="rounded-none h-9"
             >
               Cancelar
@@ -314,7 +335,7 @@ function UsersTab({ users, isLoading, onRefresh, queryClient }: {
                         size="sm"
                         className="h-7 px-2 text-xs rounded-none hover:bg-primary/10 hover:text-primary"
                         onClick={() => setGrantTarget(user)}
-                        title="Otorgar créditos"
+                        title="Ajustar créditos"
                       >
                         <Coins className="h-3.5 w-3.5" />
                       </Button>
@@ -494,12 +515,27 @@ function KeysTab({ keys, isLoading, queryClient }: {
             {showKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
           </button>
         </div>
-        <Input
-          placeholder={MODEL_PLACEHOLDER[newKey.provider] ?? "prefix/model-name"}
-          value={newKey.default_model}
-          onChange={(e) => setNewKey({ ...newKey, default_model: e.target.value })}
-          className="rounded-none border-2 font-mono text-xs h-9"
-        />
+        {providerModels[newKey.provider as any]?.length > 0 ? (
+          <select
+            value={newKey.default_model}
+            onChange={(e) => setNewKey({ ...newKey, default_model: e.target.value })}
+            className="h-9 w-full border-2 border-input bg-background px-3 text-xs font-mono rounded-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+          >
+            <option value="">-- Modelo por defecto (Opcional) --</option>
+            {providerModels[newKey.provider as any].map((model) => (
+              <option key={model.id} value={model.id}>
+                {model.name}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <Input
+            placeholder={MODEL_PLACEHOLDER[newKey.provider] ?? "prefix/model-name"}
+            value={newKey.default_model}
+            onChange={(e) => setNewKey({ ...newKey, default_model: e.target.value })}
+            className="rounded-none border-2 font-mono text-xs h-9"
+          />
+        )}
         {addKeyMutation.isError && (
           <p className="text-xs text-destructive">{getApiErrorMessage(addKeyMutation.error)}</p>
         )}
