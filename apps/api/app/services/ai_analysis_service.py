@@ -365,6 +365,10 @@ class AiAnalysisService:
             )
         return analysis
 
+    async def delete_analysis(self, *, project_id: UUID, analysis_id: UUID, owner_id: UUID) -> None:
+        analysis = await self.get_analysis(project_id=project_id, analysis_id=analysis_id, owner_id=owner_id)
+        await self.ai_analysis_repository.delete(analysis)
+
     # -----------------------------------------------------------------------
     # Helpers privados
     # -----------------------------------------------------------------------
@@ -470,10 +474,7 @@ class AiAnalysisService:
             f"Al final de tu feedback, incluye obligatoriamente un bloque ```json con este esquema.\n"
             f"REGLA OBLIGATORIA: NO escribas NINGUNA frase como 'Aquí tienes la respuesta en json:'. Simplemente termina tu texto conversacional e INMEDIATAMENTE abre el bloque ```json en la siguiente línea.\n\n"
             f"{PLANNING_JSON_SCHEMA}\n\n"
-            f"Reglas estrictas para calcular el veredicto para el JSON:\n"
-            f"  - overall_score >= 70 → verdict: 'CONSTRUYE'\n"
-            f"  - overall_score 50-69 → verdict: 'VALIDA_PRIMERO'\n"
-            f"  - overall_score < 50 → verdict: 'REPLANTEA'\n\n"
+            f"El veredicto ('CONSTRUYE', 'VALIDA_PRIMERO', 'REPLANTEA') y los puntajes numéricos debes decidirlos tú de forma autónoma basándote en la calidad y factibilidad de la propuesta.\n\n"
             f"Datos del proyecto aportados por el emprendedor:\n{fields_text}\n\n"
             f"IMPORTANTE: Analiza la coherencia entre el Nivel de Validación de Mercado, el Presupuesto (Caja) y las metas del Año 1. Si algún campo fundamental dice 'No provisto', asigna un puntaje más bajo en esa dimensión en el JSON e incentiva al estudiante a pensarlo."
         )

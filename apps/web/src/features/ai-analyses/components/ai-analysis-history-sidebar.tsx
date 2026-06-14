@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { X, Clock, BrainCircuit, Activity, ChevronRight, Zap } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { X, Clock, BrainCircuit, Activity, ChevronRight, Zap, Trash2 } from "lucide-react";
 import { formatDateTime } from "@/lib/formatters";
-import { listAiAnalyses } from "@/features/ai-analyses/api";
+import { listAiAnalyses, deleteAiAnalysis } from "@/features/ai-analyses/api";
+import { toast } from "@/lib/toast";
 import { analysisTypeLabel } from "@/features/ai-analyses/utils";
 import { providerLabel } from "@/features/ai-keys/utils";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,19 @@ export function AiAnalysisHistorySidebar({
     queryKey: ["ai-analyses", projectId],
     queryFn: () => listAiAnalyses(projectId),
     enabled: isOpen,
+  });
+
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: (analysisId: string) => deleteAiAnalysis(projectId, analysisId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ai-analyses", projectId] });
+      toast({ title: "Análisis eliminado", variant: "success" });
+    },
+    onError: () => {
+      toast({ title: "Error al eliminar el análisis", variant: "destructive" });
+    }
   });
 
   const analyses = analysesQuery.data?.items ?? [];
@@ -130,8 +144,24 @@ export function AiAnalysisHistorySidebar({
                         </p>
                       </div>
                       
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted transition-transform group-hover:translate-x-1">
-                        <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (window.confirm("¿Seguro que deseas eliminar este análisis?")) {
+                              deleteMutation.mutate(analysis.id);
+                            }
+                          }}
+                          className="flex h-6 w-6 items-center justify-center rounded-full transition-colors hover:bg-status-destructive-bg hover:text-status-destructive-fg"
+                          title="Eliminar análisis"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted transition-transform group-hover:translate-x-1">
+                          <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                        </div>
                       </div>
                     </div>
 
