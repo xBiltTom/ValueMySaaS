@@ -11,6 +11,7 @@ from fastapi import HTTPException, status
 from app.repositories.metric_snapshot_repository import MetricSnapshotRepository
 from app.repositories.saas_project_repository import SaasProjectRepository
 from app.repositories.saas_score_repository import SaasScoreRepository
+from app.repositories.user_repository import UserRepository
 from app.services.dashboard_service import DashboardService
 
 
@@ -21,11 +22,13 @@ class AiContextService:
         metric_snapshot_repository: MetricSnapshotRepository,
         saas_score_repository: SaasScoreRepository,
         dashboard_service: DashboardService,
+        user_repository: UserRepository,
     ) -> None:
         self.saas_project_repository = saas_project_repository
         self.metric_snapshot_repository = metric_snapshot_repository
         self.saas_score_repository = saas_score_repository
         self.dashboard_service = dashboard_service
+        self.user_repository = user_repository
 
     async def build_context(self, *, project_id: UUID, owner_id: UUID) -> dict:
         project = await self.saas_project_repository.get_by_id_for_owner(
@@ -39,6 +42,8 @@ class AiContextService:
             project_id=project_id,
             owner_id=owner_id,
         )
+        
+        user = await self.user_repository.get_by_id(owner_id)
 
         # Fetch FULL history: all snapshots and all scores (up to 50 each to stay within token limits)
         all_snapshots = await self.metric_snapshot_repository.list_by_project(
@@ -100,6 +105,9 @@ class AiContextService:
         latest_score = all_scores_sorted[-1] if all_scores_sorted else None
 
         return {
+            "user": {
+                "name": user.full_name or user.email.split("@")[0],
+            } if user else None,
             "project": dashboard.project.model_dump(mode="json"),
             # Latest summary for quick reference
             "latest_snapshot": dashboard.latest_snapshot.model_dump(mode="json") if dashboard.latest_snapshot else None,
