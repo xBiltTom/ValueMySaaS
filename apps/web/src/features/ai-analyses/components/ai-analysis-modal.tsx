@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { listAiKeys, listAiKeyModels } from "@/features/ai-keys/api";
+import { listAiAnalyses } from "@/features/ai-analyses/api";
 import { useQuery } from "@tanstack/react-query";
 import { useCurrentUser } from "@/features/auth/use-auth";
 import { AiKey } from "@/features/ai-keys/types";
@@ -25,11 +26,13 @@ export function AiAnalysisModal({
   onClose,
   projectId,
   projectStage,
+  latestSnapshotId,
 }: {
   isOpen: boolean;
   onClose: () => void;
   projectId: string;
   projectStage: string;
+  latestSnapshotId?: string;
 }) {
   const router = useRouter();
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -66,7 +69,29 @@ export function AiAnalysisModal({
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
+  const analysesQuery = useQuery({
+    queryKey: ["ai-analyses", projectId],
+    queryFn: () => listAiAnalyses(projectId),
+    enabled: isOpen,
+  });
+
   const onSubmit = (values: AiAnalysisFormValues) => {
+    // Evitar generar un análisis repetido si ya existe para este snapshot (o para el proyecto en planeación)
+    if (values.analysis_type !== "CUSTOM" && analysesQuery.data) {
+      const existing = analysesQuery.data.items.find((a) => {
+        if (a.analysis_type !== values.analysis_type) return false;
+        if (isPlanning) return true; // En planeación, cualquier análisis previo del mismo tipo es válido
+        // En implementación, solo reutilizar si es del mismo snapshot
+        return a.metric_snapshot_id === latestSnapshotId;
+      });
+
+      if (existing) {
+        onClose();
+        router.push(`/projects/${projectId}/ai-analysis/${existing.id}`);
+        return;
+      }
+    }
+
     // Redirect to the streaming chat view with query params
     const params = new URLSearchParams({
       keyId: values.ai_key_id,

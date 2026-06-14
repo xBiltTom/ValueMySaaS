@@ -337,11 +337,12 @@ export default function ProjectDashboardPage() {
       ) : null}
 
       {project && (
-        <AiAnalysisModal 
-          isOpen={showAiModal} 
-          onClose={() => setShowAiModal(false)} 
-          projectId={project.id} 
-          projectStage={project.stage} 
+        <AiAnalysisModal
+          isOpen={showAiModal}
+          onClose={() => setShowAiModal(false)}
+          projectId={projectId}
+          projectStage={project.stage}
+          latestSnapshotId={dashboard?.latest_snapshot?.id}
         />
       )}
     </DashboardShell>
