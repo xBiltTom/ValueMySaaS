@@ -85,7 +85,9 @@ class PlanningAnalysisOutput(BaseModel):
     )
 
     # Veredicto final
-    verdict: IdeaVerdict
+    verdict: str = Field(
+        description="Veredicto final resumido en una frase corta (max 6 palabras)."
+    )
     verdict_rationale: str = Field(
         description="Justificación del veredicto en 2-3 oraciones claras para un estudiante."
     )

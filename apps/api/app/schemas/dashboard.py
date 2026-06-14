@@ -30,7 +30,7 @@ class PlanningAiOutput(BaseModel):
     market_fit_score: int
     business_model_score: int
     pricing_feasibility_score: int
-    verdict: IdeaVerdict
+    verdict: str
     verdict_rationale: str
     market_size_estimate: str
     infrastructure_complexity: InfrastructureComplexity

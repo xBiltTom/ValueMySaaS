@@ -91,11 +91,10 @@ export function ProjectScoreCard({
               <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">VEREDICTO</p>
               <span className={cn(
                 "text-xs font-bold uppercase tracking-wider flex items-center gap-2",
-                planningAiOutput.verdict === "BUILD" ? "text-emerald-400" :
-                planningAiOutput.verdict === "VALIDATE_FIRST" ? "text-amber-400" : "text-destructive"
+                aiScore >= 75 ? "text-emerald-400" :
+                aiScore >= 50 ? "text-amber-400" : "text-destructive"
               )}>
-                {planningAiOutput.verdict === "BUILD" ? "Construye ya" :
-                 planningAiOutput.verdict === "VALIDATE_FIRST" ? "Validar primero" : "Replantear"}
+                {planningAiOutput.verdict}
               </span>
             </div>
             {onAiAnalysis && (

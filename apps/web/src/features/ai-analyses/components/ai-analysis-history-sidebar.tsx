@@ -37,10 +37,10 @@ export function AiAnalysisHistorySidebar({
     mutationFn: (analysisId: string) => deleteAiAnalysis(projectId, analysisId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ai-analyses", projectId] });
-      toast({ title: "Análisis eliminado", variant: "success" });
+      toast.success("Análisis eliminado");
     },
     onError: () => {
-      toast({ title: "Error al eliminar el análisis", variant: "destructive" });
+      toast.error("Error al eliminar el análisis");
     }
   });
 

@@ -237,7 +237,7 @@ export type PlanningAiOutput = {
   market_fit_score: number;
   business_model_score: number;
   pricing_feasibility_score: number;
-  verdict: IdeaVerdict;
+  verdict: string;
   verdict_rationale: string;
   market_size_estimate: string;
   infrastructure_complexity: InfrastructureComplexity;

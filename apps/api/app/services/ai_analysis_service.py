@@ -125,23 +125,12 @@ PLANNING_JSON_SCHEMA = """{
   "market_size_estimate": "<estimación concreta del tamaño de mercado local>",
   "infrastructure_complexity": "<BAJA|MEDIA|ALTA>",
   "breakeven_customers": "<número aproximado de clientes para punto de equilibrio>",
-  "verdict": "<CONSTRUYE|VALIDA_PRIMERO|REPLANTEA>",
+  "verdict": "<veredicto en una frase corta, ej: 'Lista para construir'>",
   "verdict_rationale": "<justificación en 2-3 oraciones para un estudiante>",
   "strengths": ["<fortaleza 1>", "<fortaleza 2>"],
   "risks": ["<riesgo 1>", "<riesgo 2>"],
   "next_steps": ["<paso 1>", "<paso 2>", "<paso 3>"]
 }"""
-
-# Mapeo de valores en español a los enums Python
-VERDICT_MAP = {
-    "CONSTRUYE": "BUILD",
-    "VALIDA_PRIMERO": "VALIDATE_FIRST",
-    "REPLANTEA": "RETHINK",
-    # También aceptar inglés directo
-    "BUILD": "BUILD",
-    "VALIDATE_FIRST": "VALIDATE_FIRST",
-    "RETHINK": "RETHINK",
-}
 
 COMPLEXITY_MAP = {
     "BAJA": "LOW",
@@ -474,7 +463,7 @@ class AiAnalysisService:
             f"Al final de tu feedback, incluye obligatoriamente un bloque ```json con este esquema.\n"
             f"REGLA OBLIGATORIA: NO escribas NINGUNA frase como 'Aquí tienes la respuesta en json:'. Simplemente termina tu texto conversacional e INMEDIATAMENTE abre el bloque ```json en la siguiente línea.\n\n"
             f"{PLANNING_JSON_SCHEMA}\n\n"
-            f"El veredicto ('CONSTRUYE', 'VALIDA_PRIMERO', 'REPLANTEA') y los puntajes numéricos debes decidirlos tú de forma autónoma basándote en la calidad y factibilidad de la propuesta.\n\n"
+            f"El veredicto (una frase corta, ej: 'Lista para construir') y los puntajes numéricos debes decidirlos tú de forma autónoma basándote en la calidad y factibilidad de la propuesta.\n\n"
             f"Datos del proyecto aportados por el emprendedor:\n{fields_text}\n\n"
             f"IMPORTANTE: Analiza la coherencia entre el Nivel de Validación de Mercado, el Presupuesto (Caja) y las metas del Año 1. Si algún campo fundamental dice 'No provisto', asigna un puntaje más bajo en esa dimensión en el JSON e incentiva al estudiante a pensarlo."
         )
@@ -536,15 +525,15 @@ class AiAnalysisService:
             else:
                 return None
 
-        # Normalizar verdict (acepta español e inglés)
-        if "verdict" in data:
-            data["verdict"] = VERDICT_MAP.get(str(data["verdict"]).upper(), "VALIDATE_FIRST")
-
         # Normalizar infrastructure_complexity
         if "infrastructure_complexity" in data:
             data["infrastructure_complexity"] = COMPLEXITY_MAP.get(
                 str(data["infrastructure_complexity"]).upper(), "MEDIUM"
             )
+
+        # Normalizar verdict (asegurar que es string)
+        if "verdict" in data:
+            data["verdict"] = str(data["verdict"])
 
         # Calcular overall_score si no viene o está fuera de rango
         if "overall_score" not in data or not (0 <= data.get("overall_score", -1) <= 100):

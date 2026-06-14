@@ -528,7 +528,7 @@ class DashboardService:
                 market_fit_score=int(float(raw.get("market_fit_score", 0))),
                 business_model_score=int(float(raw.get("business_model_score", 0))),
                 pricing_feasibility_score=int(float(raw.get("pricing_feasibility_score", 0))),
-                verdict=raw.get("verdict", "RETHINK"),
+                verdict=str(raw.get("verdict", "No especificado")),
                 verdict_rationale=raw.get("verdict_rationale", ""),
                 market_size_estimate=str(raw.get("market_size_estimate", "")),
                 infrastructure_complexity=raw.get("infrastructure_complexity", "MEDIUM"),
