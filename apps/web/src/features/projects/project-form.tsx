@@ -16,7 +16,7 @@ import {
   businessModels, categories, createProjectSchema, CreateProjectFormValues,
 } from "@/features/projects/schemas";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function Label({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
@@ -126,6 +126,16 @@ export function ProjectForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [step, setStep] = useState(0);
+  const [canSubmit, setCanSubmit] = useState(false);
+
+  useEffect(() => {
+    if (step === 3) {
+      const timer = setTimeout(() => setCanSubmit(true), 500);
+      return () => clearTimeout(timer);
+    } else {
+      setCanSubmit(false);
+    }
+  }, [step]);
 
   const form = useForm<CreateProjectFormValues>({
     resolver: zodResolver(createProjectSchema),
@@ -390,6 +400,7 @@ export function ProjectForm() {
                 <div>
                   <Label required>
                     PROBLEMA DETECTADO
+                    <Tooltip text="QUÉ DOLOR RESUELVES. EJ: PROCESOS LENTOS" />
                   </Label>
                   <BrutalistTextarea
                     rows={3}
@@ -402,6 +413,7 @@ export function ProjectForm() {
                 <div>
                   <Label required>
                     PROPUESTA DE SOLUCIÓN
+                    <Tooltip text="CÓMO LO RESUELVES. EJ: SOFTWARE IA AUTOMATIZADO" />
                   </Label>
                   <BrutalistTextarea
                     rows={3}
@@ -416,6 +428,7 @@ export function ProjectForm() {
                     <div>
                       <Label>
                         COMPETENCIA (WIP)
+                        <Tooltip text="QUÉ ALTERNATIVAS USAN HOY. EJ: HOJAS DE CÁLCULO" />
                       </Label>
                       <BrutalistTextarea
                         rows={3}
@@ -427,6 +440,7 @@ export function ProjectForm() {
                     <div>
                       <Label>
                         ESTRATEGIA GTM
+                        <Tooltip text="CÓMO CONSEGUIRÁS TUS PRIMEROS CLIENTES. EJ: LINKEDIN OUTBOUND" />
                       </Label>
                       <BrutalistTextarea
                         rows={3}
@@ -551,7 +565,7 @@ export function ProjectForm() {
           ) : (
             <button
               type="submit"
-              disabled={mutation.isPending}
+              disabled={mutation.isPending || !canSubmit}
               className={cn(
                 "group relative flex items-center gap-2 rounded-[8px] border-2 border-primary bg-primary px-10 py-4 text-[13px] font-black uppercase tracking-widest text-primary-foreground transition-all hover:bg-primary/90 active:translate-y-0.5 shadow-[6px_6px_0_rgba(var(--primary),0.4)] hover:shadow-[3px_3px_0_rgba(var(--primary),0.4)] disabled:opacity-50 disabled:cursor-not-allowed font-mono overflow-hidden",
               )}
