@@ -678,7 +678,7 @@ export function MetricSnapshotForm({
               isPlanning && "border-amber-500 bg-amber-500 hover:bg-amber-500/90 shadow-[6px_6px_0_rgba(245,158,11,0.3)] hover:shadow-[3px_3px_0_rgba(245,158,11,0.3)]"
             )}
           >
-            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 rounded-[8px]" />
+            <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-[8px] pointer-events-none" />
             {mutation.isPending ? (
               <span className="relative z-10 flex items-center gap-2">
                 <span className="h-4 w-4 rounded-[3px] bg-primary-foreground/30 animate-pulse" />
