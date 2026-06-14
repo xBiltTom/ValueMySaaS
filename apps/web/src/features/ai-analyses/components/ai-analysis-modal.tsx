@@ -115,7 +115,7 @@ export function AiAnalysisModal({
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-primary/10 p-2.5 text-primary">
+            <div className="rounded-[8px] border-2 border-primary/30 bg-primary/10 p-2.5 text-primary shadow-[4px_4px_0_rgba(var(--primary),0.1)]">
               <BrainCircuit className="h-5 w-5" />
             </div>
             <div>
@@ -134,37 +134,43 @@ export function AiAnalysisModal({
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 mt-2">
           {!isPlanning && (
             <label className="block">
-              <span className="text-sm font-semibold mb-1.5 block">Tipo de análisis</span>
-              <Select className="w-full rounded-xl border border-border px-3 py-2.5 focus:ring-2 focus:ring-primary/20" {...form.register("analysis_type")}>
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground font-mono mb-1.5 flex items-center gap-1.5">
+                <span className="text-primary">&gt;</span> Tipo de análisis
+              </span>
+              <Select className="w-full" {...form.register("analysis_type")}>
                 {analysisTypes.map((type) => (
                   <option key={type} value={type}>
                     {analysisLabels[type]}
                   </option>
                 ))}
               </Select>
-              <p className="mt-1.5 text-xs text-muted-foreground">{analysisDescriptions[analysisType]}</p>
+              <p className="mt-1.5 text-[10px] font-mono text-muted-foreground uppercase">{analysisDescriptions[analysisType]}</p>
             </label>
           )}
 
           {!isPlanning && analysisType === "CUSTOM" && (
             <label className="block">
-              <span className="text-sm font-semibold mb-1.5 block">Tu pregunta</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground font-mono mb-1.5 flex items-center gap-1.5">
+                <span className="text-primary">&gt;</span> Tu pregunta
+              </span>
               <Textarea
-                className="w-full rounded-xl border border-border px-3 py-2.5 focus:ring-2 focus:ring-primary/20 resize-none"
+                className="w-full"
                 placeholder="Ej: ¿Qué riesgos debería priorizar antes de invertir en adquisición?"
                 rows={3}
                 {...form.register("custom_question")}
               />
               {form.formState.errors.custom_question && (
-                <p className="mt-1 text-xs text-status-danger-fg font-medium">{form.formState.errors.custom_question.message}</p>
+                <p className="mt-1.5 text-[10px] font-mono text-destructive uppercase">{form.formState.errors.custom_question.message}</p>
               )}
             </label>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
-              <span className="text-sm font-semibold mb-1.5 block">API Key</span>
-              <Select className="w-full rounded-xl border border-border px-3 py-2.5 focus:ring-2 focus:ring-primary/20" {...form.register("ai_key_id")}>
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground font-mono mb-1.5 flex items-center gap-1.5">
+                <span className="text-primary">&gt;</span> API Key
+              </span>
+              <Select className="w-full" {...form.register("ai_key_id")}>
                 {hasCredits && (
                   <option value="">
                     Créditos del sistema ({currentUser?.ai_credits ?? 0} restantes)
@@ -178,13 +184,15 @@ export function AiAnalysisModal({
               </Select>
             </label>
             <label className="block">
-              <span className="text-sm font-semibold mb-1.5 block">Modelo (opcional)</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground font-mono mb-1.5 flex items-center gap-1.5">
+                <span className="text-primary">&gt;</span> Modelo (opcional)
+              </span>
               {dynamicModelsQuery.isLoading ? (
-                <div className="w-full h-[42px] px-3 flex items-center bg-background border border-border rounded-xl text-sm text-muted-foreground">
+                <div className="h-10 w-full rounded-[6px] border-2 border-border/60 bg-background/50 px-3 flex items-center text-[10px] font-mono text-muted-foreground uppercase">
                   Cargando modelos...
                 </div>
               ) : selectedKey && (dynamicModelsQuery.data?.items?.length || providerModels[selectedKey.provider]?.length > 0) ? (
-                <Select className="w-full rounded-xl border border-border px-3 py-2.5 focus:ring-2 focus:ring-primary/20" {...form.register("model_name")}>
+                <Select className="w-full" {...form.register("model_name")}>
                   <option value="">-- Autoselección --</option>
                   {((dynamicModelsQuery.data?.items?.length ? dynamicModelsQuery.data.items : null) || providerModels[selectedKey.provider]).map((model) => (
                     <option key={model.id} value={model.id}>{model.name}</option>
@@ -192,7 +200,7 @@ export function AiAnalysisModal({
                 </Select>
               ) : (
                 <Input
-                  className="w-full rounded-xl border border-border px-3 py-2.5 focus:ring-2 focus:ring-primary/20"
+                  className="w-full"
                   placeholder={selectedKey ? providerHints[selectedKey.provider] : ""}
                   {...form.register("model_name")}
                 />
@@ -200,12 +208,12 @@ export function AiAnalysisModal({
             </label>
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="ghost" onClick={onClose} className="rounded-xl">
+          <div className="flex justify-end gap-3 pt-3">
+            <Button type="button" variant="ghost" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit" className="rounded-xl bg-primary hover:opacity-90 text-primary-foreground shadow-md">
-              <Sparkles className="h-4 w-4 mr-2" />
+            <Button type="submit">
+              <Sparkles className="h-3.5 w-3.5 mr-1" />
               Iniciar análisis
             </Button>
           </div>
