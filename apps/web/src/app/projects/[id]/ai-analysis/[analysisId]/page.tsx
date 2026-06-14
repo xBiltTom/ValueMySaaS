@@ -59,7 +59,8 @@ export default function AiAnalysisDetailPage() {
       hasStartedRef.current = true;
       complete("", {
         body: {
-          ai_key_id: keyId,
+          ai_key_id: keyId === "CREDITS" ? undefined : keyId,
+          use_system_credits: keyId === "CREDITS",
           analysis_type: type,
           model_name: model || undefined,
           custom_question: q || undefined,
@@ -75,6 +76,7 @@ export default function AiAnalysisDetailPage() {
     if (isFinished) {
       queryClient.invalidateQueries({ queryKey: ["ai-analyses", projectId] });
       queryClient.invalidateQueries({ queryKey: ["ai-analysis", projectId, analysisId] });
+      queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
       
       const timer = setTimeout(() => {
         router.replace(`/projects/${projectId}/ai-analysis/${analysisId}`);

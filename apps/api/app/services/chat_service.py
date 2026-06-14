@@ -23,6 +23,7 @@ from app.repositories.conversation_repository import ConversationRepository
 from app.repositories.credit_transaction_repository import CreditTransactionRepository
 from app.repositories.saas_project_repository import SaasProjectRepository
 from app.repositories.system_ai_key_repository import SystemAiKeyRepository
+from app.repositories.system_config_repository import SystemConfigRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.chat_message import ChatMessageListResponse, SendChatMessageRequest, SendChatMessageResponse
 from app.services.ai_context_service import AiContextService
@@ -130,6 +131,7 @@ class ChatService:
         credentials = await self.credit_service.resolve_llm_credentials(
             user=user,
             ai_key_id=payload.ai_key_id,
+            use_system_credits=payload.use_system_credits,
         )
 
         # Guardar el mensaje del usuario
@@ -250,6 +252,7 @@ class ChatService:
         credentials = await self.credit_service.resolve_llm_credentials(
             user=user,
             ai_key_id=payload.ai_key_id,
+            use_system_credits=payload.use_system_credits,
         )
 
         actual_message = payload.message or (payload.messages[-1].get("content", "") if payload.messages else "")
@@ -309,6 +312,8 @@ class ChatService:
 
             # New session required: FastAPI closes the request session before the generator finishes.
             try:
+                import logging
+                logging.getLogger(__name__).info(f"DB COMMIT START: credit_used={credentials.credit_used}, provider={credentials.provider}, ai_key_id={payload.ai_key_id}")
                 async with AsyncSessionLocal() as session:
                     chat_repo = ChatMessageRepository(session)
                     conv_repo = ConversationRepository(session)
@@ -350,6 +355,7 @@ class ChatService:
                             ai_key_repository=AiProviderKeyRepository(session),
                             system_ai_key_repository=SystemAiKeyRepository(session),
                             credit_transaction_repository=CreditTransactionRepository(session),
+                            system_config_repository=SystemConfigRepository(session),
                         )
                         await credit_svc.consume_credit(
                             user_id=owner_id,
@@ -358,6 +364,9 @@ class ChatService:
                         )
                         await session.commit()
             except Exception as db_e:
+                import traceback
+                with open("/tmp/debug.log", "a") as f:
+                    f.write(f"DB Error: {str(db_e)}\n{traceback.format_exc()}\n")
                 logger.error(f"Error guardando historial del chat en DB: {db_e}")
                 yield f"\n[Error interno guardando historial: {str(db_e)}]\n"
 

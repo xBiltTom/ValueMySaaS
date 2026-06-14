@@ -116,7 +116,7 @@ function PlanningKpiCards({
     VALIDATE_FIRST: { label: "VALIDAR PRIMERO", color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/30", icon: HelpCircle },
     RETHINK: { label: "REPLANTEAR", color: "text-destructive", bg: "bg-destructive/10 border-destructive/30", icon: AlertTriangle },
   };
-  const verdict = planningAiOutput ? verdictConfig[planningAiOutput.verdict] : null;
+  const verdict = planningAiOutput ? verdictConfig[planningAiOutput.verdict as keyof typeof verdictConfig] : null;
   const VerdictIcon = verdict?.icon ?? CheckCircle2;
 
   return (

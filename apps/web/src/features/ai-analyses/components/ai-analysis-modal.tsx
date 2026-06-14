@@ -52,7 +52,7 @@ export function AiAnalysisModal({
   const form = useForm<AiAnalysisFormValues>({
     resolver: zodResolver(aiAnalysisSchema),
     defaultValues: {
-      ai_key_id: firstKey?.id || "",
+      ai_key_id: firstKey?.id || "CREDITS",
       analysis_type: isPlanning ? "FULL_DIAGNOSIS" : "FULL_DIAGNOSIS",
       model_name: firstKey ? providerHints[firstKey.provider] : "",
       custom_question: "",
@@ -62,8 +62,8 @@ export function AiAnalysisModal({
   const selectedKeyId = useWatch({ control: form.control, name: "ai_key_id" });
   const analysisType = useWatch({ control: form.control, name: "analysis_type" });
   const selectedKey = useMemo(
-    () => activeKeys.find((key) => key.id === selectedKeyId) || firstKey,
-    [activeKeys, firstKey, selectedKeyId]
+    () => activeKeys.find((key) => key.id === selectedKeyId),
+    [activeKeys, selectedKeyId]
   );
 
   const dynamicModelsQuery = useQuery({
@@ -134,7 +134,7 @@ export function AiAnalysisModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <div className="flex items-center gap-3 pr-6">
+          <div className="flex items-center gap-3 pr-10">
             <div className="rounded-[8px] border-2 border-primary/30 bg-primary/10 p-2.5 text-primary shadow-[4px_4px_0_rgba(var(--primary),0.1)] shrink-0">
               <BrainCircuit className="h-5 w-5" />
             </div>
@@ -192,7 +192,7 @@ export function AiAnalysisModal({
               </span>
               <Select className="w-full" {...form.register("ai_key_id")}>
                 {hasCredits && (
-                  <option value="" disabled={!systemCreditsEnabled}>
+                  <option value="CREDITS" disabled={!systemCreditsEnabled}>
                     {systemCreditsEnabled 
                       ? `Créditos del sistema (${currentUser?.ai_credits ?? 0} restantes)` 
                       : `Créditos desactivados temporalmente`}
@@ -206,7 +206,7 @@ export function AiAnalysisModal({
               </Select>
             </label>
 
-            {selectedKeyId !== "" ? (
+            {selectedKeyId !== "CREDITS" ? (
               <label className="block">
                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground font-mono mb-1.5 flex items-center gap-1.5">
                   <span className="text-primary">&gt;</span> Modelo (opcional)

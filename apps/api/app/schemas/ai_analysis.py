@@ -27,6 +27,10 @@ class AiAnalysisCreate(BaseModel):
         default=None,
         description="ID de tu API Key propia. Si no se provee, se usarán créditos del sistema.",
     )
+    use_system_credits: bool = Field(
+        default=False,
+        description="Indica si se deben usar créditos del sistema explícitamente.",
+    )
     analysis_type: AiAnalysisType
     model_name: str | None = Field(
         default=None,

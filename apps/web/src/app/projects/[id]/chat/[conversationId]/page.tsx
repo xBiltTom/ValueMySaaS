@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useParams, useRouter } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingState } from "@/components/shared/loading-state";
@@ -23,6 +23,7 @@ export default function ConversationPage() {
   const params = useParams<{ id: string; conversationId: string }>();
   const projectId = params.id;
   const conversationId = params.conversationId;
+  const queryClient = useQueryClient();
 
   const [selectedKeyId, setSelectedKeyId] = useState("CREDITS");
   const [selectedModel, setSelectedModel] = useState("");
@@ -119,6 +120,8 @@ export default function ConversationPage() {
         }
       }
       messagesQuery.refetch();
+      queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
     } catch (e: any) {
       setChatError(e);
       // Remove assistant placeholder on error
@@ -208,8 +211,8 @@ export default function ConversationPage() {
             <div className="flex items-center gap-3">
               <ChatModelSelector
                 activeKeys={activeKeys}
-                selectedKeyId={selectedKeyId}
-                setSelectedKeyId={handleKeyChange}
+                selectedKeyId={selectedKeyId} 
+                setSelectedKeyId={handleKeyChange} 
                 selectedModel={selectedModel}
                 setSelectedModel={handleModelChange}
               />

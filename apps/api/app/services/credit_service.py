@@ -58,6 +58,7 @@ class CreditService:
         *,
         user: User,
         ai_key_id: UUID | None,
+        use_system_credits: bool = False,
     ) -> LlmCredentials:
         """Resuelve qué credenciales usar para llamar al LLM.
 
@@ -67,20 +68,21 @@ class CreditService:
         """
         # --- Caso 1: BYOK ---
         key = None
-        if ai_key_id is not None:
-            key = await self.ai_key_repository.get_active_by_id_for_user(
-                key_id=ai_key_id, user_id=user.id
-            )
-            if key is None:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="API Key propia no encontrada o inactiva.",
+        if not use_system_credits:
+            if ai_key_id is not None:
+                key = await self.ai_key_repository.get_active_by_id_for_user(
+                    key_id=ai_key_id, user_id=user.id
                 )
-        else:
-            # Intentar obtener la primera API Key activa del usuario (fallback automático a BYOK)
-            keys = await self.ai_key_repository.list_by_user(user_id=user.id, active_only=True, limit=1)
-            if keys:
-                key = keys[0]
+                if key is None:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="API Key propia no encontrada o inactiva.",
+                    )
+            else:
+                # Intentar obtener la primera API Key activa del usuario (fallback automático a BYOK)
+                keys = await self.ai_key_repository.list_by_user(user_id=user.id, active_only=True, limit=1)
+                if keys:
+                    key = keys[0]
 
         if key is not None:
             try:

@@ -428,7 +428,7 @@ function KeysTab({ keys, isLoading, queryClient }: {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-bold text-sm">{k.provider}</span>
-                <span className="text-[10px] text-muted-foreground border border-border/60 px-1.5 py-0.5">#{k.priority}</span>
+                <span className="text-[10px] text-muted-foreground border border-border/60 px-1.5 py-0.5">Prioridad: {k.priority}</span>
                 <span className="text-xs text-muted-foreground truncate">{k.label}</span>
                 {k.key_last_four && <span className="font-mono text-[10px] text-muted-foreground">••••{k.key_last_four}</span>}
               </div>

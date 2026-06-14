@@ -26,6 +26,7 @@ from app.repositories.metric_snapshot_repository import MetricSnapshotRepository
 from app.repositories.saas_project_repository import SaasProjectRepository
 from app.repositories.saas_score_repository import SaasScoreRepository
 from app.repositories.system_ai_key_repository import SystemAiKeyRepository
+from app.repositories.system_config_repository import SystemConfigRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.ai_analysis import AiAnalysisCreate, AiAnalysisListResponse, PlanningAnalysisOutput
 from app.services.ai_context_service import AiContextService
@@ -305,6 +306,7 @@ class AiAnalysisService:
                             ai_key_repository=AiProviderKeyRepository(session),
                             system_ai_key_repository=SystemAiKeyRepository(session),
                             credit_transaction_repository=CreditTransactionRepository(session),
+                            system_config_repository=SystemConfigRepository(session),
                         )
                         await credit_svc.consume_credit(
                             user_id=owner_id,
@@ -389,7 +391,11 @@ class AiAnalysisService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
 
         phase = self._get_project_phase(project.stage)
-        credentials = await self.credit_service.resolve_llm_credentials(user=user, ai_key_id=payload.ai_key_id)
+        credentials = await self.credit_service.resolve_llm_credentials(
+            user=user,
+            ai_key_id=payload.ai_key_id,
+            use_system_credits=payload.use_system_credits,
+        )
 
         if phase == ProjectPhase.PLANNING:
             system_prompt = PLANNING_SYSTEM_PROMPT

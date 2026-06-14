@@ -47,6 +47,7 @@ export function ChatInputForm({
       {
         body: {
           ai_key_id: selectedKeyId === "CREDITS" ? undefined : selectedKeyId,
+          use_system_credits: selectedKeyId === "CREDITS",
           model_name: selectedModel || undefined,
           message: values.message,
         },

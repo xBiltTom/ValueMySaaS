@@ -149,8 +149,9 @@ class MetricCalculationService:
         # Load provided metrics
         for key in METRIC_KEYS:
             value = getattr(snapshot, key, None)
-            if value is None and snapshot.custom_metrics:
-                value = snapshot.custom_metrics.get(key)
+            custom_metrics = getattr(snapshot, "custom_metrics", None)
+            if value is None and custom_metrics:
+                value = custom_metrics.get(key)
             values[key] = value
             if value is not None:
                 metrics[key] = CalculatedMetric(
