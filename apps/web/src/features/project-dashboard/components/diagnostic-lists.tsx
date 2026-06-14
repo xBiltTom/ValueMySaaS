@@ -56,64 +56,71 @@ export function DiagnosticList({
         </div>
       </button>
 
-      {/* Items */}
-      {expanded && (
-        <div className="relative z-10 px-5 pb-5 space-y-3">
-          {items?.length ? (
-            items.map((item, index) => {
-              const title_ = textFrom(item, "title") || textFrom(item, "code") || "Item";
-              const message = textFrom(item, "message") || JSON.stringify(item);
-              const priority = textFrom(item, "priority");
-              const severity = textFrom(item, "severity");
+      {/* Items (Accordion Animation) */}
+      <div
+        className={cn(
+          "grid transition-all duration-300 ease-in-out",
+          expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        )}
+      >
+        <div className="overflow-hidden">
+          <div className="relative z-10 px-5 pb-5 space-y-3">
+            {items?.length ? (
+              items.map((item, index) => {
+                const title_ = textFrom(item, "title") || textFrom(item, "code") || "Item";
+                const message = textFrom(item, "message") || JSON.stringify(item);
+                const priority = textFrom(item, "priority");
+                const severity = textFrom(item, "severity");
 
-              return (
-                <div
-                  key={`${title}-${index}`}
-                  className={cn(
-                    "relative overflow-hidden rounded-[16px] border border-border/40 bg-background/50 p-4 transition-all hover:bg-card hover:shadow-md group/item",
-                  )}
-                >
-                  <div className={cn("absolute left-0 top-0 bottom-0 w-1 opacity-50 group-hover/item:opacity-100 transition-opacity", bgColor.split(" ")[0])} />
-                  
-                  <div className="flex items-start gap-4 pl-2">
-                    <TerminalSquare className={cn("mt-0.5 h-4 w-4 shrink-0 opacity-70", textColor)} />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <h3 className="text-xs font-black uppercase tracking-wider text-foreground">{title_}</h3>
-                        {priority && (
-                          <span className="rounded-[4px] bg-muted px-1.5 py-0.5 text-[9px] font-mono font-bold text-muted-foreground uppercase">
-                            PRIORITY:{priority}
-                          </span>
-                        )}
-                        {severity && (
-                          <span className={cn(
-                            "rounded-[4px] px-1.5 py-0.5 text-[9px] font-mono font-bold uppercase",
-                            severity === "HIGH" ? "bg-destructive/20 text-destructive" : "bg-amber-500/20 text-amber-500"
-                          )}>
-                            SEV:{severity}
-                          </span>
-                        )}
+                return (
+                  <div
+                    key={`${title}-${index}`}
+                    className={cn(
+                      "relative overflow-hidden rounded-[16px] border border-border/40 bg-background/50 p-4 transition-all hover:bg-card hover:shadow-md group/item",
+                    )}
+                  >
+                    <div className={cn("absolute left-0 top-0 bottom-0 w-1 opacity-50 group-hover/item:opacity-100 transition-opacity", bgColor.split(" ")[0])} />
+                    
+                    <div className="flex items-start gap-4 pl-2">
+                      <TerminalSquare className={cn("mt-0.5 h-4 w-4 shrink-0 opacity-70", textColor)} />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          <h3 className="text-xs font-black uppercase tracking-wider text-foreground">{title_}</h3>
+                          {priority && (
+                            <span className="rounded-[4px] bg-muted px-1.5 py-0.5 text-[9px] font-mono font-bold text-muted-foreground uppercase">
+                              PRIORITY:{priority}
+                            </span>
+                          )}
+                          {severity && (
+                            <span className={cn(
+                              "rounded-[4px] px-1.5 py-0.5 text-[9px] font-mono font-bold uppercase",
+                              severity === "HIGH" ? "bg-destructive/20 text-destructive" : "bg-amber-500/20 text-amber-500"
+                            )}>
+                              SEV:{severity}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] leading-relaxed text-muted-foreground font-medium">{message}</p>
                       </div>
-                      <p className="text-[11px] leading-relaxed text-muted-foreground font-medium">{message}</p>
                     </div>
                   </div>
-                </div>
-              );
-            })
-          ) : (
-            <div className="rounded-[16px] border border-dashed border-border/60 bg-background/30 px-4 py-8 text-center flex flex-col items-center gap-3">
-              <TerminalSquare className="h-6 w-6 text-muted-foreground/50" />
-              <p className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest">
-                {variant === "alert" 
-                  ? "SYS_OK: NO_ISSUES_DETECTED" 
-                  : variant === "strength" 
-                  ? "SYS_INFO: NO_STRENGTHS_FOUND" 
-                  : "SYS_INFO: NO_RECOMMENDATIONS"}
-              </p>
-            </div>
-          )}
+                );
+              })
+            ) : (
+              <div className="rounded-[16px] border border-dashed border-border/60 bg-background/30 px-4 py-8 text-center flex flex-col items-center gap-3">
+                <TerminalSquare className="h-6 w-6 text-muted-foreground/50" />
+                <p className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest">
+                  {variant === "alert" 
+                    ? "SYS_OK: NO_ISSUES_DETECTED" 
+                    : variant === "strength" 
+                    ? "SYS_INFO: NO_STRENGTHS_FOUND" 
+                    : "SYS_INFO: NO_RECOMMENDATIONS"}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

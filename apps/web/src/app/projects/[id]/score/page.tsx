@@ -80,7 +80,7 @@ export default function ProjectScorePage() {
         <div className="space-y-6">
           <ScoreOverview score={latestScoreQuery.data} />
           <ScoreBreakdown score={latestScoreQuery.data} />
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-6 lg:grid-cols-2 items-start">
             <DiagnosticList title="Fortalezas" items={latestScoreQuery.data.strengths} variant="strength" />
             <DiagnosticList title="Debilidades" items={latestScoreQuery.data.weaknesses} variant="alert" />
             <DiagnosticList title="Alertas" items={latestScoreQuery.data.alerts} variant="alert" />

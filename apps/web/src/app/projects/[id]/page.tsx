@@ -239,7 +239,7 @@ export default function ProjectDashboardPage() {
 
           {/* Diagnostic alerts and recommendations */}
           {dashboard.latest_snapshot && (
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="grid gap-4 lg:grid-cols-2 items-start">
               <DiagnosticList
                 title="Alertas Críticas"
                 items={dashboard.alerts}
