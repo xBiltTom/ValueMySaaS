@@ -15,7 +15,7 @@ import { getProject, getProjectDashboard } from "@/features/project-dashboard/ap
 import { listAiAnalyses } from "@/features/ai-analyses/api";
 import { ProjectHeader } from "@/features/project-dashboard/components/project-header";
 import { ProjectScoreCard } from "@/features/project-dashboard/components/project-score-card";
-import { ProjectKpiCards } from "@/features/project-dashboard/components/project-kpi-cards";
+import { ProjectKpiCards, ProjectSecondaryKpiCards } from "@/features/project-dashboard/components/project-kpi-cards";
 import { ProjectHistoryChart } from "@/features/project-dashboard/components/project-history-chart";
 import { DiagnosticList } from "@/features/project-dashboard/components/diagnostic-lists";
 import { generateLatestScore } from "@/features/scoring/api";
@@ -196,6 +196,14 @@ export default function ProjectDashboardPage() {
                 isPlanning={isPlanning}
               />
             </div>
+          )}
+
+          {/* Secondary KPIs */}
+          {dashboard.latest_snapshot && (
+            <ProjectSecondaryKpiCards
+              metrics={dashboard.metric_cards}
+              isPlanning={isPlanning}
+            />
           )}
 
           {/* Charts section */}

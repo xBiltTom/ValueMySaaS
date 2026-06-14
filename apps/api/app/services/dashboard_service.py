@@ -372,8 +372,13 @@ class DashboardService:
             active_users=self._metric_value(calculation, "active_users"),
             conversion_rate=self._metric_value(calculation, "conversion_rate"),
             churn_rate=self._metric_value(calculation, "churn_rate"),
+            cac=self._metric_value(calculation, "cac"),
             retention_rate=self._metric_value(calculation, "retention_rate"),
             ltv_cac_ratio=self._metric_value(calculation, "ltv_cac_ratio"),
+            net_profit=self._metric_value(calculation, "net_profit"),
+            arpu=self._metric_value(calculation, "arpu"),
+            ltv=self._metric_value(calculation, "ltv"),
+            mrr_growth_rate=self._metric_value(calculation, "mrr_growth_rate"),
             runway_months=self._metric_value(calculation, "runway_months"),
             uptime_percentage=self._metric_value(calculation, "uptime_percentage"),
         )

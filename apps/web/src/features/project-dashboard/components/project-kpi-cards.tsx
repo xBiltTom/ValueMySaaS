@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, Banknote, CircleDollarSign, Users, TrendingDown, Target, TerminalSquare, HelpCircle } from "lucide-react";
+import { Activity, Banknote, CircleDollarSign, Users, TrendingDown, Target, TerminalSquare, HelpCircle, Coins, ArrowUpRight, Clock, Percent, LineChart, ShieldCheck } from "lucide-react";
 import { MaybeNumber } from "@/types/api";
 import { cn } from "@/lib/utils";
 
@@ -94,9 +94,40 @@ export function ProjectKpiCards({
       <KpiCard icon={CircleDollarSign} label="MRR" value={display(metrics.mrr)} accent="text-emerald-500" tooltip="Monthly Recurring Revenue. Ingresos recurrentes y predecibles normalizados a un mes." />
       <KpiCard icon={Banknote} label="Revenue mensual" value={display(metrics.monthly_revenue)} tooltip="Total de ingresos del mes, incluyendo ventas únicas, setup fees y suscripciones." />
       <KpiCard icon={Users} label="Clientes pagos" value={display(metrics.paying_customers)} tooltip="Total de usuarios distintos que tienen una suscripción activa o han realizado pagos." />
-      <KpiCard icon={Activity} label="Usuarios activos" value={display(metrics.active_users)} tooltip="Número de usuarios únicos que interactúan con tu aplicación de manera frecuente." />
+      
+      <KpiCard icon={Coins} label="CAC" value={display(metrics.cac)} accent="text-amber-500" tooltip="Customer Acquisition Cost. Cuánto dinero cuesta adquirir un nuevo cliente de pago." />
+      <KpiCard icon={ArrowUpRight} label="LTV/CAC Ratio" value={metrics.ltv_cac_ratio !== null && metrics.ltv_cac_ratio !== undefined ? `${Number(metrics.ltv_cac_ratio).toFixed(2)}x` : "—"} accent="text-emerald-500" tooltip="Por cada $1 en adquisición, cuánto genera el cliente en su vida útil. >3x es el estándar de oro." />
       <KpiCard icon={TrendingDown} label="Churn rate" value={metrics.churn_rate !== null && metrics.churn_rate !== undefined ? `${(Number(metrics.churn_rate) * 100).toFixed(1)}%` : "—"} accent="text-destructive" tooltip="Porcentaje de clientes o ingresos que se pierden o cancelan durante un periodo determinado." />
+      
+      <KpiCard icon={Activity} label="Usuarios activos" value={display(metrics.active_users)} tooltip="Número de usuarios únicos que interactúan con tu aplicación de manera frecuente." />
+      <KpiCard icon={Clock} label="Runway" value={metrics.runway_months !== null && metrics.runway_months !== undefined ? `${Number(metrics.runway_months).toFixed(1)} mo` : "—"} tooltip="Meses estimados antes de quedarse sin liquidez si los gastos e ingresos se mantienen iguales." />
       <KpiCard icon={TerminalSquare} label="Score general" value={score !== undefined && score !== null ? `${Number(score).toFixed(0)}/100` : "—"} accent="text-primary" tooltip="Puntuación heurística de salud basada en métricas reales de crecimiento, retención y finanzas." />
+    </div>
+  );
+}
+
+export function ProjectSecondaryKpiCards({
+  metrics,
+  isPlanning = false,
+}: {
+  metrics: Record<string, MaybeNumber>;
+  isPlanning?: boolean;
+}) {
+  if (isPlanning) {
+    return (
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4 mt-5">
+        <KpiCard icon={Banknote} label="Net Profit" value={display(metrics.net_profit)} tooltip="Utilidad neta proyectada." />
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-2 gap-4 md:grid-cols-5 mt-5">
+      <KpiCard icon={Banknote} label="Utilidad Neta" value={display(metrics.net_profit)} tooltip="Ingresos recurrentes menos costos operativos (Net Profit)." />
+      <KpiCard icon={Users} label="ARPU" value={display(metrics.arpu)} tooltip="Average Revenue Per User. Cuánto paga en promedio cada cliente activo." />
+      <KpiCard icon={CircleDollarSign} label="LTV" value={display(metrics.ltv)} tooltip="Customer Lifetime Value. Dinero total que dejará un cliente durante toda su vida útil." />
+      <KpiCard icon={LineChart} label="MRR Growth" value={metrics.mrr_growth_rate !== null && metrics.mrr_growth_rate !== undefined ? `${(Number(metrics.mrr_growth_rate) * 100).toFixed(1)}%` : "—"} accent="text-primary" tooltip="Crecimiento porcentual del MRR comparado con el mes anterior." />
+      <KpiCard icon={Percent} label="Conversión" value={metrics.conversion_rate !== null && metrics.conversion_rate !== undefined ? `${(Number(metrics.conversion_rate) * 100).toFixed(1)}%` : "—"} tooltip="Porcentaje de usuarios registrados que pagan." />
     </div>
   );
 }

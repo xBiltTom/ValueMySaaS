@@ -94,8 +94,13 @@ class MetricCards(BaseModel):
     active_users: Decimal | int | str | None = None
     conversion_rate: Decimal | int | str | None = None
     churn_rate: Decimal | int | str | None = None
+    cac: Decimal | int | str | None = None
     retention_rate: Decimal | int | str | None = None
     ltv_cac_ratio: Decimal | int | str | None = None
+    net_profit: Decimal | int | str | None = None
+    arpu: Decimal | int | str | None = None
+    ltv: Decimal | int | str | None = None
+    mrr_growth_rate: Decimal | int | str | None = None
     runway_months: Decimal | int | str | None = None
     uptime_percentage: Decimal | int | str | None = None
 

@@ -11,10 +11,9 @@ import { ErrorState } from "@/components/shared/error-state";
 import { LoadingState } from "@/components/shared/loading-state";
 import { getApiErrorMessage } from "@/lib/api-client";
 import { getProject } from "@/features/project-dashboard/api";
-import { listMetricSnapshots, getLatestMetricCalculation } from "@/features/metrics/api";
+import { listMetricSnapshots } from "@/features/metrics/api";
 import { MetricSnapshotForm } from "@/features/metrics/components/metric-snapshot-form";
 import { MetricSnapshotList } from "@/features/metrics/components/metric-snapshot-list";
-import { MetricCalculationPanel } from "@/features/metrics/components/metric-calculation-panel";
 import { cn } from "@/lib/utils";
 
 export default function ProjectMetricsPage() {
@@ -38,12 +37,6 @@ export default function ProjectMetricsPage() {
   const snapshotsQuery = useQuery({
     queryKey: ["metric-snapshots", projectId],
     queryFn: () => listMetricSnapshots(projectId),
-  });
-  const calculationQuery = useQuery({
-    queryKey: ["metric-calculations", projectId, "latest"],
-    queryFn: () => getLatestMetricCalculation(projectId),
-    enabled: Boolean(snapshotsQuery.data?.items.length),
-    retry: false,
   });
 
   const project = projectQuery.data;
@@ -188,12 +181,6 @@ export default function ProjectMetricsPage() {
                       window.scrollTo({ top: 0, behavior: "smooth" });
                     }}
                   />
-                ) : null}
-                {calculationQuery.data ? (
-                  <MetricCalculationPanel calculation={calculationQuery.data} projectStage={project?.stage} />
-                ) : null}
-                {calculationQuery.isError && snapshotsQuery.data?.items.length ? (
-                  <ErrorState title="Cálculos no disponibles" message={getApiErrorMessage(calculationQuery.error)} />
                 ) : null}
               </div>
             </div>
