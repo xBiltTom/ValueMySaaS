@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { ArrowLeft, Terminal, Loader2, Cpu } from "lucide-react";
+import { ArrowLeft, Terminal, Loader2, Cpu, Megaphone, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -13,12 +14,14 @@ import { ErrorState } from "@/components/shared/error-state";
 import { getApiErrorMessage } from "@/lib/api-client";
 import { setAuthToken } from "@/lib/auth-token";
 import { login } from "@/features/auth/api";
+import { getAnnouncement } from "@/features/admin/api";
 import { loginSchema, LoginFormValues } from "@/features/auth/schemas";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function LoginPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [announcement, setAnnouncement] = useState<string | null>(null);
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
@@ -29,9 +32,47 @@ export default function LoginPage() {
     onSuccess: async (data) => {
       setAuthToken(data.access_token);
       await queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+      // Fetch system announcement before redirecting
+      try {
+        const ann = await getAnnouncement();
+        if (ann.has_announcement) {
+          setAnnouncement(ann.announcement);
+          // Redirect after user dismisses banner
+          return;
+        }
+      } catch {
+        // Silently ignore — announcement is non-critical
+      }
       router.replace("/dashboard");
     },
   });
+
+  // If announcement is showing, render it first
+  if (announcement) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center bg-background text-foreground px-5 py-12">
+        <div className="w-full max-w-md animate-in fade-in zoom-in-95 duration-300">
+          <div className="border-2 border-primary/30 bg-primary/5 rounded-none p-8 space-y-5">
+            <div className="flex items-center gap-3">
+              <span className="p-2 border-2 border-primary/30 bg-primary/10">
+                <Megaphone className="h-5 w-5 text-primary" />
+              </span>
+              <p className="text-xs font-black uppercase tracking-widest text-primary">Anuncio del Sistema</p>
+            </div>
+            <p className="text-sm font-medium leading-relaxed text-foreground border-l-2 border-primary/40 pl-4">
+              {announcement}
+            </p>
+            <Button
+              className="w-full rounded-none h-10"
+              onClick={() => router.replace("/dashboard")}
+            >
+              Entendido, ir al Dashboard
+            </Button>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="flex min-h-screen flex-col bg-background text-foreground relative selection:bg-primary/30 selection:text-primary-foreground overflow-hidden">

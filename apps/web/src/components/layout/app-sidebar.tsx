@@ -20,7 +20,7 @@ export function AppSidebar({ user }: { user?: User | null }) {
 
   const navItems = [...items];
   if (user?.role === "ADMIN") {
-    navItems.push({ href: "/dashboard/admin", label: "Administración", icon: Shield });
+    navItems.push({ href: "/admin", label: "Administración", icon: Shield });
   }
 
   return (

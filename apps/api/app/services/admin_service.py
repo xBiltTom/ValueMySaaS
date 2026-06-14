@@ -11,6 +11,7 @@ from app.repositories.ai_analysis_repository import AiAnalysisRepository
 from app.repositories.credit_transaction_repository import CreditTransactionRepository
 from app.repositories.saas_project_repository import SaasProjectRepository
 from app.repositories.system_ai_key_repository import SystemAiKeyRepository
+from app.repositories.system_config_repository import SystemConfigRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.admin import AdminStatsResponse, AdminUserListResponse, AdminUserRead
 from app.services.credit_service import CreditService
@@ -25,6 +26,7 @@ class AdminService:
         ai_analysis_repository: AiAnalysisRepository,
         credit_service: CreditService,
         saas_project_repository: SaasProjectRepository,
+        system_config_repository: SystemConfigRepository,
     ) -> None:
         self.user_repository = user_repository
         self.credit_transaction_repository = credit_transaction_repository
@@ -32,6 +34,7 @@ class AdminService:
         self.ai_analysis_repository = ai_analysis_repository
         self.credit_service = credit_service
         self.saas_project_repository = saas_project_repository
+        self.system_config_repository = system_config_repository
 
     async def list_users(
         self,
@@ -136,3 +139,38 @@ class AdminService:
             total_system_keys=total_system_keys,
             active_system_keys=active_system_keys,
         )
+
+    async def toggle_user_active(self, *, user_id: UUID, is_active: bool) -> None:
+        """Activa o desactiva un usuario."""
+        user = await self.user_repository.get_by_id(user_id)
+        if user is None:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+        await self.user_repository.set_active(user_id=user_id, is_active=is_active)
+
+    async def bulk_grant_credits(
+        self,
+        *,
+        delta: int,
+        description: str | None,
+        admin_id: UUID,
+    ) -> int:
+        """Otorga créditos a todos los usuarios activos. Retorna el número de usuarios afectados."""
+        users = await self.user_repository.list_all(limit=10000, offset=0)
+        active_users = [u for u in users if u.is_active]
+        for user in active_users:
+            await self.credit_service.grant_credits(
+                user_id=user.id,
+                delta=delta,
+                granted_by_admin_id=admin_id,
+                description=description,
+            )
+        return len(active_users)
+
+    async def get_config(self) -> list:
+        return await self.system_config_repository.list_all()
+
+    async def set_config(self, *, key: str, value: str) -> object:
+        return await self.system_config_repository.set(key=key, value=value)
+
+    async def get_announcement(self) -> str:
+        return await self.system_config_repository.get_value("login_announcement")

@@ -17,6 +17,7 @@ from app.schemas.admin import (
     AdminStatsResponse,
     AdminUserListResponse,
     AdminUserRead,
+    BulkGrantCreditsRequest,
     CreditGrantRequest,
     CreditTransactionListResponse,
     CreditTransactionRead,
@@ -25,6 +26,9 @@ from app.schemas.admin import (
     SystemAiKeyRead,
     SystemAiKeyUpdate,
     SystemAiKeyVerifyResponse,
+    SystemConfigRead,
+    SystemConfigUpdate,
+    ToggleUserActiveRequest,
 )
 from app.services.admin_service import AdminService
 from app.services.system_ai_key_service import SystemAiKeyService
@@ -198,3 +202,77 @@ async def verify_system_key(
     """Verifica que una API Key del sistema sea válida haciendo una llamada de prueba al LLM."""
     result = await key_service.verify_key(key_id=key_id, model_name=model_name)
     return SystemAiKeyVerifyResponse(**result)
+
+
+# ---------------------------------------------------------------------------
+# Toggle user active status
+# ---------------------------------------------------------------------------
+
+@router.patch("/users/{user_id}/active", status_code=status.HTTP_204_NO_CONTENT)
+async def toggle_user_active(
+    user_id: UUID,
+    payload: ToggleUserActiveRequest,
+    admin: User = Depends(require_admin),
+    admin_service: AdminService = Depends(get_admin_service),
+):
+    """Activa o desactiva un usuario del sistema."""
+    await admin_service.toggle_user_active(user_id=user_id, is_active=payload.is_active)
+
+
+# ---------------------------------------------------------------------------
+# Bulk credit grant
+# ---------------------------------------------------------------------------
+
+@router.post("/credits/bulk-grant")
+async def bulk_grant_credits(
+    payload: BulkGrantCreditsRequest,
+    admin: User = Depends(require_admin),
+    admin_service: AdminService = Depends(get_admin_service),
+):
+    """Otorga créditos a TODOS los usuarios activos del sistema."""
+    affected = await admin_service.bulk_grant_credits(
+        delta=payload.delta,
+        description=payload.description,
+        admin_id=admin.id,
+    )
+    return {"affected_users": affected, "credits_per_user": payload.delta}
+
+
+# ---------------------------------------------------------------------------
+# System Config
+# ---------------------------------------------------------------------------
+
+@router.get("/config", response_model=list[SystemConfigRead])
+async def get_system_config(
+    admin: User = Depends(require_admin),
+    admin_service: AdminService = Depends(get_admin_service),
+):
+    """Devuelve todas las configuraciones del sistema."""
+    return await admin_service.get_config()
+
+
+@router.put("/config/{key}", response_model=SystemConfigRead)
+async def update_system_config(
+    key: str,
+    payload: SystemConfigUpdate,
+    admin: User = Depends(require_admin),
+    admin_service: AdminService = Depends(get_admin_service),
+):
+    """Actualiza el valor de una clave de configuración del sistema."""
+    ALLOWED_KEYS = {"default_initial_credits", "login_announcement", "system_credits_enabled"}
+    if key not in ALLOWED_KEYS:
+        raise HTTPException(status_code=400, detail=f"Clave '{key}' no permitida.")
+    return await admin_service.set_config(key=key, value=payload.value)
+
+
+# ---------------------------------------------------------------------------
+# Public: announcement (no auth required)
+# ---------------------------------------------------------------------------
+
+@router.get("/public/announcement")
+async def get_announcement(
+    admin_service: AdminService = Depends(get_admin_service),
+):
+    """Endpoint público. Devuelve el anuncio activo para mostrar al iniciar sesión."""
+    text = await admin_service.get_announcement()
+    return {"announcement": text, "has_announcement": bool(text.strip())}

@@ -18,6 +18,7 @@ from app.repositories.report_repository import ReportRepository
 from app.repositories.saas_project_repository import SaasProjectRepository
 from app.repositories.saas_score_repository import SaasScoreRepository
 from app.repositories.system_ai_key_repository import SystemAiKeyRepository
+from app.repositories.system_config_repository import SystemConfigRepository
 from app.repositories.user_repository import UserRepository
 from app.services.admin_service import AdminService
 from app.services.ai_analysis_service import AiAnalysisService
@@ -277,6 +278,7 @@ def get_admin_service(
         ai_analysis_repository=AiAnalysisRepository(db),
         credit_service=credit_service,
         saas_project_repository=SaasProjectRepository(db),
+        system_config_repository=SystemConfigRepository(db),
     )
 
 

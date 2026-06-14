@@ -148,3 +148,29 @@ class AdminStatsResponse(BaseModel):
     credits_consumed_today: int
     total_system_keys: int
     active_system_keys: int
+
+
+# ---------------------------------------------------------------------------
+# System Config
+# ---------------------------------------------------------------------------
+
+class SystemConfigRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    key: str
+    value: str
+    description: str | None
+    updated_at: datetime
+
+
+class SystemConfigUpdate(BaseModel):
+    value: str = Field(max_length=2000)
+
+
+class BulkGrantCreditsRequest(BaseModel):
+    """Otorgar créditos a TODOS los usuarios activos."""
+    delta: int = Field(gt=0, description="Créditos a agregar a cada usuario activo.")
+    description: str | None = Field(default="Bono global del administrador", max_length=500)
+
+
+class ToggleUserActiveRequest(BaseModel):
+    is_active: bool

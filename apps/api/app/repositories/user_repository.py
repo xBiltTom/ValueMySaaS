@@ -114,3 +114,21 @@ class UserRepository:
         result = await self.db.execute(statement)
         return result.scalar_one()
 
+    async def set_active(self, *, user_id: UUID, is_active: bool) -> None:
+        """Activa o desactiva un usuario (no lo elimina)."""
+        await self.db.execute(
+            update(User)
+            .where(User.id == user_id, User.deleted_at.is_(None))
+            .values(is_active=is_active)
+        )
+        await self.db.flush()
+
+    async def set_credits(self, *, user_id: UUID, credits: int) -> None:
+        """Establece los créditos de un usuario a un valor exacto."""
+        await self.db.execute(
+            update(User)
+            .where(User.id == user_id, User.deleted_at.is_(None))
+            .values(ai_credits=credits)
+        )
+        await self.db.flush()
+
