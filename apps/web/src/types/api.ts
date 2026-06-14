@@ -227,6 +227,27 @@ export type SaasScoreListResponse = {
   offset: number;
 };
 
+export type IdeaVerdict = "BUILD" | "VALIDATE_FIRST" | "RETHINK";
+export type InfrastructureComplexity = "LOW" | "MEDIUM" | "HIGH" | "VERY_HIGH";
+
+export type PlanningAiOutput = {
+  overall_score: number;
+  problem_clarity_score: number;
+  value_prop_score: number;
+  market_fit_score: number;
+  business_model_score: number;
+  pricing_feasibility_score: number;
+  verdict: IdeaVerdict;
+  verdict_rationale: string;
+  market_size_estimate: string;
+  infrastructure_complexity: InfrastructureComplexity;
+  breakeven_customers: string;
+  strengths: string[];
+  risks: string[];
+  next_steps: string[];
+  analysis_id: string;
+};
+
 export type ProjectDashboardResponse = {
   project: {
     id: string;
@@ -260,6 +281,7 @@ export type ProjectDashboardResponse = {
     "mrr" | "monthly_revenue" | "paying_customers" | "active_users" | "churn_rate" | "overall_score",
     Array<{ date: string; label: string | null; value: MaybeNumber }>
   >;
+  planning_ai_output: PlanningAiOutput | null;
 };
 
 export type ReportType = "BASIC" | "EXECUTIVE" | "AI_ASSISTED" | "SCENARIO_SIMULATION";
@@ -341,6 +363,8 @@ export type AiAnalysis = {
   tokens_output: number | null;
   estimated_cost: string | number | null;
   created_at: string;
+  // Planning-specific structured output
+  planning_output?: PlanningAiOutput | null;
 };
 
 export type AiAnalysisListResponse = {

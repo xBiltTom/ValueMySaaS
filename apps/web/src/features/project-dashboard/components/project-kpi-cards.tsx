@@ -1,7 +1,7 @@
 "use client";
 
-import { Activity, Banknote, CircleDollarSign, Users, TrendingDown, Target, TerminalSquare, HelpCircle, Coins, ArrowUpRight, Clock, Percent, LineChart, ShieldCheck } from "lucide-react";
-import { MaybeNumber } from "@/types/api";
+import { Activity, Banknote, CircleDollarSign, Users, TrendingDown, Target, TerminalSquare, HelpCircle, Coins, ArrowUpRight, Clock, Percent, LineChart, ShieldCheck, BrainCircuit, CheckCircle2, AlertTriangle } from "lucide-react";
+import { MaybeNumber, PlanningAiOutput } from "@/types/api";
 import { cn } from "@/lib/utils";
 
 function display(value: MaybeNumber | undefined): string {
@@ -69,24 +69,97 @@ function KpiCard({
   );
 }
 
+// ──────────────────────────────────────────────────────
+// AI Score Bar — used in planning mode
+// ──────────────────────────────────────────────────────
+export function AiScoreBar({ label, score, weight, tooltip }: { label: string; score: number; weight: string; tooltip: string }) {
+  const barColor = score >= 75 ? "bg-amber-400" : score >= 50 ? "bg-amber-500/70" : "bg-destructive/70";
+  const textColor = score >= 75 ? "text-amber-400" : score >= 50 ? "text-amber-500" : "text-destructive";
+  return (
+    <div className="flex items-center gap-3">
+      <div className="w-[130px] shrink-0">
+        <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase flex items-center overflow-visible">
+          {label}
+          <Tooltip text={tooltip} />
+        </span>
+        <span className="text-[8px] font-mono text-muted-foreground/50 uppercase">{weight}</span>
+      </div>
+      <div className="flex-1 flex gap-0.5 h-2">
+        {Array.from({ length: 20 }).map((_, i) => (
+          <div
+            key={i}
+            className={cn(
+              "flex-1 transition-all duration-700 rounded-[1px]",
+              i * 5 < score ? barColor : "bg-muted",
+              i * 5 < score ? "opacity-100" : "opacity-25"
+            )}
+          />
+        ))}
+      </div>
+      <span className={cn("text-[11px] font-mono font-black w-[32px] text-right", textColor)}>{score}</span>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────
+// Planning KPI Cards — shows AI scores + snapshot financials
+// ──────────────────────────────────────────────────────
+function PlanningKpiCards({
+  metrics,
+  planningAiOutput,
+}: {
+  metrics: Record<string, MaybeNumber>;
+  planningAiOutput: PlanningAiOutput | null;
+}) {
+  const verdictConfig = {
+    BUILD: { label: "CONSTRUYE YA", color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/30", icon: CheckCircle2 },
+    VALIDATE_FIRST: { label: "VALIDAR PRIMERO", color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/30", icon: HelpCircle },
+    RETHINK: { label: "REPLANTEAR", color: "text-destructive", bg: "bg-destructive/10 border-destructive/30", icon: AlertTriangle },
+  };
+  const verdict = planningAiOutput ? verdictConfig[planningAiOutput.verdict] : null;
+  const VerdictIcon = verdict?.icon ?? CheckCircle2;
+
+  return (
+    <div className="space-y-5">
+      {/* Top row — financial estimates */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <KpiCard icon={CircleDollarSign} label="Caja disponible" value={display(metrics.cash_available)} isPlanning accent="text-status-success-fg" tooltip="Capital actual disponible para mantener el proyecto operando." />
+        <KpiCard icon={Banknote} label="Costos mensuales" value={display(metrics.monthly_costs)} isPlanning accent="text-destructive" tooltip="Estimación de gastos operativos fijos y variables por mes (OPEX)." />
+        <KpiCard icon={TrendingDown} label="Burn rate" value={display(metrics.burn_rate)} isPlanning accent="text-destructive" tooltip="Velocidad a la que se consumen las reservas de capital mensualmente. Igual a costos si no hay ingresos." />
+        <KpiCard icon={Clock} label="Runway est." value={metrics.runway_months != null ? `${Number(metrics.runway_months).toFixed(1)} mo` : "—"} isPlanning accent="text-amber-400" tooltip="Meses estimados antes de quedarse sin caja, asumiendo burn rate constante." />
+      </div>
+
+      {/* Second row — derived estimates */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <KpiCard icon={Banknote} label="Net Profit proy." value={display(metrics.net_profit)} isPlanning tooltip="Ingreso mensual proyectado (clientes año 1 ÷ 12 × precio) menos costos mensuales." />
+        <KpiCard icon={Coins} label="CAC estimado" value={display(metrics.cac)} isPlanning accent="text-amber-500" tooltip="Costo estimado para adquirir un cliente pagador. Clave para evaluar viabilidad comercial." />
+        {/* Spacers */}
+        <div />
+        <div />
+      </div>
+
+
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────
+// Exports
+// ──────────────────────────────────────────────────────
+
 export function ProjectKpiCards({
   metrics,
   score,
   isPlanning = false,
+  planningAiOutput,
 }: {
   metrics: Record<string, MaybeNumber>;
   score?: MaybeNumber;
   isPlanning?: boolean;
+  planningAiOutput?: PlanningAiOutput | null;
 }) {
   if (isPlanning) {
-    return (
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-2">
-        <KpiCard icon={CircleDollarSign} label="Caja disponible" value={display(metrics.cash_available)} isPlanning accent="text-status-success-fg" tooltip="Dinero en efectivo o runway actual del que dispones para mantener el proyecto operando." />
-        <KpiCard icon={Banknote} label="Costos mensuales" value={display(metrics.monthly_costs)} isPlanning accent="text-destructive" tooltip="Estimación de los gastos operativos fijos y variables necesarios al mes." />
-        <KpiCard icon={Target} label="Score de viabilidad" value={score !== undefined && score !== null ? `${Number(score).toFixed(0)}/100` : "—"} isPlanning accent="text-status-warning-fg" tooltip="Puntuación generada por la IA evaluando mercado, modelo de negocio y propuesta de valor." />
-        <KpiCard icon={TrendingDown} label="Burn rate estimado" value={display(metrics.burn_rate)} isPlanning accent="text-destructive" tooltip="Velocidad a la que tu startup 'quema' o agota sus reservas de capital cada mes." />
-      </div>
-    );
+    return <PlanningKpiCards metrics={metrics} planningAiOutput={planningAiOutput ?? null} />;
   }
 
   return (
@@ -113,13 +186,8 @@ export function ProjectSecondaryKpiCards({
   metrics: Record<string, MaybeNumber>;
   isPlanning?: boolean;
 }) {
-  if (isPlanning) {
-    return (
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4 mt-5">
-        <KpiCard icon={Banknote} label="Net Profit" value={display(metrics.net_profit)} tooltip="Utilidad neta proyectada." />
-      </div>
-    );
-  }
+  // In planning mode, secondary cards are folded into the main PlanningKpiCards component
+  if (isPlanning) return null;
 
   return (
     <div className="grid grid-cols-2 gap-4 md:grid-cols-5 mt-5">

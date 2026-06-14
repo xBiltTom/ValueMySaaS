@@ -124,6 +124,7 @@ def get_dashboard_service(db: AsyncSession = Depends(get_db)) -> DashboardServic
         metric_snapshot_repository,
         saas_score_repository,
         metric_calculation_service,
+        ai_analysis_repository=AiAnalysisRepository(db),
     )
 
 

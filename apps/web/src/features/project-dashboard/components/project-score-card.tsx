@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Gauge, Sparkles, TerminalSquare, AlertTriangle, ShieldCheck, HelpCircle } from "lucide-react";
+import { ArrowRight, Gauge, Sparkles, TerminalSquare, AlertTriangle, ShieldCheck, HelpCircle, BrainCircuit } from "lucide-react";
 import { formatEnum } from "@/lib/utils";
-import { MaybeNumber, ProjectDashboardResponse } from "@/types/api";
+import { MaybeNumber, PlanningAiOutput, ProjectDashboardResponse } from "@/types/api";
 import { cn } from "@/lib/utils";
+import { AiScoreBar } from "./project-kpi-cards";
 
 function toPercent(value: MaybeNumber) {
   const numeric = Number(value ?? 0);
@@ -52,12 +53,137 @@ export function ProjectScoreCard({
   score,
   isPlanning = false,
   onAiAnalysis,
+  planningAiOutput,
 }: {
   projectId: string;
   score: ProjectDashboardResponse["latest_score"];
   isPlanning?: boolean;
   onAiAnalysis?: () => void;
+  planningAiOutput?: PlanningAiOutput | null;
 }) {
+  // Planning mode with AI output: show AI overall score
+  if (isPlanning && planningAiOutput) {
+    const aiScore = planningAiOutput.overall_score;
+    const colorHex = aiScore >= 75 ? "#F59E0B" : aiScore >= 50 ? "#D97706" : "#EF4444";
+    return (
+      <div className="relative overflow-visible rounded-[24px] border border-amber-500/30 bg-card/40 backdrop-blur-xl p-6 shadow-sm">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none rounded-[24px] overflow-hidden" />
+        <div className="relative z-10 flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <BrainCircuit className="h-4 w-4 text-amber-400" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-amber-400 flex items-center overflow-visible">
+              SYS_AI_VIABILITY
+              <Tooltip text="Score de viabilidad generado por IA. Evalúa mercado, propuesta de valor y modelo de negocio con pesos ponderados." />
+            </p>
+          </div>
+          <a
+            href={`/projects/${projectId}/ai-analysis/${planningAiOutput.analysis_id}`}
+            className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-background/50 border border-border/40 text-muted-foreground hover:bg-amber-500/10 hover:text-amber-400 transition-all"
+            title="Ver análisis completo"
+          >
+            <TerminalSquare className="h-3.5 w-3.5" />
+          </a>
+        </div>
+        <div className="relative z-10 flex flex-col sm:flex-row items-center gap-6 mb-6">
+          <DigitalMeter score={aiScore} color={colorHex} />
+          <div className="min-w-0 flex-1 space-y-4 w-full">
+            <div className="rounded-[12px] bg-background/50 border border-border/40 p-3">
+              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">VEREDICTO</p>
+              <span className={cn(
+                "text-xs font-bold uppercase tracking-wider flex items-center gap-2",
+                planningAiOutput.verdict === "BUILD" ? "text-emerald-400" :
+                planningAiOutput.verdict === "VALIDATE_FIRST" ? "text-amber-400" : "text-destructive"
+              )}>
+                {planningAiOutput.verdict === "BUILD" ? "Construye ya" :
+                 planningAiOutput.verdict === "VALIDATE_FIRST" ? "Validar primero" : "Replantear"}
+              </span>
+            </div>
+            {onAiAnalysis && (
+              <button
+                onClick={onAiAnalysis}
+                className="w-full flex items-center justify-center gap-2 rounded-[12px] bg-amber-500/10 border border-amber-500/30 px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-amber-400 hover:bg-amber-500/20 transition-all"
+              >
+                <BrainCircuit className="h-3.5 w-3.5" /> Nuevo Análisis
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 5 dimension bars */}
+        <div className="relative z-10 space-y-3 pt-4 border-t border-amber-500/20">
+          <AiScoreBar
+            label="PROBLEMA"
+            score={planningAiOutput.problem_clarity_score}
+            weight="peso 30%"
+            tooltip="Qué tan claro y relevante es el problema que resuelve el proyecto."
+          />
+          <AiScoreBar
+            label="VALOR"
+            score={planningAiOutput.value_prop_score}
+            weight="peso 25%"
+            tooltip="Qué tan diferenciada y convincente es la propuesta de valor."
+          />
+          <AiScoreBar
+            label="MERCADO"
+            score={planningAiOutput.market_fit_score}
+            weight="peso 20%"
+            tooltip="Qué tan bien definido está el mercado objetivo y su tamaño."
+          />
+          <AiScoreBar
+            label="NEGOCIO"
+            score={planningAiOutput.business_model_score}
+            weight="peso 15%"
+            tooltip="Qué tan viable y coherente es el modelo de negocio propuesto."
+          />
+          <AiScoreBar
+            label="PRECIO"
+            score={planningAiOutput.pricing_feasibility_score}
+            weight="peso 10%"
+            tooltip="Qué tan realista es el precio propuesto para el mercado objetivo."
+          />
+        </div>
+
+        {/* Rationale & Info */}
+        <div className="relative z-10 mt-6 space-y-4">
+          {planningAiOutput.verdict_rationale && (
+            <p className="text-[11px] font-mono text-muted-foreground leading-relaxed border-t border-amber-500/20 pt-4">
+              &gt; {planningAiOutput.verdict_rationale}
+            </p>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            {planningAiOutput.market_size_estimate && (
+              <div className="rounded-[10px] bg-background/50 border border-border/40 px-3 py-2">
+                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Tamaño de mercado</p>
+                <p className="text-[11px] font-mono text-foreground leading-snug">{planningAiOutput.market_size_estimate}</p>
+              </div>
+            )}
+            {planningAiOutput.breakeven_customers && (
+              <div className="rounded-[10px] bg-background/50 border border-border/40 px-3 py-2">
+                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Clientes para break-even</p>
+                <p className="text-[11px] font-mono text-foreground leading-snug">{planningAiOutput.breakeven_customers}</p>
+              </div>
+            )}
+          </div>
+
+          {planningAiOutput.infrastructure_complexity && (
+            <div className="flex items-center gap-2 pt-2">
+              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Complejidad técnica:</p>
+              <span className={cn(
+                "text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-[4px]",
+                planningAiOutput.infrastructure_complexity === "LOW" ? "bg-emerald-500/20 text-emerald-400" :
+                planningAiOutput.infrastructure_complexity === "MEDIUM" ? "bg-amber-500/20 text-amber-400" :
+                "bg-destructive/20 text-destructive"
+              )}>
+                {planningAiOutput.infrastructure_complexity}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (!score) {
     return (
       <div className={cn(

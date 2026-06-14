@@ -198,11 +198,13 @@ export default function ProjectDashboardPage() {
                 score={dashboard.latest_score}
                 isPlanning={isPlanning}
                 onAiAnalysis={handleAiAnalysisClick}
+                planningAiOutput={dashboard.planning_ai_output}
               />
               <ProjectKpiCards
                 metrics={dashboard.metric_cards}
                 score={dashboard.latest_score?.overall_score}
                 isPlanning={isPlanning}
+                planningAiOutput={dashboard.planning_ai_output}
               />
             </div>
             </div>

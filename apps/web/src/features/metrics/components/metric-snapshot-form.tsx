@@ -250,7 +250,7 @@ export function MetricSnapshotForm({
         );
         return updateMetricSnapshot(projectId, editingSnapshot.id, cleanPayload);
       }
-      return createMetricSnapshot(projectId, payload);
+      return createMetricSnapshot(projectId, payload as any);
     },
     onSuccess: async () => {
       if (!editingSnapshot) {
@@ -670,15 +670,14 @@ export function MetricSnapshotForm({
             type="submit"
             disabled={mutation.isPending}
             className={cn(
-              "group overflow-hidden relative flex items-center justify-center gap-3 rounded-[10px] border-2 border-primary py-4 text-[12px] font-black uppercase tracking-widest text-primary-foreground transition-all",
+              "flex items-center justify-center gap-3 rounded-[10px] border-2 border-primary py-4 text-[12px] font-black uppercase tracking-widest text-primary-foreground transition-all duration-200",
               editingSnapshot ? "w-full sm:w-2/3" : "w-full",
               "bg-primary hover:bg-primary/90 active:translate-y-0.5",
               "shadow-[6px_6px_0_rgba(var(--primary),0.3)] hover:shadow-[3px_3px_0_rgba(var(--primary),0.3)]",
-              "disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none",
-              isPlanning && "border-amber-500 bg-amber-500 hover:bg-amber-500/90 shadow-[6px_6px_0_rgba(245,158,11,0.3)] hover:shadow-[3px_3px_0_rgba(245,158,11,0.3)]"
+              "disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0",
+              isPlanning && "border-amber-500 bg-amber-500 hover:bg-amber-600 shadow-[6px_6px_0_rgba(245,158,11,0.3)] hover:shadow-[3px_3px_0_rgba(245,158,11,0.3)]"
             )}
           >
-            <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-[8px] pointer-events-none" />
             {mutation.isPending ? (
               <span className="relative z-10 flex items-center gap-2">
                 <span className="h-4 w-4 rounded-[3px] bg-primary-foreground/30 animate-pulse" />

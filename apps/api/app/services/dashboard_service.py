@@ -7,6 +7,7 @@ from app.models.enums import SaasCategory, SaasStage, SustainabilityLevel
 from app.models.saas_project import SaasProject
 from app.models.saas_score import SaasScore
 from app.repositories.metric_snapshot_repository import MetricSnapshotRepository
+from app.repositories.ai_analysis_repository import AiAnalysisRepository
 from app.repositories.saas_project_repository import SaasProjectRepository
 from app.repositories.saas_score_repository import SaasScoreRepository
 from app.schemas.dashboard import (
@@ -14,6 +15,7 @@ from app.schemas.dashboard import (
     LatestScoreSummary,
     LatestSnapshotSummary,
     MetricCards,
+    PlanningAiOutput,
     PortfolioAlertProject,
     PortfolioDashboardResponse,
     PortfolioProjectSummary,
@@ -36,11 +38,13 @@ class DashboardService:
         metric_snapshot_repository: MetricSnapshotRepository,
         saas_score_repository: SaasScoreRepository,
         metric_calculation_service: MetricCalculationService,
+        ai_analysis_repository: AiAnalysisRepository | None = None,
     ) -> None:
         self.saas_project_repository = saas_project_repository
         self.metric_snapshot_repository = metric_snapshot_repository
         self.saas_score_repository = saas_score_repository
         self.metric_calculation_service = metric_calculation_service
+        self.ai_analysis_repository = ai_analysis_repository
 
     async def get_portfolio_dashboard(self, *, owner_id: UUID) -> PortfolioDashboardResponse:
         projects = await self.saas_project_repository.list_all_for_owner(owner_id=owner_id)
@@ -123,31 +127,92 @@ class DashboardService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SaaS project not found")
 
         # ------------------------------------------------------------------ #
-        # Planning projects: show only costs + contextual AI Analysis message #
+        # Planning projects: qualitative AI output + snapshot estimates        #
         # ------------------------------------------------------------------ #
         stage = project.stage if isinstance(project.stage, SaasStage) else SaasStage(project.stage)
         if stage in {SaasStage.IDEA, SaasStage.PLANNING}:
             latest_snapshot = await self.metric_snapshot_repository.get_latest_by_project(
                 saas_project_id=project_id,
             )
-            monthly_costs = (
-                getattr(latest_snapshot, "monthly_costs", None) if latest_snapshot else None
-            )
-            planning_recommendation = DashboardRecommendation(
-                priority="high",
-                title="Proyecto en planeación",
-                message=(
-                    "Este proyecto está en planeación. Usa el Análisis IA para obtener "
-                    "un diagnóstico de viabilidad."
-                ),
-            )
+
+            # Pull financial estimates from snapshot
+            monthly_costs = getattr(latest_snapshot, "monthly_costs", None) if latest_snapshot else None
+            custom = (latest_snapshot.custom_metrics or {}) if latest_snapshot else {}
+            cash_available = custom.get("cash_available")
+            estimated_cac = custom.get("estimated_cac")
+
+            # Derive burn_rate and net_profit from snapshot estimates
+            burn_rate = None
+            net_profit = None
+            if monthly_costs is not None:
+                try:
+                    mc = Decimal(str(monthly_costs))
+                    burn_rate = mc
+                    # Rough projected monthly revenue: expected_users_year1 / 12 * price
+                    expected_users = custom.get("expected_users_year_1")
+                    price = project.current_price
+                    if expected_users is not None and price is not None:
+                        try:
+                            proj_revenue = (Decimal(str(expected_users)) / 12) * Decimal(str(price))
+                            net_profit = (proj_revenue - mc).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
+
+            # Runway estimate
+            runway_months = None
+            if cash_available is not None and burn_rate is not None and burn_rate > 0:
+                try:
+                    runway_months = (Decimal(str(cash_available)) / Decimal(str(burn_rate))).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+                except Exception:
+                    pass
+
+            # Latest AI analysis planning output
+            planning_ai_output = None
+            if self.ai_analysis_repository is not None:
+                ai_analyses = await self.ai_analysis_repository.list_by_project(
+                    saas_project_id=project_id,
+                    limit=1,
+                )
+                if ai_analyses:
+                    planning_ai_output = self._planning_ai_output(ai_analyses[0])
+
+            # Pull latest score for alerts/recommendations
+            latest_score = await self.saas_score_repository.get_latest_by_project(saas_project_id=project_id)
+            alerts: list = latest_score.alerts if latest_score and latest_score.alerts else []
+            recommendations: list = []
+
+            # Inject risks from AI analysis as alerts
+            if planning_ai_output and planning_ai_output.risks:
+                for risk in planning_ai_output.risks:
+                    alerts.append({"code": "AI_RISK", "severity": "medium", "title": "Riesgo identificado", "message": risk})
+
+            # Inject next_steps from AI analysis as recommendations
+            if planning_ai_output and planning_ai_output.next_steps:
+                for step in planning_ai_output.next_steps:
+                    recommendations.append(DashboardRecommendation(priority="high", title="Próximo paso", message=step))
+            else:
+                recommendations.append(DashboardRecommendation(
+                    priority="high",
+                    title="Ejecutar análisis IA",
+                    message="Lanza un diagnóstico de IA para evaluar la viabilidad de tu idea y obtener próximos pasos concretos.",
+                ))
+
             return ProjectDashboardResponse(
                 project=self._project_summary(project),
                 latest_snapshot=self._latest_snapshot_summary(latest_snapshot),
-                latest_score=None,
-                metric_cards=MetricCards(monthly_costs=monthly_costs),
-                alerts=[],
-                recommendations=[planning_recommendation],
+                latest_score=self._latest_score_summary(latest_score) if latest_score else None,
+                metric_cards=MetricCards(
+                    monthly_costs=monthly_costs,
+                    cash_available=cash_available,
+                    burn_rate=burn_rate,
+                    net_profit=net_profit,
+                    runway_months=runway_months,
+                    cac=estimated_cac,
+                ),
+                alerts=alerts,
+                recommendations=recommendations,
                 series=ProjectSeries(
                     mrr=[],
                     monthly_revenue=[],
@@ -156,6 +221,7 @@ class DashboardService:
                     churn_rate=[],
                     overall_score=[],
                 ),
+                planning_ai_output=planning_ai_output,
             )
 
         # ------------------------------------------------------------------ #
@@ -431,3 +497,29 @@ class DashboardService:
 
     def _enum_value(self, value) -> str:
         return value.value if hasattr(value, "value") else str(value)
+
+    def _planning_ai_output(self, analysis) -> PlanningAiOutput | None:
+        """Extract PlanningAiOutput from an AiAnalysis model instance."""
+        try:
+            raw = analysis.output_json
+            if not raw:
+                return None
+            return PlanningAiOutput(
+                overall_score=int(raw.get("overall_score", 0)),
+                problem_clarity_score=int(raw.get("problem_clarity_score", 0)),
+                value_prop_score=int(raw.get("value_prop_score", 0)),
+                market_fit_score=int(raw.get("market_fit_score", 0)),
+                business_model_score=int(raw.get("business_model_score", 0)),
+                pricing_feasibility_score=int(raw.get("pricing_feasibility_score", 0)),
+                verdict=raw.get("verdict", "RETHINK"),
+                verdict_rationale=raw.get("verdict_rationale", ""),
+                market_size_estimate=raw.get("market_size_estimate", ""),
+                infrastructure_complexity=raw.get("infrastructure_complexity", "MEDIUM"),
+                breakeven_customers=raw.get("breakeven_customers", ""),
+                strengths=raw.get("strengths", []),
+                risks=raw.get("risks", []),
+                next_steps=raw.get("next_steps", []),
+                analysis_id=str(analysis.id),
+            )
+        except Exception:
+            return None
