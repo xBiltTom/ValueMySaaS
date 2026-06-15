@@ -12,7 +12,7 @@ pydantic==2.10.3
 pydantic-settings==2.6.1
 
 # Auth & security
-python-jose[cryptography]==3.3.0
+PyJWT==2.8.0
 passlib[bcrypt]==1.7.4
 bcrypt==3.2.2
 cryptography==43.0.3
@@ -23,6 +23,10 @@ email-validator==2.2.0
 python-multipart==0.0.17
 litellm
 openai
+curl-cffi>=0.7.0
+g4f
+brotli
+
 
 # Tests
 pytest==8.3.4

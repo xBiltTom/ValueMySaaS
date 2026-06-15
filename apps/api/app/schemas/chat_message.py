@@ -31,6 +31,10 @@ class SendChatMessageRequest(BaseModel):
         default=None,
         description="ID de tu API Key propia. Si no se provee, se usarán créditos del sistema.",
     )
+    use_system_credits: bool = Field(
+        default=False,
+        description="Indica si se deben usar créditos del sistema explícitamente.",
+    )
     model_name: str | None = Field(default=None, max_length=100)
     message: str | None = Field(default=None, max_length=4000)
     messages: list[dict[str, Any]] | None = Field(default=None, description="Requerido por Vercel AI SDK useChat")

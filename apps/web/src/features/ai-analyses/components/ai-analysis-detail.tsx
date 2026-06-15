@@ -7,7 +7,7 @@ import { analysisTypeLabel } from "@/features/ai-analyses/utils";
 import { AiAnalysisResult } from "@/features/ai-analyses/components/ai-analysis-result";
 import { cn } from "@/lib/utils";
 
-export function AiAnalysisDetail({ analysis }: { analysis: AiAnalysis }) {
+export function AiAnalysisDetail({ analysis, isStreaming }: { analysis: AiAnalysis, isStreaming?: boolean }) {
   return (
     <div className="space-y-6">
       <div className="relative overflow-hidden rounded-[24px] border border-border/60 bg-card/40 backdrop-blur-xl p-6 md:p-8 shadow-2xl">
@@ -34,15 +34,15 @@ export function AiAnalysisDetail({ analysis }: { analysis: AiAnalysis }) {
       
       <div className="grid gap-4 md:grid-cols-3">
         {[
-          { label: "INPUT_TOKENS", value: analysis.tokens_input ?? "N/A", color: "text-accent" },
-          { label: "OUTPUT_TOKENS", value: analysis.tokens_output ?? "N/A", color: "text-primary" },
-          { label: "EST_COST", value: analysis.estimated_cost ? `$${analysis.estimated_cost}` : "N/A", color: "text-emerald-500" },
+          { label: "INPUT_TOKENS", value: analysis.tokens_input ?? (isStreaming ? "Calculando..." : "N/A"), color: "text-accent" },
+          { label: "OUTPUT_TOKENS", value: analysis.tokens_output ?? (isStreaming ? "Calculando..." : "N/A"), color: "text-primary" },
+          { label: "EST_COST", value: analysis.estimated_cost ? `$${analysis.estimated_cost}` : (isStreaming ? "Calculando..." : "N/A"), color: "text-emerald-500" },
         ].map((stat, i) => (
           <div key={i} className="group relative overflow-hidden rounded-[16px] border border-border/40 bg-card/40 backdrop-blur-md p-5 transition-all duration-300 hover:bg-card hover:border-primary/40 shadow-sm">
             <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.05)_50%)] bg-[length:100%_4px] pointer-events-none opacity-20" />
             <div className="relative z-10 flex flex-col gap-2">
               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{stat.label}</p>
-              <p className={cn("text-3xl font-mono font-bold tracking-tight", stat.color)}>{stat.value}</p>
+              <p className={cn(stat.value === "Calculando..." ? "text-lg md:text-xl font-mono tracking-tight animate-pulse" : "text-3xl font-mono font-bold tracking-tight", stat.color)}>{stat.value}</p>
             </div>
           </div>
         ))}

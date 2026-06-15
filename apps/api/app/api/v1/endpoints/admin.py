@@ -2,12 +2,14 @@
 
 Gestiona usuarios, créditos, API Keys del sistema y estadísticas globales.
 """
+
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.api.deps import (
     get_admin_service,
+    get_chatgpt_web_account_service,
     get_current_user,
     get_system_ai_key_service,
 )
@@ -17,6 +19,13 @@ from app.schemas.admin import (
     AdminStatsResponse,
     AdminUserListResponse,
     AdminUserRead,
+    BulkGrantCreditsRequest,
+    ChatGptWebAccountCreate,
+    ChatGptWebAccountListResponse,
+    ChatGptWebAccountRead,
+    ChatGptWebAccountUpdate,
+    ChatGptWebInjectTokenRequest,
+    ChatGptWebVerifyResponse,
     CreditGrantRequest,
     CreditTransactionListResponse,
     CreditTransactionRead,
@@ -25,11 +34,13 @@ from app.schemas.admin import (
     SystemAiKeyRead,
     SystemAiKeyUpdate,
     SystemAiKeyVerifyResponse,
+    SystemConfigRead,
+    SystemConfigUpdate,
+    ToggleUserActiveRequest,
 )
 from app.services.admin_service import AdminService
+from app.services.chatgpt_web_account_service import ChatGptWebAccountService
 from app.services.system_ai_key_service import SystemAiKeyService
-from fastapi import HTTPException
-
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -48,6 +59,7 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
 # Estadísticas del sistema
 # ---------------------------------------------------------------------------
 
+
 @router.get("/stats", response_model=AdminStatsResponse)
 async def get_system_stats(
     admin: User = Depends(require_admin),
@@ -60,6 +72,7 @@ async def get_system_stats(
 # ---------------------------------------------------------------------------
 # Gestión de usuarios
 # ---------------------------------------------------------------------------
+
 
 @router.get("/users", response_model=AdminUserListResponse)
 async def list_users(
@@ -88,6 +101,7 @@ async def get_user(
 # Gestión de créditos
 # ---------------------------------------------------------------------------
 
+
 @router.post("/users/{user_id}/credits", status_code=status.HTTP_204_NO_CONTENT)
 async def grant_credits(
     user_id: UUID,
@@ -104,7 +118,9 @@ async def grant_credits(
     )
 
 
-@router.get("/users/{user_id}/credit-history", response_model=CreditTransactionListResponse)
+@router.get(
+    "/users/{user_id}/credit-history", response_model=CreditTransactionListResponse
+)
 async def get_credit_history(
     user_id: UUID,
     limit: int = Query(default=20, ge=1, le=100),
@@ -128,6 +144,7 @@ async def get_credit_history(
 # Gestión de API Keys del sistema
 # ---------------------------------------------------------------------------
 
+
 @router.get("/system-keys", response_model=SystemAiKeyListResponse)
 async def list_system_keys(
     active_only: bool = Query(default=False),
@@ -148,7 +165,9 @@ async def list_system_keys(
     )
 
 
-@router.post("/system-keys", response_model=SystemAiKeyRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/system-keys", response_model=SystemAiKeyRead, status_code=status.HTTP_201_CREATED
+)
 async def create_system_key(
     payload: SystemAiKeyCreate,
     admin: User = Depends(require_admin),
@@ -198,3 +217,234 @@ async def verify_system_key(
     """Verifica que una API Key del sistema sea válida haciendo una llamada de prueba al LLM."""
     result = await key_service.verify_key(key_id=key_id, model_name=model_name)
     return SystemAiKeyVerifyResponse(**result)
+
+
+# ---------------------------------------------------------------------------
+# Toggle user active status
+# ---------------------------------------------------------------------------
+
+
+@router.patch("/users/{user_id}/active", status_code=status.HTTP_204_NO_CONTENT)
+async def toggle_user_active(
+    user_id: UUID,
+    payload: ToggleUserActiveRequest,
+    admin: User = Depends(require_admin),
+    admin_service: AdminService = Depends(get_admin_service),
+):
+    """Activa o desactiva un usuario del sistema."""
+    await admin_service.toggle_user_active(user_id=user_id, is_active=payload.is_active)
+
+
+# ---------------------------------------------------------------------------
+# Bulk credit grant
+# ---------------------------------------------------------------------------
+
+
+@router.post("/credits/bulk-grant")
+async def bulk_grant_credits(
+    payload: BulkGrantCreditsRequest,
+    admin: User = Depends(require_admin),
+    admin_service: AdminService = Depends(get_admin_service),
+):
+    """Otorga créditos a TODOS los usuarios activos del sistema."""
+    affected = await admin_service.bulk_grant_credits(
+        delta=payload.delta,
+        description=payload.description,
+        admin_id=admin.id,
+    )
+    return {"affected_users": affected, "credits_per_user": payload.delta}
+
+
+# ---------------------------------------------------------------------------
+# System Config
+# ---------------------------------------------------------------------------
+
+
+@router.get("/config", response_model=list[SystemConfigRead])
+async def get_system_config(
+    admin: User = Depends(require_admin),
+    admin_service: AdminService = Depends(get_admin_service),
+):
+    """Devuelve todas las configuraciones del sistema."""
+    return await admin_service.get_config()
+
+
+@router.put("/config/{key}", response_model=SystemConfigRead)
+async def update_system_config(
+    key: str,
+    payload: SystemConfigUpdate,
+    admin: User = Depends(require_admin),
+    admin_service: AdminService = Depends(get_admin_service),
+):
+    """Actualiza el valor de una clave de configuración del sistema."""
+    ALLOWED_KEYS = {
+        "default_initial_credits",
+        "login_announcement",
+        "system_credits_enabled",
+        "chatgpt_web_enabled",
+    }
+    if key not in ALLOWED_KEYS:
+        raise HTTPException(status_code=400, detail=f"Clave '{key}' no permitida.")
+    return await admin_service.set_config(key=key, value=payload.value)
+
+
+# ---------------------------------------------------------------------------
+# ChatGPT Web Accounts
+# ---------------------------------------------------------------------------
+
+
+@router.get("/chatgpt-web-accounts", response_model=ChatGptWebAccountListResponse)
+async def list_chatgpt_web_accounts(
+    active_only: bool = Query(default=False),
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    admin: User = Depends(require_admin),
+    account_service: ChatGptWebAccountService = Depends(
+        get_chatgpt_web_account_service
+    ),
+):
+    items, total = await account_service.list_accounts(
+        active_only=active_only, limit=limit, offset=offset
+    )
+    return ChatGptWebAccountListResponse(
+        items=items, total=total, limit=limit, offset=offset
+    )
+
+
+@router.post(
+    "/chatgpt-web-accounts",
+    response_model=ChatGptWebAccountRead,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_chatgpt_web_account(
+    payload: ChatGptWebAccountCreate,
+    admin: User = Depends(require_admin),
+    account_service: ChatGptWebAccountService = Depends(
+        get_chatgpt_web_account_service
+    ),
+):
+    return await account_service.create_account(
+        email=payload.email,
+        user_agent=payload.user_agent,
+        priority=payload.priority,
+    )
+
+
+@router.get("/chatgpt-web-accounts/{account_id}", response_model=ChatGptWebAccountRead)
+async def get_chatgpt_web_account(
+    account_id: UUID,
+    admin: User = Depends(require_admin),
+    account_service: ChatGptWebAccountService = Depends(
+        get_chatgpt_web_account_service
+    ),
+):
+    return await account_service.get_account(account_id=account_id)
+
+
+@router.put("/chatgpt-web-accounts/{account_id}", response_model=ChatGptWebAccountRead)
+async def update_chatgpt_web_account(
+    account_id: UUID,
+    payload: ChatGptWebAccountUpdate,
+    admin: User = Depends(require_admin),
+    account_service: ChatGptWebAccountService = Depends(
+        get_chatgpt_web_account_service
+    ),
+):
+    data = payload.model_dump(exclude_unset=True)
+    return await account_service.update_account(account_id=account_id, data=data)
+
+
+@router.delete(
+    "/chatgpt-web-accounts/{account_id}", status_code=status.HTTP_204_NO_CONTENT
+)
+async def delete_chatgpt_web_account(
+    account_id: UUID,
+    admin: User = Depends(require_admin),
+    account_service: ChatGptWebAccountService = Depends(
+        get_chatgpt_web_account_service
+    ),
+):
+    await account_service.delete_account(account_id=account_id)
+
+
+@router.post(
+    "/chatgpt-web-accounts/{account_id}/inject-token",
+    response_model=ChatGptWebAccountRead,
+)
+async def inject_chatgpt_web_token(
+    account_id: UUID,
+    payload: ChatGptWebInjectTokenRequest,
+    admin: User = Depends(require_admin),
+    account_service: ChatGptWebAccountService = Depends(
+        get_chatgpt_web_account_service
+    ),
+):
+    """Manually inject session cookies copied from the browser.
+
+    Open chatgpt.com in your browser, log in, then open DevTools →
+    Application → Cookies → chatgpt.com and copy:
+
+    - ``__Secure-next-auth.session-token.0``
+    - ``__Secure-next-auth.session-token.1`` (if present)
+    - ``cf_clearance``
+
+    Paste them together with the browser's User-Agent for best compatibility.
+    """
+    from datetime import datetime, timezone
+
+    expires_at = None
+    if payload.expires_at:
+        try:
+            expires_at = datetime.fromisoformat(payload.expires_at).replace(
+                tzinfo=timezone.utc
+            )
+        except ValueError:
+            pass
+
+    return await account_service.inject_session_token(
+        account_id,
+        session_token_part0=payload.session_token_part0,
+        session_token_part1=payload.session_token_part1,
+        cf_clearance=payload.cf_clearance,
+        user_agent=payload.user_agent,
+        expires_at=expires_at,
+    )
+
+
+@router.post(
+    "/chatgpt-web-accounts/{account_id}/verify", response_model=ChatGptWebVerifyResponse
+)
+async def verify_chatgpt_web_account(
+    account_id: UUID,
+    admin: User = Depends(require_admin),
+    account_service: ChatGptWebAccountService = Depends(
+        get_chatgpt_web_account_service
+    ),
+):
+    result = await account_service.verify_account(account_id=account_id)
+    return ChatGptWebVerifyResponse(**result)
+
+
+# ---------------------------------------------------------------------------
+# Public: announcement (no auth required)
+# ---------------------------------------------------------------------------
+
+
+@router.get("/public/announcement")
+async def get_announcement(
+    admin_service: AdminService = Depends(get_admin_service),
+):
+    """Endpoint público. Devuelve el anuncio activo para mostrar al iniciar sesión."""
+    text = await admin_service.get_announcement()
+    return {"announcement": text, "has_announcement": bool(text.strip())}
+
+
+@router.get("/public/config")
+async def get_public_config(
+    admin_service: AdminService = Depends(get_admin_service),
+):
+    """Endpoint público. Devuelve configuración global visible a todos."""
+    credits_enabled = await admin_service.get_system_credits_enabled()
+    return {
+        "system_credits_enabled": credits_enabled,
+    }

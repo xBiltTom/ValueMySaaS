@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BrainCircuit, Database, MessageSquareText, PlusCircle,
-  Rocket, Sparkles, TrendingUp, Terminal
+  Rocket, Sparkles, TrendingUp, Terminal, ChevronLeft, Info
 } from "lucide-react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ErrorState } from "@/components/shared/error-state";
@@ -15,7 +15,7 @@ import { getProject, getProjectDashboard } from "@/features/project-dashboard/ap
 import { listAiAnalyses } from "@/features/ai-analyses/api";
 import { ProjectHeader } from "@/features/project-dashboard/components/project-header";
 import { ProjectScoreCard } from "@/features/project-dashboard/components/project-score-card";
-import { ProjectKpiCards } from "@/features/project-dashboard/components/project-kpi-cards";
+import { ProjectKpiCards, ProjectSecondaryKpiCards } from "@/features/project-dashboard/components/project-kpi-cards";
 import { ProjectHistoryChart } from "@/features/project-dashboard/components/project-history-chart";
 import { DiagnosticList } from "@/features/project-dashboard/components/diagnostic-lists";
 import { generateLatestScore } from "@/features/scoring/api";
@@ -89,6 +89,17 @@ export default function ProjectDashboardPage() {
 
   return (
     <DashboardShell>
+      <div className="mb-6">
+        <Link
+          href="/projects"
+          className="group relative inline-flex h-10 items-center justify-start gap-3 rounded-lg border-2 border-border/60 bg-card px-3 text-[11px] font-black uppercase tracking-widest text-foreground shadow-[2px_2px_0_rgba(0,0,0,0.2)] hover:border-primary hover:shadow-[4px_4px_0_rgba(var(--primary),0.3)] hover:-translate-y-0.5 hover:-translate-x-0.5 transition-all active:shadow-none active:translate-x-0 active:translate-y-0"
+        >
+          <div className="h-6 w-6 bg-primary/10 text-primary flex items-center justify-center rounded-[4px] group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+            <ChevronLeft className="h-4 w-4 shrink-0" />
+          </div>
+          <span className="mt-0.5 mr-2">../ RETURN_TO_ROOT</span>
+        </Link>
+      </div>
       {(projectQuery.isLoading || dashboardQuery.isLoading) ? <LoadingState /> : null}
       {(projectQuery.isError || dashboardQuery.isError) ? (
         <ErrorState message={getApiErrorMessage(projectQuery.error || dashboardQuery.error)} />
@@ -169,22 +180,70 @@ export default function ProjectDashboardPage() {
 
           {/* Main content grid: Score + KPIs */}
           {dashboard.latest_snapshot && (
-            <div className={cn(
-              "grid gap-5",
-              isPlanning ? "xl:grid-cols-[0.9fr_1.1fr]" : "xl:grid-cols-[0.8fr_1.2fr]"
-            )}>
-              <ProjectScoreCard
-                projectId={projectId}
-                score={dashboard.latest_score}
-                isPlanning={isPlanning}
-                onAiAnalysis={handleAiAnalysisClick}
-              />
-              <ProjectKpiCards
-                metrics={dashboard.metric_cards}
-                score={dashboard.latest_score?.overall_score}
-                isPlanning={isPlanning}
-              />
+            <div className="space-y-5">
+              <div className={cn("flex items-start gap-3 rounded-[12px] border px-4 py-3 shadow-inner", isPlanning ? "border-amber-500/20 bg-amber-500/5" : "border-primary/20 bg-primary/5")}>
+                <Info className={cn("h-4 w-4 shrink-0 mt-0.5", isPlanning ? "text-amber-500" : "text-primary")} />
+                <p className="text-[11px] font-mono text-muted-foreground uppercase leading-relaxed">
+                  <strong className={cn("font-black", isPlanning ? "text-amber-500" : "text-primary")}>SYS_INFO:</strong>
+                  {isPlanning ? (
+                    <>
+                      {" "}Mostrando viabilidad construida a partir del <span className="text-foreground font-bold bg-background/50 px-1.5 py-0.5 rounded-[4px] border border-border/50">último análisis IA</span> y las <span className="text-foreground font-bold bg-background/50 px-1.5 py-0.5 rounded-[4px] border border-border/50">estimaciones más recientes</span> ingresadas.
+                    </>
+                  ) : (
+                    <>
+                      {" "}Mostrando evaluación basada en el snapshot del periodo <span className="text-foreground font-bold bg-background/50 px-1.5 py-0.5 rounded-[4px] border border-border/50">{dashboard.latest_snapshot.period_label || new Date(dashboard.latest_snapshot.captured_at).toLocaleDateString()}</span>. 
+                      <span className="opacity-80 ml-1">Excepción: Métricas de tendencia (como MRR Growth) evalúan todo el historial disponible para otorgar puntos extra.</span>
+                    </>
+                  )}
+                </p>
+              </div>
+
+              <div className={cn(
+                "grid gap-5 items-stretch",
+                isPlanning ? "xl:grid-cols-[0.9fr_1.1fr]" : "xl:grid-cols-[0.8fr_1.2fr]"
+              )}>
+                <ProjectScoreCard
+                  projectId={projectId}
+                  score={dashboard.latest_score}
+                  isPlanning={isPlanning}
+                  onAiAnalysis={handleAiAnalysisClick}
+                  planningAiOutput={dashboard.planning_ai_output}
+                />
+                
+                {isPlanning ? (
+                  <div className="flex flex-col gap-5 h-full">
+                    <ProjectKpiCards
+                      metrics={dashboard.metric_cards}
+                      score={dashboard.latest_score?.overall_score}
+                      isPlanning={isPlanning}
+                      planningAiOutput={dashboard.planning_ai_output}
+                    />
+                    <ProjectHistoryChart
+                      title="Evolución del score de viabilidad"
+                      data={dashboard.series.overall_score}
+                      color="#f59e0b"
+                      isPlanning
+                      className="flex-1"
+                    />
+                  </div>
+                ) : (
+                  <ProjectKpiCards
+                    metrics={dashboard.metric_cards}
+                    score={dashboard.latest_score?.overall_score}
+                    isPlanning={isPlanning}
+                    planningAiOutput={dashboard.planning_ai_output}
+                  />
+                )}
+              </div>
             </div>
+          )}
+
+          {/* Secondary KPIs */}
+          {dashboard.latest_snapshot && (
+            <ProjectSecondaryKpiCards
+              metrics={dashboard.metric_cards}
+              isPlanning={isPlanning}
+            />
           )}
 
           {/* Charts section */}
@@ -208,19 +267,11 @@ export default function ProjectDashboardPage() {
             </div>
           )}
 
-          {/* Planning: single score evolution chart */}
-          {dashboard.latest_snapshot && isPlanning && (
-            <ProjectHistoryChart
-              title="Evolución del score de viabilidad"
-              data={dashboard.series.overall_score}
-              color="#f59e0b"
-              isPlanning
-            />
-          )}
+
 
           {/* Diagnostic alerts and recommendations */}
           {dashboard.latest_snapshot && (
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="grid gap-4 lg:grid-cols-2 items-start">
               <DiagnosticList
                 title="Alertas Críticas"
                 items={dashboard.alerts}
@@ -308,11 +359,12 @@ export default function ProjectDashboardPage() {
       ) : null}
 
       {project && (
-        <AiAnalysisModal 
-          isOpen={showAiModal} 
-          onClose={() => setShowAiModal(false)} 
-          projectId={project.id} 
-          projectStage={project.stage} 
+        <AiAnalysisModal
+          isOpen={showAiModal}
+          onClose={() => setShowAiModal(false)}
+          projectId={projectId}
+          projectStage={project.stage}
+          latestSnapshotId={dashboard?.latest_snapshot?.id}
         />
       )}
     </DashboardShell>

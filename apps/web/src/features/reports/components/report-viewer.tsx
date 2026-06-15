@@ -178,55 +178,72 @@ export function ReportViewer({ content }: ReportViewerProps) {
             </div>
           )}
 
-          {(content.strengths?.length > 0 || content.weaknesses?.length > 0) && (
-            <>
+          {content.strengths !== undefined && (
               <div className="relative overflow-hidden rounded-[16px] border border-status-success-border/60 bg-status-success-bg/10 p-6">
                 <h3 className="mb-6 flex items-center gap-2 text-[12px] font-black uppercase tracking-widest text-status-success-fg border-b border-dashed border-status-success-border/40 pb-3">
                   <CheckCircle2 className="h-4 w-4" /> FORTALEZAS
                 </h3>
                 <ul className="space-y-4 relative z-10">
-                  {content.strengths.map((s: string, i: number) => (
+                  {content.strengths?.length > 0 ? content.strengths.map((s: any, i: number) => (
                     <li key={i} className="flex gap-3 text-[11px] font-mono text-status-success-text uppercase leading-relaxed">
                       <span className="text-status-success-fg font-black text-xs">&gt;</span>
-                      <span>{s}</span>
+                      <span>{s.title ? `${s.title}: ${s.message}` : typeof s === 'string' ? s : JSON.stringify(s)}</span>
                     </li>
-                  ))}
+                  )) : (
+                    <li className="flex gap-3 text-[11px] font-mono text-status-success-text/70 uppercase leading-relaxed">
+                      <span className="text-status-success-fg/50 font-black text-xs">&gt;</span>
+                      <span>SYS_MSG: Sin datos suficientes para detectar fortalezas.</span>
+                    </li>
+                  )}
                 </ul>
               </div>
-              
+          )}
+
+          {content.weaknesses !== undefined && (
               <div className="relative overflow-hidden rounded-[16px] border border-status-danger-border/60 bg-status-danger-bg/10 p-6">
                 <h3 className="mb-6 flex items-center gap-2 text-[12px] font-black uppercase tracking-widest text-status-danger-fg border-b border-dashed border-status-danger-border/40 pb-3">
                   <AlertTriangle className="h-4 w-4" /> ASPECTOS A MEJORAR
                 </h3>
                 <ul className="space-y-4 relative z-10">
-                  {content.weaknesses.map((w: string, i: number) => (
+                  {content.weaknesses?.length > 0 ? content.weaknesses.map((w: any, i: number) => (
                     <li key={i} className="flex gap-3 text-[11px] font-mono text-status-danger-text uppercase leading-relaxed">
                       <span className="text-status-danger-fg font-black">!</span>
-                      <span>{w}</span>
+                      <span>{w.title ? `${w.title}: ${w.message}` : typeof w === 'string' ? w : JSON.stringify(w)}</span>
                     </li>
-                  ))}
+                  )) : (
+                    <li className="flex gap-3 text-[11px] font-mono text-status-danger-text/70 uppercase leading-relaxed">
+                      <span className="text-status-danger-fg/50 font-black">!</span>
+                      <span>SYS_OK: No se detectaron métricas en estado crítico. Todo en orden.</span>
+                    </li>
+                  )}
                 </ul>
               </div>
-            </>
           )}
 
-          {content.alerts && content.alerts.length > 0 && (
+          {content.alerts !== undefined && (
             <div className="relative overflow-hidden rounded-[20px] border border-status-warning-border/60 bg-status-warning-bg/10 p-6 md:col-span-2">
               <h3 className="mb-6 flex items-center gap-2 text-[12px] font-black uppercase tracking-widest text-status-warning-fg border-b border-dashed border-status-warning-border/40 pb-3">
                 <ShieldAlert className="h-4 w-4" /> ALERTAS IMPORTANTES
               </h3>
               <div className="grid gap-4 relative z-10">
-                {content.alerts.map((alert: any, i: number) => (
+                {content.alerts?.length > 0 ? content.alerts.map((alert: any, i: number) => (
                   <div key={i} className="flex items-start gap-4 rounded-[12px] border border-status-warning-border/40 bg-status-warning-bg/30 p-4 md:p-5">
                     <div className="mt-0.5 p-2 bg-status-warning-bg rounded-[8px] border border-status-warning-border/50 shrink-0">
                       <ShieldAlert className="h-5 w-5 text-status-warning-fg" />
                     </div>
                     <div className="min-w-0">
                       <p className="font-bold text-status-warning-text uppercase text-[11px] md:text-[12px] mb-1">{alert.title}</p>
-                      <p className="text-[10px] md:text-[11px] font-mono leading-relaxed text-status-warning-text/80 uppercase break-words">{alert.description}</p>
+                      <p className="text-[10px] md:text-[11px] font-mono leading-relaxed text-status-warning-text/80 uppercase break-words">{alert.message || alert.description}</p>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <div className="flex items-start gap-4 rounded-[12px] border border-status-warning-border/40 bg-status-warning-bg/30 p-4 md:p-5">
+                    <div className="min-w-0">
+                      <p className="font-bold text-status-warning-text/70 uppercase text-[11px] md:text-[12px] mb-1">SYS_OK: SIN ALERTAS</p>
+                      <p className="text-[10px] md:text-[11px] font-mono leading-relaxed text-status-warning-text/60 uppercase break-words">No se detectaron alertas operativas para este periodo.</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -237,10 +254,10 @@ export function ReportViewer({ content }: ReportViewerProps) {
                 <Lightbulb className="h-4 w-4" /> RECOMENDACIONES
               </h3>
               <div className="grid gap-4 sm:grid-cols-2 relative z-10">
-                {content.strategic_recommendations.map((rec: string, i: number) => (
+                {content.strategic_recommendations.map((rec: any, i: number) => (
                   <div key={i} className="rounded-[12px] border border-border/40 bg-background/50 p-4 md:p-5 text-[10px] md:text-[11px] font-mono uppercase leading-relaxed text-foreground">
                     <span className="text-accent font-black mr-2 bg-accent/10 px-1.5 py-0.5 rounded border border-accent/20">[{i + 1}]</span>
-                    {rec}
+                    {rec.title ? `${rec.title}: ${rec.message}` : typeof rec === 'string' ? rec : JSON.stringify(rec)}
                   </div>
                 ))}
               </div>

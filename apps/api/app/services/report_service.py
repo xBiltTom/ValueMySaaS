@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi import HTTPException, status
 
-from app.models.enums import ReportStatus, ReportType
+from app.models.enums import ReportStatus, ReportType, SaasStage
 from app.models.report import Report
 from app.repositories.metric_snapshot_repository import MetricSnapshotRepository
 from app.repositories.report_repository import ReportRepository
@@ -180,7 +180,7 @@ class ReportService:
         }
 
     def _executive_content(self, *, project, dashboard, latest_score, generated_at: datetime) -> dict:
-        if project.stage == ProjectStage.PLANNING:
+        if project.stage == SaasStage.PLANNING:
             return {
                 "kind": "EXECUTIVE",
                 "generated_at": generated_at.isoformat(),

@@ -1,15 +1,17 @@
 import { z } from "zod";
 
-const optionalMoneyOrRate = z.number().min(0, "Debe ser 0 o mayor.").optional();
-const optionalCount = z
+const preprocessNumber = (schema: z.ZodTypeAny) => z.preprocess((val) => val === "" ? undefined : (typeof val === "string" && !isNaN(Number(val)) ? Number(val) : val), schema);
+
+const optionalMoneyOrRate = preprocessNumber(z.number().min(0, "Debe ser 0 o mayor.").optional());
+const optionalCount = preprocessNumber(z
   .number()
   .int("Debe ser un numero entero.")
   .min(0, "Debe ser 0 o mayor.")
-  .optional();
+  .optional());
 
 export const metricSnapshotSchema = z.object({
-  period_label: z.string().min(2, "El periodo es obligatorio."),
-  captured_at: z.string().optional(),
+  period_label: z.string().optional(),
+  captured_at: z.string().min(1, "Debes seleccionar un mes para registrar el snapshot."),
   mrr: optionalMoneyOrRate,
   monthly_revenue: optionalMoneyOrRate,
   monthly_costs: optionalMoneyOrRate,
@@ -21,10 +23,10 @@ export const metricSnapshotSchema = z.object({
   new_users: optionalCount,
   new_paying_customers: optionalCount,
   churned_customers: optionalCount,
-  nps: z.number().min(-100).max(100).optional(),
+  nps: preprocessNumber(z.number().min(-100).max(100).optional()),
   support_tickets: optionalCount,
   critical_bugs: optionalCount,
-  uptime_percentage: z.number().min(0).max(100).optional(),
+  uptime_percentage: preprocessNumber(z.number().min(0).max(100).optional()),
   notes: z.string().optional(),
   custom_metrics: z.any().optional(),
 });

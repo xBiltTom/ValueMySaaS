@@ -26,9 +26,10 @@ class FakeUser:
 
 
 class FakeProject:
-    def __init__(self, *, project_id: uuid.UUID, owner_id: uuid.UUID) -> None:
+    def __init__(self, *, project_id: uuid.UUID, owner_id: uuid.UUID, stage: str = "MVP") -> None:
         self.id = project_id
         self.owner_id = owner_id
+        self.stage = stage
         self.deleted_at = None
 
 

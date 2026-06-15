@@ -2,6 +2,7 @@
 
 Incluye: usuarios, créditos, API Keys del sistema y estadísticas globales.
 """
+
 from datetime import datetime
 from uuid import UUID
 
@@ -9,13 +10,14 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.models.enums import AiProvider, CreditReason, UserRole
 
-
 # ---------------------------------------------------------------------------
 # Usuarios (admin)
 # ---------------------------------------------------------------------------
 
+
 class AdminUserRead(BaseModel):
     """Vista de usuario para el admin — incluye datos que el usuario no ve."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
@@ -44,8 +46,10 @@ class AdminUserListResponse(BaseModel):
 # Créditos
 # ---------------------------------------------------------------------------
 
+
 class CreditGrantRequest(BaseModel):
     """Request para otorgar o revocar créditos a un usuario."""
+
     delta: int = Field(
         description="Número de créditos a otorgar (positivo) o revocar (negativo). No puede ser 0.",
         examples=[10, -5],
@@ -81,6 +85,7 @@ class CreditTransactionListResponse(BaseModel):
 # ---------------------------------------------------------------------------
 # System AI Keys
 # ---------------------------------------------------------------------------
+
 
 class SystemAiKeyCreate(BaseModel):
     provider: AiProvider
@@ -141,6 +146,7 @@ class SystemAiKeyVerifyResponse(BaseModel):
 # Estadísticas del sistema
 # ---------------------------------------------------------------------------
 
+
 class AdminStatsResponse(BaseModel):
     total_users: int
     active_users: int
@@ -148,3 +154,116 @@ class AdminStatsResponse(BaseModel):
     credits_consumed_today: int
     total_system_keys: int
     active_system_keys: int
+
+
+# ---------------------------------------------------------------------------
+# System Config
+# ---------------------------------------------------------------------------
+
+
+class SystemConfigRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    key: str
+    value: str
+    description: str | None
+    updated_at: datetime
+
+
+class SystemConfigUpdate(BaseModel):
+    value: str = Field(max_length=2000)
+
+
+class BulkGrantCreditsRequest(BaseModel):
+    """Otorgar créditos a TODOS los usuarios activos."""
+
+    delta: int = Field(gt=0, description="Créditos a agregar a cada usuario activo.")
+    description: str | None = Field(
+        default="Bono global del administrador", max_length=500
+    )
+
+
+class ToggleUserActiveRequest(BaseModel):
+    is_active: bool
+
+
+# ---------------------------------------------------------------------------
+# ChatGPT Web Accounts
+# ---------------------------------------------------------------------------
+
+
+class ChatGptWebAccountCreate(BaseModel):
+    email: str = Field(min_length=3, max_length=320)
+    user_agent: str | None = Field(default=None, max_length=500)
+    priority: int = Field(default=1, ge=1)
+
+
+class ChatGptWebAccountUpdate(BaseModel):
+    email: str | None = Field(default=None, min_length=3, max_length=320)
+    user_agent: str | None = None
+    priority: int | None = Field(default=None, ge=1)
+    is_active: bool | None = None
+    is_locked: bool | None = None
+
+
+class ChatGptWebInjectTokenRequest(BaseModel):
+    session_token_part0: str = Field(
+        min_length=10,
+        description=(
+            "Valor de la cookie __Secure-next-auth.session-token.0 "
+            "(parte principal del JWT encriptado)."
+        ),
+    )
+    session_token_part1: str = Field(
+        default="",
+        description=(
+            "Valor de la cookie __Secure-next-auth.session-token.1 "
+            "(firma HMAC, obligatoria si ChatGPT la exige)."
+        ),
+    )
+    cf_clearance: str = Field(
+        default="",
+        description=(
+            "Cookie cf_clearance de Cloudflare (necesaria para que httpx"
+            " pueda atravesar Cloudflare). Cópiala de DevTools junto al token."
+        ),
+    )
+    user_agent: str | None = Field(
+        default=None,
+        max_length=500,
+        description="User-Agent del navegador con el que se inició sesión (recomendado).",
+    )
+    expires_at: str | None = Field(
+        default=None,
+        description="Fecha de expiración ISO-8601 (opcional, solo referencial).",
+    )
+
+
+class ChatGptWebAccountRead(BaseModel):
+    id: UUID
+    email: str
+    has_password: bool
+    has_session_token: bool
+    session_expires_at: str | None
+    user_agent: str | None
+    session_token_part0: str | None = None
+    session_token_part1: str | None = None
+    cf_clearance: str | None = None
+    is_active: bool
+    priority: int
+    error_count: int
+    is_locked: bool
+    last_used_at: str | None
+    created_at: str | None
+    updated_at: str | None
+
+
+class ChatGptWebAccountListResponse(BaseModel):
+    items: list[ChatGptWebAccountRead]
+    total: int
+    limit: int
+    offset: int
+
+
+class ChatGptWebVerifyResponse(BaseModel):
+    ok: bool
+    message: str

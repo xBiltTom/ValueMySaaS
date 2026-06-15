@@ -129,7 +129,7 @@ class FakeCreditService:
         self.provider = provider
         self.api_key = api_key
 
-    async def resolve_llm_credentials(self, *, user, ai_key_id):
+    async def resolve_llm_credentials(self, *, user, ai_key_id, use_system_credits=False):
         from app.services.credit_service import LlmCredentials
         return LlmCredentials(
             provider=self.provider,
@@ -148,7 +148,7 @@ class FakeContextService:
 
 
 class FakeLlm:
-    async def generate_analysis(self, *, provider, api_key, model_name, system_prompt, user_prompt):
+    async def generate_analysis(self, *, provider, api_key, model_name, system_prompt, user_prompt, fallback_keys=None, **kwargs):
         return LlmResponse(
             output_text="Tu churn debe revisarse con prioridad.",
             tokens_input=10,

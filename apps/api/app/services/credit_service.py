@@ -15,8 +15,10 @@ from app.core.security import decrypt_api_key, encrypt_api_key
 from app.models.enums import AiProvider, CreditReason
 from app.models.user import User
 from app.repositories.ai_key_repository import AiProviderKeyRepository
+from app.repositories.chatgpt_web_account_repository import ChatGptWebAccountRepository
 from app.repositories.credit_transaction_repository import CreditTransactionRepository
 from app.repositories.system_ai_key_repository import SystemAiKeyRepository
+from app.repositories.system_config_repository import SystemConfigRepository
 from app.repositories.user_repository import UserRepository
 
 
@@ -33,6 +35,9 @@ class LlmCredentials:
     # Keys de sistema adicionales a intentar en orden si la primaria falla (failover)
     # Cada tupla: (provider, api_key_decrypted, default_model)
     fallback_system_keys: list[tuple[AiProvider, str, str | None]] = field(default_factory=list)
+    # Para ChatGPT Web
+    user_agent: str | None = None
+    account_id: UUID | None = None
 
 
 class CreditService:
@@ -44,17 +49,22 @@ class CreditService:
         ai_key_repository: AiProviderKeyRepository,
         system_ai_key_repository: SystemAiKeyRepository,
         credit_transaction_repository: CreditTransactionRepository,
+        system_config_repository: SystemConfigRepository,
+        chatgpt_web_account_repository: ChatGptWebAccountRepository | None = None,
     ) -> None:
         self.user_repository = user_repository
         self.ai_key_repository = ai_key_repository
         self.system_ai_key_repository = system_ai_key_repository
         self.credit_transaction_repository = credit_transaction_repository
+        self.system_config_repository = system_config_repository
+        self.chatgpt_web_account_repository = chatgpt_web_account_repository
 
     async def resolve_llm_credentials(
         self,
         *,
         user: User,
         ai_key_id: UUID | None,
+        use_system_credits: bool = False,
     ) -> LlmCredentials:
         """Resuelve qué credenciales usar para llamar al LLM.
 
@@ -64,20 +74,21 @@ class CreditService:
         """
         # --- Caso 1: BYOK ---
         key = None
-        if ai_key_id is not None:
-            key = await self.ai_key_repository.get_active_by_id_for_user(
-                key_id=ai_key_id, user_id=user.id
-            )
-            if key is None:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="API Key propia no encontrada o inactiva.",
+        if not use_system_credits:
+            if ai_key_id is not None:
+                key = await self.ai_key_repository.get_active_by_id_for_user(
+                    key_id=ai_key_id, user_id=user.id
                 )
-        else:
-            # Intentar obtener la primera API Key activa del usuario (fallback automático a BYOK)
-            keys = await self.ai_key_repository.list_by_user(user_id=user.id, active_only=True, limit=1)
-            if keys:
-                key = keys[0]
+                if key is None:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="API Key propia no encontrada o inactiva.",
+                    )
+            else:
+                # Intentar obtener la primera API Key activa del usuario (fallback automático a BYOK)
+                keys = await self.ai_key_repository.list_by_user(user_id=user.id, active_only=True, limit=1)
+                if keys:
+                    key = keys[0]
 
         if key is not None:
             try:
@@ -95,50 +106,68 @@ class CreditService:
             )
 
         # --- Caso 2: Créditos del sistema ---
-        if user.ai_credits > 0:
-            system_keys = await self.system_ai_key_repository.get_all_active_ordered()
-            if not system_keys:
-                raise HTTPException(
-                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail=(
-                        "El sistema de créditos no está configurado. "
-                        "Contacta al administrador o usa tu propia API Key."
-                    ),
-                )
-            primary_key = system_keys[0]
-            try:
-                decrypted = decrypt_api_key(primary_key.encrypted_api_key)
-            except RuntimeError as exc:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Error interno en la clave del sistema.",
-                ) from exc
-
-            # Construir lista de fallback con las keys restantes (ignorar las que fallen al desencriptar)
-            fallback: list[tuple[AiProvider, str, str | None]] = []
-            for sk in system_keys[1:]:
-                try:
-                    fallback.append((sk.provider, decrypt_api_key(sk.encrypted_api_key), sk.default_model))
-                except RuntimeError:
-                    pass
-
-            return LlmCredentials(
-                provider=primary_key.provider,
-                api_key=decrypted,
-                model_name=primary_key.default_model,
-                credit_used=True,
-                system_key_id=primary_key.id,
-                fallback_system_keys=fallback,
+        system_credits_enabled = await self.system_config_repository.get_value("system_credits_enabled")
+        if system_credits_enabled != "true":
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail="El sistema de créditos está temporalmente desactivado por el administrador. Por favor, configura tu propia API Key.",
             )
 
-        # --- Caso 3: Sin acceso ---
-        raise HTTPException(
-            status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail=(
-                "No tienes créditos de IA disponibles y no tienes una API Key configurada. "
-                "Opciones: (1) Configura tu propia API Key en Configuración → IA, "
-                "o (2) Contacta a tu administrador para recibir más créditos."
-            ),
+        if user.ai_credits <= 0:
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail=(
+                    "No tienes créditos de IA disponibles y no tienes una API Key configurada. "
+                    "Opciones: (1) Configura tu propia API Key en Configuración → IA, "
+                    "o (2) Contacta a tu administrador para recibir más créditos."
+                ),
+            )
+
+        # --- Rama 2a: G4F ---
+        use_g4f = await self.system_config_repository.get_value("use_g4f_for_system_credits")
+        # Default to true if not set, or we can just check if it equals "true"
+        if use_g4f == "true":
+            return LlmCredentials(
+                provider=AiProvider.G4F,
+                api_key="g4f_dummy",
+                model_name=None,
+                credit_used=True,
+                system_key_id=None,
+            )
+
+        # --- Rama 2b: SystemAiKey (API tradicional) ---
+        system_keys = await self.system_ai_key_repository.get_all_active_ordered()
+        if not system_keys:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=(
+                    "El sistema de créditos no está configurado. "
+                    "Contacta al administrador o usa tu propia API Key."
+                ),
+            )
+        primary_key = system_keys[0]
+        try:
+            decrypted = decrypt_api_key(primary_key.encrypted_api_key)
+        except RuntimeError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error interno en la clave del sistema.",
+            ) from exc
+
+        fallback: list[tuple[AiProvider, str, str | None]] = []
+        for sk in system_keys[1:]:
+            try:
+                fallback.append((sk.provider, decrypt_api_key(sk.encrypted_api_key), sk.default_model))
+            except RuntimeError:
+                pass
+
+        return LlmCredentials(
+            provider=primary_key.provider,
+            api_key=decrypted,
+            model_name=primary_key.default_model,
+            credit_used=True,
+            system_key_id=primary_key.id,
+            fallback_system_keys=fallback,
         )
 
     async def consume_credit(

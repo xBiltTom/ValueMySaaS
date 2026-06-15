@@ -29,6 +29,7 @@ KEY_METRICS = [
     "total_users",
     "churn_rate",
     "cac",
+    "mrr_growth_rate",
 ]
 
 class SaasScoreService:
@@ -132,8 +133,7 @@ class SaasScoreService:
         growth_score = self._calculate_growth_score(calculation, strengths, weaknesses, alerts, recommendations)
         retention_score = self._calculate_retention_score(calculation, strengths, weaknesses, alerts, recommendations)
         
-        # Product/Risk logic simplified
-        product_score = Decimal("50")
+        product_score = self._calculate_product_score(calculation, strengths, weaknesses, alerts, recommendations)
         risk_score = self._calculate_risk_score(calculation, alerts)
 
         overall_score = self._round_score(
@@ -227,6 +227,17 @@ class SaasScoreService:
         if paying_customers is not None and paying_customers > 0:
             score += 15
 
+        mrr_growth = self._metric_value(calculation, 'mrr_growth_rate')
+        if mrr_growth is not None:
+            if mrr_growth >= Decimal('0.20'):  # >20% MoM
+                score += 25
+                strengths.append(self._diagnostic('HIGH_MRR_GROWTH', 'Crecimiento MRR alto', 'El MRR crece más del 20% mensual.'))
+            elif mrr_growth >= Decimal('0.05'):  # 5-20%
+                score += 10
+            elif mrr_growth < 0:  # negative growth
+                score -= 20
+                weaknesses.append(self._diagnostic('NEGATIVE_MRR_GROWTH', 'MRR en caída', 'El MRR disminuyó respecto al mes anterior.'))
+
         return self._round_score(self._clamp(score))
 
     def _calculate_retention_score(
@@ -250,6 +261,34 @@ class SaasScoreService:
                 score -= 30
                 alerts.append(self._alert("high", "HIGH_CHURN", "Cancelación alta", "Muchos clientes abandonan el servicio."))
                 
+        return self._round_score(self._clamp(score))
+
+    def _calculate_product_score(
+        self,
+        calculation: MetricCalculationResponse,
+        strengths: list[dict],
+        weaknesses: list[dict],
+        alerts: list[dict],
+        recommendations: list[dict],
+    ) -> Decimal:
+        score = Decimal('50')
+        # NPS from custom_metrics
+        nps_metric = calculation.metrics.get('nps')
+        nps = None
+        if nps_metric and nps_metric.source != 'missing' and nps_metric.value is not None:
+            try:
+                nps = Decimal(str(nps_metric.value))
+            except Exception:
+                pass
+        if nps is not None:
+            if nps >= 50:
+                score += 20
+                strengths.append(self._diagnostic('HIGH_NPS', 'NPS excelente', 'Los usuarios recomiendan activamente el producto.'))
+            elif nps >= 20:
+                score += 10
+            elif nps < 0:
+                score -= 20
+                weaknesses.append(self._diagnostic('NEGATIVE_NPS', 'NPS negativo', 'Los detractores superan a los promotores.'))
         return self._round_score(self._clamp(score))
 
     def _calculate_risk_score(self, calculation: MetricCalculationResponse, alerts: list[dict]) -> Decimal:

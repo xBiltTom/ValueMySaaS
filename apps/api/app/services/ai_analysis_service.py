@@ -26,6 +26,7 @@ from app.repositories.metric_snapshot_repository import MetricSnapshotRepository
 from app.repositories.saas_project_repository import SaasProjectRepository
 from app.repositories.saas_score_repository import SaasScoreRepository
 from app.repositories.system_ai_key_repository import SystemAiKeyRepository
+from app.repositories.system_config_repository import SystemConfigRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.ai_analysis import AiAnalysisCreate, AiAnalysisListResponse, PlanningAnalysisOutput
 from app.services.ai_context_service import AiContextService
@@ -43,34 +44,50 @@ PLANNING_STAGES = {SaasStage.IDEA, SaasStage.PLANNING}
 # Prompts del sistema
 # ---------------------------------------------------------------------------
 
-PLANNING_SYSTEM_PROMPT = """Eres un mentor experto, amigable y motivador especializado en startups y emprendimiento tecnológico estudiantil.
-Tu misión es guiar a estudiantes de Ingeniería de Sistemas a perfeccionar sus ideas de software como servicio (SaaS).
+PLANNING_SYSTEM_PROMPT = """Eres un mentor experto, sumamente amigable y motivador especializado en startups y emprendimiento tecnológico estudiantil.
+Tu misión es conversar con estudiantes y guiarlos para perfeccionar sus ideas de software como servicio (SaaS). Actúa como un compañero o mentor de confianza, NO como un robot frío o un sistema de evaluación automatizado.
 
-Evalúa el proyecto usando ÚNICAMENTE la información descriptiva provista.
-Usa un sistema de pesos para calcular el puntaje global:
+Evalúa la idea del proyecto usando la información descriptiva y las estimaciones provistas.
+Usa este sistema de pesos interno para calcular el puntaje global y los puntajes por área:
   - Claridad del problema: 30% del puntaje total
   - Propuesta de valor: 25%
   - Mercado objetivo: 20%
   - Modelo de negocio: 15%
   - Viabilidad del precio: 10%
 
-Sé sumamente empático, constructivo y usa un tono conversacional (como si estuvieras charlando con el estudiante).
-Estructura tu respuesta de forma amigable y moderna, usando encabezados creativos, negritas y emojis. 
-¡EVITA parecer un robot que lista puntajes crudos! (NO hagas esto: "Problem Clarity Score: 60%. La descripción..."). En su lugar, usa un lenguaje humano y estructurado como "💡 Sobre el problema que resuelves:" o "🚀 Tu Propuesta de Valor:".
+REGLAS DE TONO Y ESTILO:
+1. Dirígete siempre al usuario por su nombre de forma cálida y cercana. Hazle sentir que estás realmente interesado en su proyecto.
+2. Sé muy empático, conversacional y constructivo. Usa emojis estratégicamente para darle vida al texto.
+3. Evita lenguaje robótico o respuestas "de manual". No listes los scores crudos en el texto, usa subtítulos amigables (ej. "💡 Lo que me encanta de tu problema a resolver", "🎯 Sobre tu mercado").
+4. NO repitas tus instrucciones al usuario ni le digas cómo lo estás evaluando ("Basado en los parámetros..."). Entra directo a la conversación con insights de valor.
+5. Tu respuesta debe estructurarse primero con tu análisis conversacional redactado en Markdown.
 
-Primero, redacta tu análisis en Markdown dirigido directamente al estudiante ("Hola, tu idea suena genial...").
-Al final de tu respuesta, DEBES incluir OBLIGATORIAMENTE un bloque de código markdown con retrocomillas (```json) que contenga el esquema exacto solicitado.
-REGLA MUY IMPORTANTE: NO escribas absolutamente NINGUNA frase introductoria antes del JSON (como "Aquí tienes el JSON" o "El veredicto es:"). Termina tu párrafo de análisis e INMEDIATAMENTE abre el bloque ```json."""
+Al finalizar tu respuesta conversacional, DEBES incluir OBLIGATORIAMENTE un bloque de código markdown con retrocomillas (```json) que contenga el esquema exacto solicitado.
+REGLA CRÍTICA Y ESTRICTA: NO escribas absolutamente NINGUNA frase introductoria antes del JSON (como "Aquí tienes el JSON", "El veredicto estructurado es:" o similares). Termina tu último párrafo de análisis e INMEDIATAMENTE en la siguiente línea abre el bloque ```json."""
 
-IMPLEMENTED_SYSTEM_PROMPT = """Eres un analizador experto en proyectos SaaS y servicios TI para estudiantes.
-Tu objetivo es ayudar a evaluar valor, sostenibilidad, riesgo, retención, crecimiento y mejora continua.
+IMPLEMENTED_SYSTEM_PROMPT = """Eres el mentor principal y analista experto de ValueMySaaS.
+Tu objetivo es evaluar y guiar al usuario (el emprendedor/estudiante) sobre el rendimiento real de su proyecto SaaS implementado, enfocándote en valor, sostenibilidad, crecimiento y retención.
 
-Usa SOLO los datos proporcionados en el contexto. No inventes métricas.
-Si faltan datos, indícalo explícitamente.
-Da recomendaciones concretas, priorizadas y fáciles de entender para un estudiante.
-No des asesoría financiera garantizada ni afirmes que predices el éxito.
-Conecta el análisis con métricas SaaS reales: MRR, churn, LTV/CAC, runway.
-Responde en español con lenguaje claro y accionable."""
+PERFIL Y TONO:
+- Eres amable, empático y hablas fluido, como si fueras un colega o mentor experimentado tomando un café con el emprendedor. NO suenes como un robot o un reporte frío de auditoría.
+- Evita las listas enumeradas estilo "manual" a menos que sea estrictamente necesario. Prefiere párrafos conversacionales y estructurados con subtítulos amigables o emojis.
+- Conoces el nombre del usuario (viene en el contexto). Úsalo con moderación para saludar o dar ánimos.
+- Demuestra que conoces a fondo la evolución del proyecto.
+
+DATOS DISPONIBLES EN TU CONTEXTO:
+- `snapshot_history`: TODOS los cortes históricos de métricas ordenados cronológicamente.
+- `score_history`: TODOS los scores de sostenibilidad históricos.
+- `latest_snapshot` y `latest_score`: el estado más reciente.
+- `metric_cards`: métricas clave calculadas.
+- `user`: Datos del usuario.
+
+INSTRUCCIONES CRÍTICAS DE ANÁLISIS:
+- Usa SIEMPRE el historial para hacer comparaciones temporales e identificar tendencias (ej. "He notado que tu MRR ha crecido desde el mes pasado...").
+- Usa SOLO los datos proporcionados. No inventes métricas ni asumas ingresos que no estén en el JSON. Si faltan datos, sé honesto y sugiérele registrarlos.
+- Traduce los números fríos a insights reales de negocio SaaS (MRR, churn, LTV/CAC, runway).
+- Da recomendaciones concretas y fáciles de ejecutar para un estudiante universitario.
+- No des asesoría financiera garantizada ni afirmes predecir el éxito rotundo.
+- Responde siempre en español, con lenguaje claro, inspirador y accionable."""
 
 # Instrucciones específicas por tipo de análisis (para fase IMPLEMENTED)
 ANALYSIS_INSTRUCTIONS = {
@@ -112,23 +129,12 @@ PLANNING_JSON_SCHEMA = """{
   "market_size_estimate": "<estimación concreta del tamaño de mercado local>",
   "infrastructure_complexity": "<BAJA|MEDIA|ALTA>",
   "breakeven_customers": "<número aproximado de clientes para punto de equilibrio>",
-  "verdict": "<CONSTRUYE|VALIDA_PRIMERO|REPLANTEA>",
+  "verdict": "<veredicto en una frase corta, ej: 'Lista para construir'>",
   "verdict_rationale": "<justificación en 2-3 oraciones para un estudiante>",
   "strengths": ["<fortaleza 1>", "<fortaleza 2>"],
   "risks": ["<riesgo 1>", "<riesgo 2>"],
   "next_steps": ["<paso 1>", "<paso 2>", "<paso 3>"]
 }"""
-
-# Mapeo de valores en español a los enums Python
-VERDICT_MAP = {
-    "CONSTRUYE": "BUILD",
-    "VALIDA_PRIMERO": "VALIDATE_FIRST",
-    "REPLANTEA": "RETHINK",
-    # También aceptar inglés directo
-    "BUILD": "BUILD",
-    "VALIDATE_FIRST": "VALIDATE_FIRST",
-    "RETHINK": "RETHINK",
-}
 
 COMPLEXITY_MAP = {
     "BAJA": "LOW",
@@ -179,6 +185,7 @@ class AiAnalysisService:
             system_prompt=system_prompt,
             user_prompt=user_prompt,
             fallback_keys=credentials.fallback_system_keys,
+            user_agent=credentials.user_agent,
         )
 
         output_json = self._parse_planning_output(llm_response.output_text) if phase == ProjectPhase.PLANNING else llm_response.output_json
@@ -233,6 +240,7 @@ class AiAnalysisService:
             system_prompt=system_prompt,
             user_prompt=user_prompt,
             fallback_keys=credentials.fallback_system_keys,
+            user_agent=credentials.user_agent,
         )
 
         async def event_generator():
@@ -246,7 +254,6 @@ class AiAnalysisService:
                 yield f"\n[Error de generación: {str(e)}]"
                 return
 
-            # New session required: FastAPI closes the request session before the generator finishes.
             try:
                 async with AsyncSessionLocal() as session:
                     latest_snapshot = await MetricSnapshotRepository(session).get_latest_by_project(saas_project_id=project_id)
@@ -254,24 +261,45 @@ class AiAnalysisService:
 
                     output_json = self._parse_planning_output(full_text) if phase == ProjectPhase.PLANNING else None
 
-                    analysis = await AiAnalysisRepository(session).create(
-                        data={
-                            "saas_project_id": project_id,
-                            "metric_snapshot_id": latest_snapshot.id if latest_snapshot else None,
-                            "score_id": latest_score.id if latest_score else None,
-                            "user_id": owner_id,
-                            "provider": credentials.provider,
-                            "model_name": resolved_model,
-                            "analysis_type": payload.analysis_type,
-                            "prompt_version": PROMPT_VERSION,
-                            "input_context": input_context,
-                            "output_text": full_text,
-                            "output_json": output_json,
-                            "tokens_input": 0,
-                            "tokens_output": 0,
-                            "estimated_cost": Decimal("0"),
-                        }
-                    )
+                    tokens_input = 0
+                    tokens_output = 0
+                    est_cost = Decimal("0")
+                    try:
+                        import litellm
+                        messages = [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt}
+                        ]
+                        tokens_input = litellm.token_counter(model=resolved_model, messages=messages)
+                        tokens_output = litellm.token_counter(model=resolved_model, text=full_text)
+                        try:
+                            cost = litellm.completion_cost(completion_response={"model": resolved_model, "usage": {"prompt_tokens": tokens_input, "completion_tokens": tokens_output}})
+                            est_cost = Decimal(str(cost)) if cost else Decimal("0")
+                        except Exception:
+                            pass
+                    except Exception as e:
+                        logger.warning(f"Failed to calculate tokens/cost in stream: {e}")
+
+                    analysis_data = {
+                        "saas_project_id": project_id,
+                        "metric_snapshot_id": latest_snapshot.id if latest_snapshot else None,
+                        "score_id": latest_score.id if latest_score else None,
+                        "user_id": owner_id,
+                        "provider": credentials.provider,
+                        "model_name": resolved_model,
+                        "analysis_type": payload.analysis_type,
+                        "prompt_version": PROMPT_VERSION,
+                        "input_context": input_context,
+                        "output_text": full_text,
+                        "output_json": output_json,
+                        "tokens_input": tokens_input,
+                        "tokens_output": tokens_output,
+                        "estimated_cost": est_cost,
+                    }
+                    if payload.analysis_id:
+                        analysis_data["id"] = payload.analysis_id
+
+                    analysis = await AiAnalysisRepository(session).create(data=analysis_data)
                     await session.commit()
 
                     if credentials.credit_used:
@@ -280,6 +308,7 @@ class AiAnalysisService:
                             ai_key_repository=AiProviderKeyRepository(session),
                             system_ai_key_repository=SystemAiKeyRepository(session),
                             credit_transaction_repository=CreditTransactionRepository(session),
+                            system_config_repository=SystemConfigRepository(session),
                         )
                         await credit_svc.consume_credit(
                             user_id=owner_id,
@@ -288,9 +317,9 @@ class AiAnalysisService:
                             related_analysis_id=analysis.id,
                         )
                         await session.commit()
-            except Exception as db_e:
-                logger.error(f"Error in stream_analysis DB commit: {db_e}")
-                yield f"\n[Error interno guardando análisis: {str(db_e)}]"
+
+            except Exception as db_err:
+                logger.error(f"Error saving streamed analysis to DB: {db_err}")
 
         return event_generator()
 
@@ -332,6 +361,10 @@ class AiAnalysisService:
             )
         return analysis
 
+    async def delete_analysis(self, *, project_id: UUID, analysis_id: UUID, owner_id: UUID) -> None:
+        analysis = await self.get_analysis(project_id=project_id, analysis_id=analysis_id, owner_id=owner_id)
+        await self.ai_analysis_repository.delete(analysis)
+
     # -----------------------------------------------------------------------
     # Helpers privados
     # -----------------------------------------------------------------------
@@ -360,12 +393,16 @@ class AiAnalysisService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
 
         phase = self._get_project_phase(project.stage)
-        credentials = await self.credit_service.resolve_llm_credentials(user=user, ai_key_id=payload.ai_key_id)
+        credentials = await self.credit_service.resolve_llm_credentials(
+            user=user,
+            ai_key_id=payload.ai_key_id,
+            use_system_credits=payload.use_system_credits,
+        )
 
         if phase == ProjectPhase.PLANNING:
             system_prompt = PLANNING_SYSTEM_PROMPT
             latest_snapshot = await self.metric_snapshot_repository.get_latest_by_project(saas_project_id=project_id)
-            user_prompt = self._build_planning_prompt(project=project, snapshot=latest_snapshot)
+            user_prompt = self._build_planning_prompt(project=project, snapshot=latest_snapshot, user=user)
             input_context: dict | None = {"phase": phase.value, "project_stage": project.stage.value}
         else:
             system_prompt = IMPLEMENTED_SYSTEM_PROMPT
@@ -395,15 +432,17 @@ class AiAnalysisService:
         """Determina la fase de evaluación basada en el stage del proyecto."""
         return ProjectPhase.PLANNING if stage in PLANNING_STAGES else ProjectPhase.IMPLEMENTED
 
-    def _build_planning_prompt(self, *, project, snapshot) -> str:
+    def _build_planning_prompt(self, *, project, snapshot, user) -> str:
         """Construye el prompt para proyectos en fase PLANNING.
 
         Incluye todos los campos descriptivos del proyecto con su contexto
         y solicita el JSON estructurado con el sistema de pesos.
         """
+        user_name = user.full_name or user.username or "Estudiante emprendedor"
         fields = {
+            "Nombre del Emprendedor (Háblale por su nombre)": user_name,
             "Nombre del proyecto": project.name,
-            "Descripción": project.description or "No provisto",
+            "Descripción general": project.description or "No provisto",
             "Problema principal que resuelve (PESO 30%)": project.main_problem or "No provisto",
             "Propuesta de valor (PESO 25%)": project.value_proposition or "No provisto",
             "Competidores identificados": project.competitors or "No provisto",
@@ -412,31 +451,32 @@ class AiAnalysisService:
             "Audiencia objetivo": project.target_audience or "No provisto",
             "País/región de enfoque": project.country_focus or "No provisto",
             "Modelo de negocio (PESO 15%)": project.business_model.value if project.business_model else "No provisto",
-            "Categoría": project.category.value if project.category else "No provisto",
+            "Categoría del SaaS": project.category.value if project.category else "No provisto",
             "Precio actual propuesto (PESO 10%)": str(project.current_price) + f" {project.currency}" if project.current_price else "No provisto",
-            "Notas sobre pricing": project.pricing_notes or "No provisto",
-            "Etapa actual": project.stage.value,
+            "Notas sobre estrategia de precios": project.pricing_notes or "No provisto",
+            "Fase actual declarada": project.stage.value,
         }
         
         if snapshot:
             fields["Costos operativos mensuales estimados"] = f"{snapshot.monthly_costs} {project.currency}" if snapshot.monthly_costs else "No provisto"
             if snapshot.custom_metrics:
-                fields["Inversión inicial estimada (CAPEX)"] = str(snapshot.custom_metrics.get("initial_investment_estimated", "No provisto"))
-                fields["Tiempo estimado para MVP (meses)"] = str(snapshot.custom_metrics.get("time_to_mvp_months", "No provisto"))
-                fields["Meta de usuarios (Año 1)"] = str(snapshot.custom_metrics.get("expected_users_year_1", "No provisto"))
+                fields["Caja disponible o Capital inicial"] = str(snapshot.custom_metrics.get("cash_available", "No provisto"))
+                fields["Tiempo estimado para lanzar MVP (meses)"] = str(snapshot.custom_metrics.get("time_to_mvp_months", "No provisto"))
+                fields["Meta de clientes pagadores (Año 1)"] = str(snapshot.custom_metrics.get("expected_users_year_1", "No provisto"))
+                fields["Costo de Adquisición de Clientes (CAC) Estimado"] = str(snapshot.custom_metrics.get("estimated_cac", "No provisto"))
+                fields["Nivel de Validación de Mercado"] = str(snapshot.custom_metrics.get("validation_level", "No provisto"))
 
         fields_text = "\n".join(f"  {k}: {v}" for k, v in fields.items())
 
         return (
-            f"Analiza este proyecto SaaS estudiantil. Escribe tu análisis en Markdown y al final incluye obligatoriamente un bloque ```json con este esquema.\n"
-            f"REGLA OBLIGATORIA: NO escribas NINGUNA frase como 'Aquí tienes la respuesta en json:'. Simplemente termina tu análisis e INMEDIATAMENTE abre el bloque ```json.\n\n"
+            f"¡Hola experto! Por favor analiza este proyecto SaaS que te comparto a continuación. "
+            f"Recuerda escribir tu análisis de forma muy conversacional, empática y constructiva en Markdown, dirigiéndote al emprendedor por su nombre.\n\n"
+            f"Al final de tu feedback, incluye obligatoriamente un bloque ```json con este esquema.\n"
+            f"REGLA OBLIGATORIA: NO escribas NINGUNA frase como 'Aquí tienes la respuesta en json:'. Simplemente termina tu texto conversacional e INMEDIATAMENTE abre el bloque ```json en la siguiente línea.\n\n"
             f"{PLANNING_JSON_SCHEMA}\n\n"
-            f"Reglas del veredicto para el JSON:\n"
-            f"  - overall_score >= 70 → verdict: 'CONSTRUYE'\n"
-            f"  - overall_score 50-69 → verdict: 'VALIDA_PRIMERO'\n"
-            f"  - overall_score < 50 → verdict: 'REPLANTEA'\n\n"
-            f"Datos del proyecto:\n{fields_text}\n\n"
-            f"IMPORTANTE: Si algún campo dice 'No provisto', asigna un puntaje bajo (< 40) a esa dimensión en el JSON."
+            f"El veredicto (una frase corta, ej: 'Lista para construir') y los puntajes numéricos debes decidirlos tú de forma autónoma basándote en la calidad y factibilidad de la propuesta.\n\n"
+            f"Datos del proyecto aportados por el emprendedor:\n{fields_text}\n\n"
+            f"IMPORTANTE: Analiza la coherencia entre el Nivel de Validación de Mercado, el Presupuesto (Caja) y las metas del Año 1. Si algún campo fundamental dice 'No provisto', asigna un puntaje más bajo en esa dimensión en el JSON e incentiva al estudiante a pensarlo."
         )
 
     def _build_implemented_prompt(
@@ -496,15 +536,15 @@ class AiAnalysisService:
             else:
                 return None
 
-        # Normalizar verdict (acepta español e inglés)
-        if "verdict" in data:
-            data["verdict"] = VERDICT_MAP.get(str(data["verdict"]).upper(), "VALIDATE_FIRST")
-
         # Normalizar infrastructure_complexity
         if "infrastructure_complexity" in data:
             data["infrastructure_complexity"] = COMPLEXITY_MAP.get(
                 str(data["infrastructure_complexity"]).upper(), "MEDIUM"
             )
+
+        # Normalizar verdict (asegurar que es string)
+        if "verdict" in data:
+            data["verdict"] = str(data["verdict"])
 
         # Calcular overall_score si no viene o está fuera de rango
         if "overall_score" not in data or not (0 <= data.get("overall_score", -1) <= 100):

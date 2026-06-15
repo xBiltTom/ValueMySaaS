@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useParams, useRouter } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingState } from "@/components/shared/loading-state";
@@ -23,6 +23,7 @@ export default function ConversationPage() {
   const params = useParams<{ id: string; conversationId: string }>();
   const projectId = params.id;
   const conversationId = params.conversationId;
+  const queryClient = useQueryClient();
 
   const [selectedKeyId, setSelectedKeyId] = useState("CREDITS");
   const [selectedModel, setSelectedModel] = useState("");
@@ -119,6 +120,8 @@ export default function ConversationPage() {
         }
       }
       messagesQuery.refetch();
+      queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
     } catch (e: any) {
       setChatError(e);
       // Remove assistant placeholder on error
@@ -205,13 +208,15 @@ export default function ConversationPage() {
                 </span>
               </div>
             </div>
-            <ChatModelSelector
-              activeKeys={activeKeys}
-              selectedKeyId={selectedKeyId}
-              setSelectedKeyId={handleKeyChange}
-              selectedModel={selectedModel}
-              setSelectedModel={handleModelChange}
-            />
+            <div className="flex items-center gap-3">
+              <ChatModelSelector
+                activeKeys={activeKeys}
+                selectedKeyId={selectedKeyId} 
+                setSelectedKeyId={handleKeyChange} 
+                selectedModel={selectedModel}
+                setSelectedModel={handleModelChange}
+              />
+            </div>
           </header>
 
           {/* Messages Scroll Area */}
@@ -247,17 +252,6 @@ export default function ConversationPage() {
                   total: messages.length, limit: 100, offset: 0
                 }} 
               />
-              {isChatLoading && messages[messages.length - 1]?.role === "user" && (
-                <div className="flex justify-start mt-8 mb-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                  <div className="bg-card/40 backdrop-blur-md border-2 border-primary/20 rounded-[8px] p-4 shadow-[4px_4px_0_rgba(var(--primary),0.1)] text-sm text-foreground/70 flex items-center gap-3 font-mono">
-                    <span className="relative flex h-3 w-3">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/60"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-primary m-0.5"></span>
-                    </span>
-                    <span className="animate-pulse uppercase tracking-wider text-[11px] font-black">PROCESANDO CONSULTA...</span>
-                  </div>
-                </div>
-              )}
               {chatError && (
                 <div className="mt-6 animate-in fade-in">
                   <div className="bg-destructive/10 border-2 border-destructive p-4 rounded-[8px]">

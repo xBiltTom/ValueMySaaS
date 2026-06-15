@@ -102,7 +102,13 @@ class SaasProject(Base):
     )
 
     __table_args__ = (
-        UniqueConstraint("owner_id", "slug", name="uq_saas_projects_owner_slug"),
+        Index(
+            "uq_saas_projects_owner_slug",
+            "owner_id",
+            "slug",
+            unique=True,
+            postgresql_where=text("deleted_at IS NULL"),
+        ),
         Index("ix_saas_projects_owner_stage", "owner_id", "stage"),
     )
 

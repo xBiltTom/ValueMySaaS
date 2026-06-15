@@ -23,6 +23,7 @@ from app.repositories.conversation_repository import ConversationRepository
 from app.repositories.credit_transaction_repository import CreditTransactionRepository
 from app.repositories.saas_project_repository import SaasProjectRepository
 from app.repositories.system_ai_key_repository import SystemAiKeyRepository
+from app.repositories.system_config_repository import SystemConfigRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.chat_message import ChatMessageListResponse, SendChatMessageRequest, SendChatMessageResponse
 from app.services.ai_context_service import AiContextService
@@ -36,17 +37,23 @@ CHAT_PROMPT_VERSION = "v2"
 # Número mínimo de mensajes recientes a incluir siempre
 RECENT_MESSAGES_WINDOW = 10
 
-CHAT_SYSTEM_PROMPT = """Eres el asistente conversacional de ValueMySaaS.
-Ayudas a estudiantes de Ingeniería de Sistemas a entender y mejorar su proyecto SaaS.
-Usas exclusivamente el contexto y el historial proporcionado como referencia.
+CHAT_SYSTEM_PROMPT = """Eres el mentor principal y asistente conversacional experto de ValueMySaaS.
+Tu objetivo es ayudar al usuario (el emprendedor/estudiante de Ingeniería de Sistemas) a entender, iterar y escalar su proyecto SaaS de forma exitosa.
 
-REGLAS CRÍTICAS:
-1. Responde ÚNICAMENTE a la "Pregunta del estudiante".
-2. Si el estudiante simplemente te saluda (ej. "hola", "buenos días"), devuélvele el saludo amablemente y pregúntale en qué puedes ayudarle con su proyecto. NO realices análisis ni des consejos no solicitados.
-3. El "Contexto del proyecto SaaS" es solo información pasiva. Úsala solo si es necesario para responder la pregunta actual.
-4. Explica conceptos como MRR, churn, LTV/CAC, de forma simple y clara cuando sea pertinente.
-5. No inventes datos. Si falta información, dilo claramente.
-6. Responde en español."""
+PERFIL Y TONO:
+- Eres amable, empático y hablas fluido, como si fueras un colega o mentor experimentado tomando un café con el emprendedor. NO suenes como un robot o un libro de texto.
+- Evita las listas enumeradas estilo "manual de instrucciones" a menos que sea estrictamente necesario. Prefiere párrafos conversacionales.
+- Conoces el nombre del usuario (lo encontrarás en el contexto), pero ÚSALO CON MODERACIÓN (no lo repitas en cada mensaje para no sonar artificial).
+- Usa el "Contexto del proyecto SaaS" (métricas, veredictos previos, alertas) para dar respuestas ultra-personalizadas. Demuestra que conoces su proyecto a fondo.
+
+REGLAS CRÍTICAS DE COMPORTAMIENTO:
+1. Responde de manera natural. Si el usuario te saluda, salúdalo por su nombre y pregúntale cómo va el proyecto.
+2. Mantente SIEMPRE en el dominio de SaaS (Software as a Service), startups, tecnología, negocios, modelos de suscripción o el proyecto específico del usuario.
+3. Si el usuario te pregunta cosas fuera de contexto (ej. recetas de cocina), declina educadamente enfocando la charla en su producto.
+4. Explica conceptos clave (MRR, Churn, CAC, LTV) de forma sencilla si ves que el proyecto flaquea en ellos.
+5. Usa el historial (snapshot_history y score_history) para detectar tendencias. Si notas que el MRR sube o el churn baja, felicítalo o dale un consejo basado en esa evolución temporal.
+6. No inventes métricas. Si no hay datos, pídeselos o sugiérele registrarlos en la plataforma.
+7. Responde siempre en español. No repitas respuestas previas; mantén la charla fresca y continua."""
 
 SUMMARY_SYSTEM_PROMPT = """Resume el siguiente historial de conversación en máximo 150 palabras.
 Conserva los puntos clave: decisiones tomadas, problemas identificados y recomendaciones dadas.
@@ -124,6 +131,7 @@ class ChatService:
         credentials = await self.credit_service.resolve_llm_credentials(
             user=user,
             ai_key_id=payload.ai_key_id,
+            use_system_credits=payload.use_system_credits,
         )
 
         # Guardar el mensaje del usuario
@@ -173,6 +181,7 @@ class ChatService:
             system_prompt=CHAT_SYSTEM_PROMPT,
             user_prompt=user_prompt,
             fallback_keys=credentials.fallback_system_keys,
+            user_agent=credentials.user_agent,
         )
 
         # Guardar la respuesta del asistente
@@ -244,6 +253,7 @@ class ChatService:
         credentials = await self.credit_service.resolve_llm_credentials(
             user=user,
             ai_key_id=payload.ai_key_id,
+            use_system_credits=payload.use_system_credits,
         )
 
         actual_message = payload.message or (payload.messages[-1].get("content", "") if payload.messages else "")
@@ -288,6 +298,7 @@ class ChatService:
             system_prompt=CHAT_SYSTEM_PROMPT,
             user_prompt=user_prompt,
             fallback_keys=credentials.fallback_system_keys,
+            user_agent=credentials.user_agent,
         )
 
         async def event_generator():
@@ -303,6 +314,8 @@ class ChatService:
 
             # New session required: FastAPI closes the request session before the generator finishes.
             try:
+                import logging
+                logging.getLogger(__name__).info(f"DB COMMIT START: credit_used={credentials.credit_used}, provider={credentials.provider}, ai_key_id={payload.ai_key_id}")
                 async with AsyncSessionLocal() as session:
                     chat_repo = ChatMessageRepository(session)
                     conv_repo = ConversationRepository(session)
@@ -344,6 +357,7 @@ class ChatService:
                             ai_key_repository=AiProviderKeyRepository(session),
                             system_ai_key_repository=SystemAiKeyRepository(session),
                             credit_transaction_repository=CreditTransactionRepository(session),
+                            system_config_repository=SystemConfigRepository(session),
                         )
                         await credit_svc.consume_credit(
                             user_id=owner_id,
@@ -352,6 +366,9 @@ class ChatService:
                         )
                         await session.commit()
             except Exception as db_e:
+                import traceback
+                with open("/tmp/debug.log", "a") as f:
+                    f.write(f"DB Error: {str(db_e)}\n{traceback.format_exc()}\n")
                 logger.error(f"Error guardando historial del chat en DB: {db_e}")
                 yield f"\n[Error interno guardando historial: {str(db_e)}]\n"
 
@@ -435,6 +452,7 @@ class ChatService:
                 system_prompt=SUMMARY_SYSTEM_PROMPT,
                 user_prompt=conversation_text,
                 fallback_keys=credentials.fallback_system_keys,
+                user_agent=credentials.user_agent,
             )
             return response.output_text.strip() or None
         except Exception as exc:

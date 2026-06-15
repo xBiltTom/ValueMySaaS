@@ -16,7 +16,7 @@ import {
   businessModels, categories, createProjectSchema, CreateProjectFormValues,
 } from "@/features/projects/schemas";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function Label({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
@@ -126,6 +126,16 @@ export function ProjectForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [step, setStep] = useState(0);
+  const [canSubmit, setCanSubmit] = useState(false);
+
+  useEffect(() => {
+    if (step === 3) {
+      const timer = setTimeout(() => setCanSubmit(true), 500);
+      return () => clearTimeout(timer);
+    } else {
+      setCanSubmit(false);
+    }
+  }, [step]);
 
   const form = useForm<CreateProjectFormValues>({
     resolver: zodResolver(createProjectSchema),
@@ -135,6 +145,7 @@ export function ProjectForm() {
       target_market: "", target_audience: "",
       main_problem: "", value_proposition: "",
       competitors: "", acquisition_strategy: "",
+      pricing_notes: "",
       current_price: 0, currency: "USD",
     },
   });
@@ -156,7 +167,7 @@ export function ProjectForm() {
   });
 
   const onSubmit = form.handleSubmit((values) => {
-    mutation.mutate({ ...values, country_focus: "Peru", pricing_notes: "", is_public_sample: false });
+    mutation.mutate({ ...values, country_focus: "Peru", pricing_notes: values.pricing_notes || "", is_public_sample: false });
   });
 
   const nextStep = async () => {
@@ -169,6 +180,21 @@ export function ProjectForm() {
       if (!valid) return;
     }
     setStep((s) => Math.min(s + 1, 3));
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    // Only intercept Enter if it's not a textarea (which needs Enter for newlines)
+    if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") {
+      e.preventDefault();
+      if (step === 0) setStep(1);
+      else if (step < 3) nextStep();
+      else {
+        // If step 3, we can submit
+        form.handleSubmit((values) => {
+          mutation.mutate({ ...values, country_focus: "Peru", pricing_notes: "", is_public_sample: false });
+        })();
+      }
+    }
   };
 
   return (
@@ -184,7 +210,7 @@ export function ProjectForm() {
 
       {mutation.isError ? <div className="mb-6"><ErrorState message={getApiErrorMessage(mutation.error)} /></div> : null}
 
-      <form onSubmit={onSubmit}>
+      <form onSubmit={onSubmit} onKeyDown={handleKeyDown}>
         {/* Step 0: Tipo de proyecto */}
         {step === 0 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
@@ -375,6 +401,7 @@ export function ProjectForm() {
                 <div>
                   <Label required>
                     PROBLEMA DETECTADO
+                    <Tooltip text="QUÉ DOLOR RESUELVES. EJ: PROCESOS LENTOS" />
                   </Label>
                   <BrutalistTextarea
                     rows={3}
@@ -387,6 +414,7 @@ export function ProjectForm() {
                 <div>
                   <Label required>
                     PROPUESTA DE SOLUCIÓN
+                    <Tooltip text="CÓMO LO RESUELVES. EJ: SOFTWARE IA AUTOMATIZADO" />
                   </Label>
                   <BrutalistTextarea
                     rows={3}
@@ -397,28 +425,50 @@ export function ProjectForm() {
                 </div>
 
                 {isPlanning && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t-2 border-border/60">
-                    <div>
-                      <Label>
-                        COMPETENCIA (WIP)
-                      </Label>
-                      <BrutalistTextarea
-                        rows={3}
-                        placeholder="EJ: EXCEL, SISTEMAS LEGACY..."
-                        {...form.register("competitors")}
-                      />
-                      <FieldError message={form.formState.errors.competitors?.message} />
+                  <div className="space-y-6 pt-4 border-t-2 border-border/60">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <Label>
+                          ALTERNATIVAS ACTUALES
+                          <Tooltip text="QUÉ USAN HOY TUS USUARIOS. EJ: EXCEL, SISTEMAS LEGACY, APPS RIVALES" />
+                        </Label>
+                        <BrutalistTextarea
+                          rows={3}
+                          placeholder="EJ: EXCEL, GOOGLE SHEETS, SOFTWARE LEGACY..."
+                          {...form.register("competitors")}
+                        />
+                        <FieldError message={form.formState.errors.competitors?.message} />
+                      </div>
+                      <div>
+                        <Label>
+                          ESTRATEGIA GTM
+                          <Tooltip text="CÓMO CONSEGUIRÁS TUS PRIMEROS CLIENTES. EJ: LINKEDIN OUTBOUND, REFERIDOS" />
+                        </Label>
+                        <BrutalistTextarea
+                          rows={3}
+                          placeholder="EJ: OUTBOUND SALES, ADS, COMUNIDADES..."
+                          {...form.register("acquisition_strategy")}
+                        />
+                        <FieldError message={form.formState.errors.acquisition_strategy?.message} />
+                      </div>
                     </div>
-                    <div>
-                      <Label>
-                        ESTRATEGIA GTM
-                      </Label>
-                      <BrutalistTextarea
-                        rows={3}
-                        placeholder="EJ: OUTBOUND SALES, ADS..."
-                        {...form.register("acquisition_strategy")}
-                      />
-                      <FieldError message={form.formState.errors.acquisition_strategy?.message} />
+                    {/* Ventaja diferencial — campo clave para evaluar defensibilidad */}
+                    <div className="relative">
+                      <div className="absolute -top-2 left-4 z-10">
+                        <span className="bg-primary px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-primary-foreground font-mono">CLAVE</span>
+                      </div>
+                      <div className="rounded-[8px] border-2 border-primary/50 bg-primary/5 p-4 pt-5">
+                        <Label>
+                          VENTAJA DIFERENCIAL
+                          <Tooltip text="¿POR QUÉ TU SOLUCIÓN ES DIFÍCIL DE COPIAR? EJ: TECNOLOGÍA PROPIA, RED DE USUARIOS, DATOS EXCLUSIVOS, KNOW-HOW DE INDUSTRIA" />
+                        </Label>
+                        <BrutalistTextarea
+                          rows={2}
+                          placeholder="EJ: INTEGRACIÓN NATIVA CON SISTEMAS PERUANOS QUE COMPETIDORES IGNORAN..."
+                          {...form.register("pricing_notes")}
+                        />
+                        <p className="mt-2 text-[9px] font-mono uppercase text-primary/70">&gt; ESTE DATO IMPACTA DIRECTAMENTE EN EL SCORE DE DEFENSIBILIDAD DEL PROYECTO.</p>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -434,7 +484,7 @@ export function ProjectForm() {
               <p className="text-[10px] font-black uppercase tracking-widest text-primary font-mono">STEP 04/04</p>
               <h2 className="text-2xl md:text-3xl font-display font-black uppercase tracking-tight text-foreground">PARAMETRIZACIÓN FINANCIERA</h2>
               <p className="text-muted-foreground text-[11px] font-mono uppercase">
-                &gt; Vías de monetización.
+                &gt; Vías de monetización y métricas base.
               </p>
             </div>
 
@@ -536,7 +586,7 @@ export function ProjectForm() {
           ) : (
             <button
               type="submit"
-              disabled={mutation.isPending}
+              disabled={mutation.isPending || !canSubmit}
               className={cn(
                 "group relative flex items-center gap-2 rounded-[8px] border-2 border-primary bg-primary px-10 py-4 text-[13px] font-black uppercase tracking-widest text-primary-foreground transition-all hover:bg-primary/90 active:translate-y-0.5 shadow-[6px_6px_0_rgba(var(--primary),0.4)] hover:shadow-[3px_3px_0_rgba(var(--primary),0.4)] disabled:opacity-50 disabled:cursor-not-allowed font-mono overflow-hidden",
               )}

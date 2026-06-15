@@ -1,7 +1,7 @@
 import { MetricCalculationResponse, MetricSnapshot, MetricSnapshotListResponse } from "@/types/api";
 
 export type CreateMetricSnapshotPayload = {
-  period_label: string;
+  period_label?: string;
   captured_at?: string;
   mrr?: number;
   monthly_revenue?: number;

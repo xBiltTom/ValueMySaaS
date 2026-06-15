@@ -19,3 +19,7 @@ export async function getAiAnalysis(projectId: string, analysisId: string) {
   );
   return data;
 }
+
+export async function deleteAiAnalysis(projectId: string, analysisId: string) {
+  await apiClient.delete(`/saas-projects/${projectId}/ai-analyses/${analysisId}`);
+}

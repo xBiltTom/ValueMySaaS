@@ -55,6 +55,10 @@ class AiAnalysisRepository:
         )
         return result.scalar_one_or_none()
 
+    async def delete(self, analysis: AiAnalysis) -> None:
+        await self.db.delete(analysis)
+        await self.db.commit()
+
     def _project_query(self, *, saas_project_id: UUID, analysis_type: AiAnalysisType | None):
         statement = select(AiAnalysis).where(AiAnalysis.saas_project_id == saas_project_id)
         if analysis_type is not None:

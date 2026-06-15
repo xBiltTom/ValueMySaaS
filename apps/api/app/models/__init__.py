@@ -10,6 +10,8 @@ from app.models.chat_message import ChatMessage
 from app.models.report import Report
 from app.models.system_ai_key import SystemAiKey
 from app.models.credit_transaction import CreditTransaction
+from app.models.system_config import SystemConfig
+from app.models.chatgpt_web_account import ChatGptWebAccount
 
 __all__ = [
     "User",
@@ -23,4 +25,6 @@ __all__ = [
     "Report",
     "SystemAiKey",
     "CreditTransaction",
+    "SystemConfig",
+    "ChatGptWebAccount",
 ]

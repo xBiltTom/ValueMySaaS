@@ -1,4 +1,4 @@
-import ReactMarkdown from "react-markdown";
+import { Streamdown } from "streamdown";
 import { Card } from "@/components/ui/card";
 import { ReportJsonRenderer } from "@/features/reports/components/report-json-renderer";
 import { AiAnalysis } from "@/features/ai-analyses/types";
@@ -40,18 +40,21 @@ function PlanningAnalysisRenderer({ data }: { data: any }) {
               <span>OUTPUT_VERDICT</span>
               <span className="h-2 w-px bg-border/50"></span>
               <span className={cn(
-                data.verdict === "BUILD" ? "text-emerald-500" :
-                data.verdict === "VALIDATE_MORE" ? "text-amber-500" : "text-destructive"
+                data.overall_score >= 75 ? "text-emerald-500" :
+                data.overall_score >= 50 ? "text-amber-500" : "text-destructive"
               )}>
-                {data.verdict}
+                {data.overall_score >= 75 ? "VIABLE" : data.overall_score >= 50 ? "AJUSTAR" : "RIESGO"}
               </span>
             </div>
-            <h2 className="font-display text-4xl font-black text-foreground uppercase tracking-tight leading-none">
-              {data.verdict === "BUILD" ? "¡Construye esto!" : 
-               data.verdict === "VALIDATE_MORE" ? "Valida un poco más" : "Pivota la idea"}
+            <h2 className={cn(
+              "font-display text-4xl font-black uppercase tracking-tight leading-none",
+              data.overall_score >= 75 ? "text-emerald-500" :
+              data.overall_score >= 50 ? "text-amber-500" : "text-destructive"
+            )}>
+              {data.verdict}
             </h2>
             <p className="text-[13px] font-mono leading-relaxed text-muted-foreground">
-              {data.reasoning}
+              {data.verdict_rationale || data.reasoning}
             </p>
           </div>
           
@@ -143,7 +146,7 @@ export function AiAnalysisResult({ analysis }: { analysis: AiAnalysis }) {
         <div className="relative overflow-hidden rounded-[24px] border border-border/60 bg-card/40 backdrop-blur-xl p-6 shadow-sm">
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none" />
           <div className="relative z-10 prose prose-neutral dark:prose-invert max-w-none prose-headings:font-display prose-headings:font-black prose-headings:uppercase prose-headings:tracking-wider prose-p:leading-relaxed prose-p:font-medium prose-p:text-[13px] prose-li:leading-relaxed prose-li:text-[13px] prose-strong:text-accent">
-            <ReactMarkdown>{text}</ReactMarkdown>
+            <Streamdown>{text}</Streamdown>
           </div>
         </div>
       )}

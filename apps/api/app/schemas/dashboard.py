@@ -8,6 +8,8 @@ from pydantic import BaseModel
 from app.models.enums import (
     BusinessModel,
     DecisionRecommendation,
+    IdeaVerdict,
+    InfrastructureComplexity,
     SaasCategory,
     SaasStage,
     SustainabilityLevel,
@@ -18,6 +20,26 @@ class DashboardRecommendation(BaseModel):
     priority: str
     title: str
     message: str
+
+
+class PlanningAiOutput(BaseModel):
+    """Subset of PlanningAnalysisOutput surfaced in the project dashboard."""
+    overall_score: int
+    problem_clarity_score: int
+    value_prop_score: int
+    market_fit_score: int
+    business_model_score: int
+    pricing_feasibility_score: int
+    verdict: str
+    verdict_rationale: str
+    market_size_estimate: str
+    infrastructure_complexity: InfrastructureComplexity
+    breakeven_customers: str
+    strengths: list[str]
+    risks: list[str]
+    next_steps: list[str]
+    analysis_id: str  # UUID of the source AiAnalysis
+
 
 
 class PortfolioProjectSummary(BaseModel):
@@ -88,14 +110,25 @@ class LatestScoreSummary(BaseModel):
 class MetricCards(BaseModel):
     mrr: Decimal | int | str | None = None
     arr: Decimal | int | str | None = None
+    monthly_revenue: Decimal | int | str | None = None
     paying_customers: Decimal | int | str | None = None
     total_users: Decimal | int | str | None = None
+    active_users: Decimal | int | str | None = None
     conversion_rate: Decimal | int | str | None = None
     churn_rate: Decimal | int | str | None = None
+    cac: Decimal | int | str | None = None
     retention_rate: Decimal | int | str | None = None
     ltv_cac_ratio: Decimal | int | str | None = None
+    net_profit: Decimal | int | str | None = None
+    arpu: Decimal | int | str | None = None
+    ltv: Decimal | int | str | None = None
+    mrr_growth_rate: Decimal | int | str | None = None
     runway_months: Decimal | int | str | None = None
     uptime_percentage: Decimal | int | str | None = None
+    # Planning-specific
+    cash_available: Decimal | int | str | None = None
+    burn_rate: Decimal | int | str | None = None
+    monthly_costs: Decimal | int | str | None = None
 
 
 class SeriesPoint(BaseModel):
@@ -121,3 +154,4 @@ class ProjectDashboardResponse(BaseModel):
     alerts: list[dict[str, Any]]
     recommendations: list[dict[str, Any] | DashboardRecommendation]
     series: ProjectSeries
+    planning_ai_output: PlanningAiOutput | None = None

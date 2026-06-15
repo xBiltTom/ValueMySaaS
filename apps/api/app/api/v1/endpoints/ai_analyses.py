@@ -81,3 +81,16 @@ async def get_ai_analysis(
         analysis_id=analysis_id,
         owner_id=current_user.id,
     )
+
+@router.delete("/{analysis_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_ai_analysis(
+    project_id: UUID,
+    analysis_id: UUID,
+    current_user: User = Depends(get_current_user),
+    ai_analysis_service: AiAnalysisService = Depends(get_ai_analysis_service),
+):
+    await ai_analysis_service.delete_analysis(
+        project_id=project_id,
+        analysis_id=analysis_id,
+        owner_id=current_user.id,
+    )

@@ -40,16 +40,18 @@ def _to_decimal(value) -> Decimal | None:
     return value if isinstance(value, Decimal) else Decimal(str(value))
 
 
-def _auto_fill_derived_metrics(data: dict) -> dict:
+def _auto_fill_derived_metrics(data: dict, force_recalc: list[str] | None = None) -> dict:
     """Calcula métricas derivadas si no fueron provistas por el cliente.
 
     Permite que el estudiante ingrese solo los datos básicos (mrr, monthly_costs,
     cash_available) y el sistema complete automáticamente las métricas complejas.
 
-    Solo completa campos que vengan como None — nunca sobrescribe valores explícitos.
+    Solo completa campos que vengan como None — nunca sobrescribe valores explícitos,
+    a menos que estén en la lista force_recalc.
     Todas las divisiones por cero están controladas.
     """
     d = dict(data)
+    force = force_recalc or []
 
     mrr = _to_decimal(d.get("mrr"))
     monthly_revenue = _to_decimal(d.get("monthly_revenue"))
@@ -69,8 +71,10 @@ def _auto_fill_derived_metrics(data: dict) -> dict:
             d["arr"] = (mrr * Decimal("12")).quantize(Decimal("0.01"))
 
     # 3. gross_profit = monthly_revenue - monthly_costs
-    if d.get("gross_profit") is None and monthly_revenue is not None and monthly_costs is not None:
-        d["gross_profit"] = (monthly_revenue - monthly_costs).quantize(Decimal("0.01"))
+    rev_for_calc = monthly_revenue or Decimal("0")
+    cost_for_calc = monthly_costs or Decimal("0")
+    if d.get("gross_profit") is None and (monthly_revenue is not None or monthly_costs is not None):
+        d["gross_profit"] = (rev_for_calc - cost_for_calc).quantize(Decimal("0.01"))
 
     gross_profit = _to_decimal(d.get("gross_profit"))
 
@@ -80,10 +84,24 @@ def _auto_fill_derived_metrics(data: dict) -> dict:
 
     burn_rate = _to_decimal(d.get("burn_rate"))
 
-    # 5. runway_months = cash_available / burn_rate (solo si burn_rate > 0)
-    if d.get("runway_months") is None and cash_available is not None and burn_rate is not None:
-        if burn_rate > Decimal("0"):
-            d["runway_months"] = (cash_available / burn_rate).quantize(Decimal("0.01"))
+    # 5. runway_months = cash_available / monthly_costs
+    if d.get("runway_months") is None and cash_available is not None and monthly_costs is not None:
+        if monthly_costs > Decimal("0"):
+            d["runway_months"] = (cash_available / monthly_costs).quantize(Decimal("0.01"))
+
+    # 6. churn_rate = churned_customers / paying_customers
+    if d.get('churn_rate') is None or 'churn_rate' in force:
+        churned = _to_decimal(d.get('churned_customers'))
+        paying_for_churn = _to_decimal(d.get('paying_customers'))
+        if churned is not None and paying_for_churn is not None and paying_for_churn > Decimal('0'):
+            d['churn_rate'] = (churned / paying_for_churn).quantize(Decimal('0.0001'))
+
+    # 7. cac = marketing_spend / new_paying_customers
+    if d.get('cac') is None or 'cac' in force:
+        marketing = _to_decimal(d.get('marketing_spend'))
+        new_paying = _to_decimal(d.get('new_paying_customers'))
+        if marketing is not None and new_paying is not None and new_paying > Decimal('0'):
+            d['cac'] = (marketing / new_paying).quantize(Decimal('0.01'))
 
     return d
 
@@ -130,6 +148,22 @@ class MetricSnapshotService:
         project = await self._ensure_project_owned(project_id=project_id, owner_id=owner_id)
         data = payload.model_dump(exclude_unset=True)
         data["captured_at"] = self._normalize_captured_at(data.get("captured_at"))
+
+        # Verify month uniqueness
+        dt = data.get("captured_at")
+        if dt:
+            from fastapi import HTTPException, status
+            # dt is already a datetime object at this point because _normalize_captured_at returns a datetime
+            exists = await self.metric_snapshot_repository.check_exists_for_month(
+                saas_project_id=project_id,
+                year=dt.year,
+                month=dt.month,
+            )
+            if exists:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Ya existe un snapshot para {dt.strftime('%m/%Y')}. Por favor, edita el existente en lugar de crear uno nuevo.",
+                )
 
         # For planning-phase projects, silently discard metrics that don't exist yet.
         stage = project.stage if isinstance(project.stage, SaasStage) else SaasStage(project.stage)
@@ -206,10 +240,46 @@ class MetricSnapshotService:
         data = payload.model_dump(exclude_unset=True)
         if "captured_at" in data:
             data["captured_at"] = self._normalize_captured_at(data["captured_at"])
-        # Auto-calcular métricas derivadas también en actualizaciones
-        data = _auto_fill_derived_metrics(data)
-        data = _pack_custom_metrics(data)
-        return await self.metric_snapshot_repository.update(snapshot=snapshot, data=data)
+
+        force_recalc = []
+        if "churned_customers" in data or "paying_customers" in data:
+            force_recalc.append("churn_rate")
+        if "marketing_spend" in data or "new_paying_customers" in data:
+            force_recalc.append("cac")
+
+        # 1. Base the full context on existing data
+        full_data = {
+            "period_label": snapshot.period_label,
+            "captured_at": snapshot.captured_at,
+            "mrr": snapshot.mrr,
+            "monthly_costs": snapshot.monthly_costs,
+            "total_users": snapshot.total_users,
+            "paying_customers": snapshot.paying_customers,
+            "cac": snapshot.cac,
+            "churn_rate": snapshot.churn_rate,
+            "notes": snapshot.notes,
+        }
+
+        # 2. Add existing custom metrics
+        if snapshot.custom_metrics:
+            for k, v in snapshot.custom_metrics.items():
+                full_data[k] = v
+
+        # 3. Overlay the incoming updates
+        for k, v in data.items():
+            if k == "custom_metrics" and isinstance(v, dict):
+                for ck, cv in v.items():
+                    full_data[ck] = cv
+            else:
+                full_data[k] = v
+
+        # 4. Auto-calcular métricas derivadas en la vista completa
+        full_data = _auto_fill_derived_metrics(full_data, force_recalc=force_recalc)
+        
+        # 5. Empaquetar todo lo que no es columna oficial
+        full_data = _pack_custom_metrics(full_data)
+        
+        return await self.metric_snapshot_repository.update(snapshot=snapshot, data=full_data)
 
     async def delete_snapshot(
         self,

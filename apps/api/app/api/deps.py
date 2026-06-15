@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError
+import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import decode_access_token
@@ -11,6 +11,7 @@ from app.models.user import User
 from app.repositories.ai_analysis_repository import AiAnalysisRepository
 from app.repositories.ai_key_repository import AiProviderKeyRepository
 from app.repositories.chat_message_repository import ChatMessageRepository
+from app.repositories.chatgpt_web_account_repository import ChatGptWebAccountRepository
 from app.repositories.conversation_repository import ConversationRepository
 from app.repositories.credit_transaction_repository import CreditTransactionRepository
 from app.repositories.metric_snapshot_repository import MetricSnapshotRepository
@@ -18,6 +19,7 @@ from app.repositories.report_repository import ReportRepository
 from app.repositories.saas_project_repository import SaasProjectRepository
 from app.repositories.saas_score_repository import SaasScoreRepository
 from app.repositories.system_ai_key_repository import SystemAiKeyRepository
+from app.repositories.system_config_repository import SystemConfigRepository
 from app.repositories.user_repository import UserRepository
 from app.services.admin_service import AdminService
 from app.services.ai_analysis_service import AiAnalysisService
@@ -25,6 +27,7 @@ from app.services.ai_context_service import AiContextService
 from app.services.ai_key_service import AiProviderKeyService
 from app.services.auth_service import AuthService
 from app.services.chat_service import ChatService
+from app.services.chatgpt_web_account_service import ChatGptWebAccountService
 from app.services.conversation_service import ConversationService
 from app.services.credit_service import CreditService
 from app.services.dashboard_service import DashboardService
@@ -44,7 +47,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 # ---------------------------------------------------------------------------
 
 def get_auth_service(db: AsyncSession = Depends(get_db)) -> AuthService:
-    return AuthService(UserRepository(db))
+    return AuthService(
+        user_repository=UserRepository(db),
+        system_config_repository=SystemConfigRepository(db),
+    )
 
 
 def get_llm_client_service() -> LlmClientService:
@@ -61,6 +67,14 @@ def get_credit_service(db: AsyncSession = Depends(get_db)) -> CreditService:
         ai_key_repository=AiProviderKeyRepository(db),
         system_ai_key_repository=SystemAiKeyRepository(db),
         credit_transaction_repository=CreditTransactionRepository(db),
+        system_config_repository=SystemConfigRepository(db),
+        chatgpt_web_account_repository=ChatGptWebAccountRepository(db),
+    )
+
+
+def get_chatgpt_web_account_service(db: AsyncSession = Depends(get_db)) -> ChatGptWebAccountService:
+    return ChatGptWebAccountService(
+        account_repository=ChatGptWebAccountRepository(db),
     )
 
 
@@ -124,6 +138,7 @@ def get_dashboard_service(db: AsyncSession = Depends(get_db)) -> DashboardServic
         metric_snapshot_repository,
         saas_score_repository,
         metric_calculation_service,
+        ai_analysis_repository=AiAnalysisRepository(db),
     )
 
 
@@ -177,6 +192,7 @@ def get_ai_context_service(db: AsyncSession = Depends(get_db)) -> AiContextServi
         metric_snapshot_repository,
         saas_score_repository,
         dashboard_service,
+        UserRepository(db),
     )
 
 
@@ -203,6 +219,7 @@ def get_ai_analysis_service(
         metric_snapshot_repository,
         saas_score_repository,
         dashboard_service,
+        UserRepository(db),
     )
     return AiAnalysisService(
         ai_analysis_repository=AiAnalysisRepository(db),
@@ -246,6 +263,7 @@ def get_chat_service(
         metric_snapshot_repository,
         saas_score_repository,
         dashboard_service,
+        UserRepository(db),
     )
     return ChatService(
         saas_project_repository=saas_project_repository,
@@ -273,6 +291,7 @@ def get_admin_service(
         ai_analysis_repository=AiAnalysisRepository(db),
         credit_service=credit_service,
         saas_project_repository=SaasProjectRepository(db),
+        system_config_repository=SystemConfigRepository(db),
     )
 
 
@@ -282,7 +301,6 @@ def get_admin_service(
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
-    auth_service: AuthService = Depends(get_auth_service),
 ) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -295,8 +313,35 @@ async def get_current_user(
         subject = payload.get("sub")
         if subject is None:
             raise credentials_exception
+            
         user_id = UUID(str(subject))
-    except (JWTError, ValueError):
+        email = payload.get("email", "")
+        is_active = payload.get("is_active", True)
+        role_str = payload.get("role", "USER")
+        
+        if not is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Inactive user",
+            )
+            
+        from app.models.enums import UserRole
+        from datetime import datetime, timezone
+        
+        # Construir usuario en memoria para evitar SELECT a DB en cada request
+        # Agregamos campos por defecto para evitar errores de validación de Pydantic
+        # con tokens legacy o endpoints que serializan el current_user
+        user = User(
+            id=user_id,
+            email=email if email and "@" in email else "legacy@example.com",
+            is_active=is_active,
+            role=UserRole[role_str] if isinstance(role_str, str) and role_str in UserRole.__members__ else UserRole.USER,
+            is_verified=payload.get("is_verified", False),
+            ai_credits=payload.get("ai_credits", 0),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        )
+        return user
+        
+    except (jwt.PyJWTError, ValueError):
         raise credentials_exception from None
-
-    return await auth_service.get_active_user(user_id)

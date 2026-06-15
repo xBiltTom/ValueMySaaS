@@ -89,7 +89,7 @@ class FakeCreditService:
     def __init__(self, key: FakeKey) -> None:
         self.key = key
 
-    async def resolve_llm_credentials(self, *, user, ai_key_id):
+    async def resolve_llm_credentials(self, *, user, ai_key_id, use_system_credits=False):
         from app.services.credit_service import LlmCredentials
         return LlmCredentials(
             provider=self.key.provider,
@@ -142,7 +142,7 @@ class FakeContextService:
 
 
 class FakeLlmClient:
-    async def generate_analysis(self, *, provider, api_key, model_name, system_prompt, user_prompt):
+    async def generate_analysis(self, *, provider, api_key, model_name, system_prompt, user_prompt, fallback_keys=None, **kwargs):
         return LlmResponse(
             output_text="Analisis generado con contexto estructurado.",
             output_json=None,
@@ -159,7 +159,7 @@ class ResolvingFakeLlmClient:
 
         self.client = LlmClientService()
 
-    async def generate_analysis(self, *, provider, api_key, model_name, system_prompt, user_prompt):
+    async def generate_analysis(self, *, provider, api_key, model_name, system_prompt, user_prompt, fallback_keys=None, **kwargs):
         resolved_model = self.client._resolve_litellm_model(provider=provider, model_name=model_name)
         return LlmResponse(
             output_text="Analisis generado con modelo resuelto.",

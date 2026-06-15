@@ -5,12 +5,43 @@ from decimal import Decimal
 from fastapi import HTTPException, status
 
 from app.models.enums import AiProvider
+from app.services.chatgpt_web_client import ChatGptWebClient, ChatGptWebClientError
 
 logger = logging.getLogger(__name__)
+
+# ── Per-provider text-model filters ─────────────────────────────────────────
+# These patterns are matched against the raw model IDs returned by each API.
+
+# OpenAI: prefixes / substrings that identify non-text models
+_OPENAI_EXCLUDE_PREFIXES: tuple[str, ...] = (
+    "dall-e",
+    "whisper-",
+    "tts-",
+    "text-embedding",
+    "text-search",
+    "text-similarity",
+    "code-search",
+)
+_OPENAI_EXCLUDE_SUBSTRINGS: tuple[str, ...] = (
+    "-embedding",
+    "-moderation",
+    "-audio-",
+)
+
+# NVIDIA / Groq: substrings that identify non-text models
+_GENERIC_EXCLUDE_SUBSTRINGS: tuple[str, ...] = (
+    "embed",
+    "rerank",
+    "vision",  # pure-vision/image-gen models — note: multimodal *text* models are fine
+    "tts",
+    "whisper",
+    "audio",
+)
 
 
 class ProviderKeyError(Exception):
     """El proveedor rechazó esta key (rate limit o autenticación). Intentar con la siguiente."""
+
     pass
 
 
@@ -42,13 +73,43 @@ class LlmClientService:
         system_prompt: str,
         user_prompt: str,
         fallback_keys: list[tuple[AiProvider, str, str | None]] | None = None,
+        user_agent: str | None = None,
     ) -> LlmResponse:
-        candidates: list[tuple[AiProvider, str, str | None]] = [(provider, api_key, model_name)]
+        if provider in (AiProvider.CHATGPT_WEB, AiProvider.G4F):
+            client = ChatGptWebClient()
+            try:
+                output_text = await client.send_message(
+                    session_token=api_key,
+                    system_prompt=system_prompt,
+                    user_prompt=user_prompt,
+                    user_agent=user_agent,
+                )
+                return LlmResponse(
+                    output_text=output_text,
+                    output_json=None,
+                    tokens_input=None,
+                    tokens_output=None,
+                    estimated_cost=None,
+                    model_name="chatgpt-web",
+                )
+            except ChatGptWebClientError as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail=str(exc),
+                )
+            finally:
+                await client.close()
+
+        candidates: list[tuple[AiProvider, str, str | None]] = [
+            (provider, api_key, model_name)
+        ]
         if fallback_keys:
             candidates.extend(fallback_keys)
 
         for try_provider, try_api_key, try_model in candidates:
-            resolved = self._resolve_litellm_model(provider=try_provider, model_name=try_model)
+            resolved = self._resolve_litellm_model(
+                provider=try_provider, model_name=try_model
+            )
             try:
                 response = await self._call_litellm(
                     api_key=try_api_key,
@@ -67,8 +128,26 @@ class LlmClientService:
                     model_name=resolved,
                 )
             except ProviderKeyError:
-                logger.warning("Provider %s rechazó la key, intentando siguiente fallback...", try_provider)
+                logger.warning(
+                    "Provider %s rechazó la key, intentando siguiente fallback...",
+                    try_provider,
+                )
                 continue
+            except ValueError as e:
+                if "request_too_large" in str(e) or "context_length_exceeded" in str(e):
+                    raise HTTPException(
+                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                        detail="El historial del proyecto es demasiado extenso para el límite de memoria (tokens) de este modelo pequeño. Intenta usar un modelo de mayor capacidad (ej. Claude 3.5 Sonnet, GPT-4o o Gemini 1.5 Pro).",
+                    )
+                raise
+            except Exception as e:
+                err_str = str(e).lower()
+                if "context_length_exceeded" in err_str or "maximum context length" in err_str:
+                    raise HTTPException(
+                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                        detail="El historial del proyecto es demasiado extenso para el límite de memoria (tokens) de este modelo pequeño. Intenta usar un modelo de mayor capacidad.",
+                    )
+                raise
 
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -84,16 +163,46 @@ class LlmClientService:
         system_prompt: str,
         user_prompt: str,
         fallback_keys: list[tuple[AiProvider, str, str | None]] | None = None,
+        user_agent: str | None = None,
     ):
-        from litellm import acompletion
-        from litellm.exceptions import RateLimitError, AuthenticationError
+        if provider in (AiProvider.CHATGPT_WEB, AiProvider.G4F):
+            client = ChatGptWebClient()
+            try:
+                async def _chatgpt_web_stream():
+                    try:
+                        async for chunk in client.stream_message(
+                            session_token=api_key,
+                            system_prompt=system_prompt,
+                            user_prompt=user_prompt,
+                            user_agent=user_agent,
+                        ):
+                            if chunk == "[[SESSION_EXPIRED]]":
+                                yield "\n\n⚠️ **Sesión de ChatGPT expirada**\nEl administrador necesita renovar la sesión en el panel de administración."
+                                return
+                            yield chunk
+                    finally:
+                        await client.close()
+                return "chatgpt-web", _chatgpt_web_stream()
+            except Exception as exc:
+                await client.close()
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail=f"ChatGPT Web error: {exc}",
+                )
 
-        candidates: list[tuple[AiProvider, str, str | None]] = [(provider, api_key, model_name)]
+        from litellm import acompletion
+        from litellm.exceptions import AuthenticationError, RateLimitError
+
+        candidates: list[tuple[AiProvider, str, str | None]] = [
+            (provider, api_key, model_name)
+        ]
         if fallback_keys:
             candidates.extend(fallback_keys)
 
         for try_provider, try_api_key, try_model in candidates:
-            resolved = self._resolve_litellm_model(provider=try_provider, model_name=try_model)
+            resolved = self._resolve_litellm_model(
+                provider=try_provider, model_name=try_model
+            )
             try:
                 kwargs = {
                     "model": resolved,
@@ -114,15 +223,30 @@ class LlmClientService:
                             delta = chunk.choices[0].delta.content or ""
                             if delta:
                                 yield delta
+                    except ValueError as e:
+                        if "request_too_large" in str(e) or "context_length_exceeded" in str(e):
+                            yield "\n\n⚠️ **Error de Capacidad del Modelo**\nEl historial del proyecto es demasiado extenso para el límite de memoria (tokens) de este modelo pequeño.\nPor favor, intenta usar un modelo de mayor capacidad (ej. Claude 3.5 Sonnet, Gemini 1.5 Pro, o GPT-4o) para proyectos con mucho historial."
+                        else:
+                            yield f"\n[Error de generación: {str(e)}]"
                     except Exception as e:
-                        yield f"\n[Error de generación: {str(e)}]"
+                        err_str = str(e).lower()
+                        if "context_length_exceeded" in err_str or "maximum context length" in err_str:
+                            yield "\n\n⚠️ **Error de Capacidad del Modelo**\nEl historial del proyecto es demasiado extenso para el límite de memoria (tokens) de este modelo. Por favor, intenta usar un modelo de mayor capacidad."
+                        else:
+                            yield f"\n[Error de generación: {str(e)}]"
 
                 return resolved, event_generator()
             except (RateLimitError, AuthenticationError) as exc:
-                logger.warning("Provider %s rechazó la key para stream, intentando siguiente...", try_provider)
+                logger.warning(
+                    "Provider %s rechazó la key para stream, intentando siguiente...",
+                    try_provider,
+                )
                 continue
             except Exception as exc:
-                raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="AI provider request failed") from exc
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail="AI provider request failed",
+                ) from exc
 
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -136,7 +260,9 @@ class LlmClientService:
         api_key: str,
         model_name: str | None,
     ) -> LlmResponse:
-        resolved_model = self._resolve_litellm_model(provider=provider, model_name=model_name)
+        resolved_model = self._resolve_litellm_model(
+            provider=provider, model_name=model_name
+        )
         try:
             response = await self._call_litellm(
                 api_key=api_key,
@@ -168,19 +294,29 @@ class LlmClientService:
             model_name=resolved_model,
         )
 
-    def _resolve_litellm_model(self, *, provider: AiProvider, model_name: str | None) -> str:
+    def _resolve_litellm_model(
+        self, *, provider: AiProvider, model_name: str | None
+    ) -> str:
         if provider == AiProvider.OPENAI:
             return model_name or "gpt-4o-mini"
 
         if provider == AiProvider.GEMINI:
             if not model_name:
                 return "gemini/gemini-1.5-flash"
-            return model_name if model_name.startswith("gemini/") else f"gemini/{model_name}"
+            return (
+                model_name
+                if model_name.startswith("gemini/")
+                else f"gemini/{model_name}"
+            )
 
         if provider == AiProvider.ANTHROPIC:
             if not model_name:
                 return "anthropic/claude-3-5-haiku-20241022"
-            return model_name if model_name.startswith("anthropic/") else f"anthropic/{model_name}"
+            return (
+                model_name
+                if model_name.startswith("anthropic/")
+                else f"anthropic/{model_name}"
+            )
 
         if provider == AiProvider.OPENROUTER:
             if not model_name:
@@ -188,17 +324,27 @@ class LlmClientService:
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="model_name is required for OPENROUTER, for example openrouter/meta-llama/llama-3.1-8b-instruct",
                 )
-            return model_name if model_name.startswith("openrouter/") else f"openrouter/{model_name}"
+            return (
+                model_name
+                if model_name.startswith("openrouter/")
+                else f"openrouter/{model_name}"
+            )
 
         if provider == AiProvider.GROQ:
             if not model_name:
                 return "groq/llama-3.3-70b-versatile"
-            return model_name if model_name.startswith("groq/") else f"groq/{model_name}"
+            return (
+                model_name if model_name.startswith("groq/") else f"groq/{model_name}"
+            )
 
         if provider == AiProvider.NVIDIA:
             if not model_name:
                 return "nvidia_nim/meta/llama-3.1-70b-instruct"
-            return model_name if model_name.startswith("nvidia_nim/") else f"nvidia_nim/{model_name}"
+            return (
+                model_name
+                if model_name.startswith("nvidia_nim/")
+                else f"nvidia_nim/{model_name}"
+            )
 
         if provider == AiProvider.OTHER:
             if not model_name or "/" not in model_name:
@@ -211,7 +357,9 @@ class LlmClientService:
                 )
             return model_name
 
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported AI provider")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported AI provider"
+        )
 
     async def _call_litellm(
         self,
@@ -224,7 +372,8 @@ class LlmClientService:
         max_tokens: int | None = None,
     ):
         from litellm import acompletion
-        from litellm.exceptions import RateLimitError, AuthenticationError
+        from litellm.exceptions import AuthenticationError, RateLimitError
+
         try:
             kwargs = {
                 "model": model_name,
@@ -275,59 +424,132 @@ class LlmClientService:
             return usage.get(key)
         return None
 
-    async def list_provider_models(self, *, provider: AiProvider, api_key: str) -> list[dict]:
-        import urllib.request
-        import json
-        import asyncio
+    # ── Text-model filtering ────────────────────────────────────────────────
 
-        def _fetch_models(url: str, headers: dict | None = None) -> list[dict]:
-            req_headers = headers or {}
-            if "User-Agent" not in req_headers:
-                req_headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-                
+    def _is_text_model_openai(self, model_id: str) -> bool:
+        """Return True if the OpenAI model ID corresponds to a text-generation model."""
+        lower = model_id.lower()
+        if any(lower.startswith(p) for p in _OPENAI_EXCLUDE_PREFIXES):
+            return False
+        if any(s in lower for s in _OPENAI_EXCLUDE_SUBSTRINGS):
+            return False
+        return True
+
+    def _is_text_model_openrouter(self, raw: dict) -> bool:
+        """OpenRouter exposes architecture.modality; keep only models whose *output* is text."""
+        modality: str = raw.get("architecture", {}).get("modality", "")
+        if not modality:
+            # No modality info — accept by default to avoid hiding valid models.
+            return True
+        return "->text" in modality
+
+    def _is_text_model_gemini(self, raw: dict) -> bool:
+        """Keep Gemini models that support generateContent (text generation)."""
+        methods: list[str] = raw.get("supportedGenerationMethods", [])
+        return "generateContent" in methods
+
+    def _is_text_model_generic(self, model_id: str) -> bool:
+        """Generic ID-based filter used for Groq, NVIDIA and similar providers."""
+        lower = model_id.lower()
+        return not any(s in lower for s in _GENERIC_EXCLUDE_SUBSTRINGS)
+
+    # ── Model listing ────────────────────────────────────────────────────────
+
+    async def list_provider_models(
+        self, *, provider: AiProvider, api_key: str
+    ) -> list[dict]:
+        import asyncio
+        import json
+        import urllib.request
+
+        def _fetch_raw(url: str, headers: dict | None = None) -> list[dict]:
+            """Fetch the raw model list from *url* and return it unparsed."""
+            req_headers = {**(headers or {})}
+            req_headers.setdefault(
+                "User-Agent",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            )
             req = urllib.request.Request(url, headers=req_headers)
             try:
-                with urllib.request.urlopen(req, timeout=10) as response:
-                    data = json.loads(response.read().decode("utf-8"))
-                    if provider == AiProvider.GEMINI:
-                        return [{"id": m["name"].replace("models/", ""), "name": m.get("displayName", m["name"])} for m in data.get("models", [])]
-                    elif provider == AiProvider.OPENROUTER:
-                        return [{"id": m["id"], "name": m.get("name", m["id"])} for m in data.get("data", [])]
-                    else:
-                        return [{"id": m["id"], "name": m["id"]} for m in data.get("data", [])]
-            except Exception as e:
-                print(f"Error fetching models: {e}")
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                    # Gemini wraps in "models", all others in "data"
+                    return data.get("models") or data.get("data") or []
+            except Exception as exc:
+                logger.warning("Error fetching models from %s: %s", url, exc)
                 return []
 
         if provider == AiProvider.OPENAI:
-            url = "https://api.openai.com/v1/models"
-            headers = {"Authorization": f"Bearer {api_key}"}
-            return await asyncio.to_thread(_fetch_models, url, headers)
+            raw = await asyncio.to_thread(
+                _fetch_raw,
+                "https://api.openai.com/v1/models",
+                {"Authorization": f"Bearer {api_key}"},
+            )
+            return [
+                {"id": m["id"], "name": m["id"]}
+                for m in raw
+                if self._is_text_model_openai(m.get("id", ""))
+            ]
+
         elif provider == AiProvider.OPENROUTER:
-            url = "https://openrouter.ai/api/v1/models"
-            headers = {"Authorization": f"Bearer {api_key}"}
-            return await asyncio.to_thread(_fetch_models, url, headers)
+            raw = await asyncio.to_thread(
+                _fetch_raw,
+                "https://openrouter.ai/api/v1/models",
+                {"Authorization": f"Bearer {api_key}"},
+            )
+            return [
+                {"id": m["id"], "name": m.get("name", m["id"])}
+                for m in raw
+                if self._is_text_model_openrouter(m)
+            ]
+
         elif provider == AiProvider.GEMINI:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
-            return await asyncio.to_thread(_fetch_models, url)
+            raw = await asyncio.to_thread(
+                _fetch_raw,
+                f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}",
+            )
+            return [
+                {
+                    "id": m["name"].replace("models/", ""),
+                    "name": m.get("displayName", m["name"]),
+                }
+                for m in raw
+                if self._is_text_model_gemini(m)
+            ]
+
         elif provider == AiProvider.GROQ:
-            url = "https://api.groq.com/openai/v1/models"
-            headers = {"Authorization": f"Bearer {api_key}"}
-            models = await asyncio.to_thread(_fetch_models, url, headers)
-            return [{"id": f"groq/{m['id']}", "name": m["name"]} for m in models]
+            raw = await asyncio.to_thread(
+                _fetch_raw,
+                "https://api.groq.com/openai/v1/models",
+                {"Authorization": f"Bearer {api_key}"},
+            )
+            return [
+                {"id": f"groq/{m['id']}", "name": m["id"]}
+                for m in raw
+                if self._is_text_model_generic(m.get("id", ""))
+            ]
+
         elif provider == AiProvider.NVIDIA:
-            url = "https://integrate.api.nvidia.com/v1/models"
-            headers = {"Authorization": f"Bearer {api_key}"}
-            models = await asyncio.to_thread(_fetch_models, url, headers)
-            return [{"id": f"nvidia_nim/{m['id']}", "name": m["name"]} for m in models]
-        elif provider == AiProvider.OTHER:
-            return []
+            raw = await asyncio.to_thread(
+                _fetch_raw,
+                "https://integrate.api.nvidia.com/v1/models",
+                {"Authorization": f"Bearer {api_key}"},
+            )
+            return [
+                {"id": f"nvidia_nim/{m['id']}", "name": m["id"]}
+                for m in raw
+                if self._is_text_model_generic(m.get("id", ""))
+            ]
+
         elif provider == AiProvider.ANTHROPIC:
-            # Anthropic doesn't have an endpoint. Provide static list.
+            # Anthropic has no public models endpoint; static list of text models.
             return [
                 {"id": "claude-3-5-sonnet-20240620", "name": "Claude 3.5 Sonnet"},
                 {"id": "claude-3-5-haiku-20241022", "name": "Claude 3.5 Haiku"},
-                {"id": "claude-3-opus-20240229", "name": "Claude 3 Opus"}
+                {"id": "claude-3-opus-20240229", "name": "Claude 3 Opus"},
             ]
-        
+
+        elif provider == AiProvider.OTHER:
+            return []
+
         return []

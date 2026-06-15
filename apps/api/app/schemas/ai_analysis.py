@@ -27,6 +27,10 @@ class AiAnalysisCreate(BaseModel):
         default=None,
         description="ID de tu API Key propia. Si no se provee, se usarán créditos del sistema.",
     )
+    use_system_credits: bool = Field(
+        default=False,
+        description="Indica si se deben usar créditos del sistema explícitamente.",
+    )
     analysis_type: AiAnalysisType
     model_name: str | None = Field(
         default=None,
@@ -35,6 +39,7 @@ class AiAnalysisCreate(BaseModel):
     )
     custom_question: str | None = Field(default=None, max_length=2000)
     prompt: str | None = Field(default=None, description="Ignorado, pero requerido por Vercel AI SDK")
+    analysis_id: UUID | None = Field(default=None, description="ID pre-generado por el frontend para el análisis")
 
 
 # ---------------------------------------------------------------------------
@@ -84,7 +89,9 @@ class PlanningAnalysisOutput(BaseModel):
     )
 
     # Veredicto final
-    verdict: IdeaVerdict
+    verdict: str = Field(
+        description="Veredicto final resumido en una frase corta (max 6 palabras)."
+    )
     verdict_rationale: str = Field(
         description="Justificación del veredicto en 2-3 oraciones claras para un estudiante."
     )

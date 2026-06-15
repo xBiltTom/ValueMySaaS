@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+.git/
+.env
+*.pyc
+.pytest_cache/
+tests/
+test_*.py
+fix_db_key.py
+check_config.py
+/tmp/
