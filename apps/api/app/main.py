@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.logging import configure_logging, logger
-from app.db.init_db import check_db_connection, run_migrations
+from app.db.init_db import check_db_connection, run_migrations, seed_admin_user
 
 
 @asynccontextmanager
@@ -15,6 +15,7 @@ async def lifespan(app: FastAPI):
     logger.info("Starting ValueMySaaS API | env=%s", settings.APP_ENV)
     await check_db_connection()
     await run_migrations()
+    await seed_admin_user()
     yield
     logger.info("Shutting down ValueMySaaS API")
 
