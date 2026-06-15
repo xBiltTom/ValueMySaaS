@@ -18,10 +18,9 @@ export function AppSidebar({ user }: { user?: User | null }) {
   const pathname = usePathname();
   const logout = useLogout();
 
-  const navItems = [...items];
-  if (user?.role === "ADMIN") {
-    navItems.push({ href: "/admin", label: "Administración", icon: Shield });
-  }
+  const navItems = user?.role === "ADMIN" 
+    ? [{ href: "/admin", label: "Administración", icon: Shield }]
+    : [...items];
 
   return (
     <aside className="hidden h-screen w-72 border-r border-border/80 dark:border-border/40 bg-background/90 dark:bg-background/80 backdrop-blur-xl px-5 py-6 lg:fixed lg:left-0 lg:top-0 lg:flex lg:flex-col relative z-30">

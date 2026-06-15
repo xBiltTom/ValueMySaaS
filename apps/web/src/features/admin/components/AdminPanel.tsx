@@ -53,6 +53,7 @@ import {
 } from "@/features/admin/api";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { cn } from "@/lib/utils";
 import { getApiErrorMessage } from "@/lib/api-client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -933,46 +934,61 @@ function ConfigTab({
 
       {/* G4F Toggle */}
       <div className="border-2 border-border/60 p-5 space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-2">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <Bot className="h-3.5 w-3.5" /> IA Gratuita (G4F)
-            </p>
-            <p className="text-sm font-semibold mt-0.5">
-              {isG4fEnabled
-                ? "Usando GPT4Free"
-                : "Usando System Keys"}
+              <Bot className="h-3.5 w-3.5" /> Proveedor de IA del Sistema
             </p>
             <p className="text-xs text-muted-foreground mt-1 max-w-sm">
-              {isG4fEnabled
-                ? "El sistema buscará automáticamente servidores gratuitos en internet. (No requiere configuración, pero puede ser inestable)."
-                : "Los créditos consumirán las System Keys (API tradicional) configuradas en la otra pestaña."}
+              Selecciona qué motor de IA se utilizará cuando los usuarios gasten sus créditos del sistema.
             </p>
           </div>
-          <Button
-            variant={isG4fEnabled ? "danger" : "primary"}
-            size="sm"
-            className="rounded-none"
-            onClick={() =>
-              updateConfigMutation.mutate({
-                key: "use_g4f_for_system_credits",
-                value: isG4fEnabled ? "false" : "true",
-              })
-            }
+        </div>
+        
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => {
+              if (!isG4fEnabled) {
+                updateConfigMutation.mutate({
+                  key: "use_g4f_for_system_credits",
+                  value: "true",
+                });
+              }
+            }}
+            className={cn(
+              "flex flex-col items-center justify-center p-4 border-2 transition-all rounded-none text-center gap-2",
+              isG4fEnabled 
+                ? "border-primary bg-primary/10 text-primary shadow-[4px_4px_0_rgba(var(--primary),0.2)]" 
+                : "border-border/60 hover:border-primary/50 text-muted-foreground hover:bg-muted"
+            )}
             disabled={updateConfigMutation.isPending}
           >
-            {isG4fEnabled ? (
-              <>
-                <ZapOff className="h-4 w-4 mr-2" />
-                Desactivar
-              </>
-            ) : (
-              <>
-                <Bot className="h-4 w-4 mr-2" />
-                Activar
-              </>
+            <Bot className={cn("h-6 w-6", isG4fEnabled ? "text-primary" : "text-muted-foreground")} />
+            <span className="font-bold text-sm">GPT4Free (Gratis)</span>
+            <span className="text-[10px] opacity-80 font-medium">Usa proveedores web sin costo.</span>
+          </button>
+
+          <button
+            onClick={() => {
+              if (isG4fEnabled) {
+                updateConfigMutation.mutate({
+                  key: "use_g4f_for_system_credits",
+                  value: "false",
+                });
+              }
+            }}
+            className={cn(
+              "flex flex-col items-center justify-center p-4 border-2 transition-all rounded-none text-center gap-2",
+              !isG4fEnabled 
+                ? "border-primary bg-primary/10 text-primary shadow-[4px_4px_0_rgba(var(--primary),0.2)]" 
+                : "border-border/60 hover:border-primary/50 text-muted-foreground hover:bg-muted"
             )}
-          </Button>
+            disabled={updateConfigMutation.isPending}
+          >
+            <KeyRound className={cn("h-6 w-6", !isG4fEnabled ? "text-primary" : "text-muted-foreground")} />
+            <span className="font-bold text-sm">System API Keys (Pago)</span>
+            <span className="text-[10px] opacity-80 font-medium">Usa las API Keys oficiales configuradas.</span>
+          </button>
         </div>
       </div>
 
