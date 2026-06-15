@@ -334,7 +334,7 @@ function UsersTab({
           />
         </div>
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
           onClick={onRefresh}
           className="rounded-none border-2 h-9"
@@ -483,7 +483,7 @@ function UsersTab({
                       </Badge>
                     ) : (
                       <Badge
-                        variant="destructive"
+                        variant="secondary"
                         className="rounded-none text-[9px] font-bold uppercase tracking-wider opacity-70"
                       >
                         Inactivo
@@ -780,7 +780,7 @@ function KeysTab({
             )}
           </button>
         </div>
-        {providerModels[newKey.provider as any]?.length > 0 ? (
+        {(providerModels as any)[newKey.provider]?.length > 0 ? (
           <select
             value={newKey.default_model}
             onChange={(e) =>
@@ -789,7 +789,7 @@ function KeysTab({
             className="h-9 w-full border-2 border-input bg-background px-3 text-xs font-mono rounded-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
           >
             <option value="">-- Modelo por defecto (Opcional) --</option>
-            {providerModels[newKey.provider as any].map((model) => (
+            {(providerModels as any)[newKey.provider].map((model: any) => (
               <option key={model.id} value={model.id}>
                 {model.name}
               </option>
@@ -824,422 +824,7 @@ function KeysTab({
   );
 }
 
-// ─── ChatGPT Web Tab ─────────────────────────────────────────────────────────
 
-const DEFAULT_UA =
-  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
-
-function ChatGptWebTab({
-  accounts,
-  isLoading,
-  queryClient,
-}: {
-  accounts: ChatGptWebAccount[];
-  isLoading: boolean;
-  queryClient: ReturnType<typeof useQueryClient>;
-}) {
-  const [newAccount, setNewAccount] = useState({
-    email: "",
-    priority: 1,
-    user_agent: "",
-  });
-  const [injectForm, setInjectForm] = useState<
-    Record<string, { open: boolean; tokenPart0: string; tokenPart1: string; cfClearance: string; userAgent: string }>
-  >({});
-  const [verifyResult, setVerifyResult] = useState<
-    Record<string, { ok: boolean; message: string } | null>
-  >({});
-
-  const addMutation = useMutation({
-    mutationFn: () =>
-      createChatGptWebAccount(
-        newAccount.email,
-        newAccount.priority,
-        newAccount.user_agent || null,
-      ),
-    onSuccess: () => {
-      setNewAccount({ email: "", priority: 1, user_agent: "" });
-      queryClient.invalidateQueries({
-        queryKey: ["admin", "chatgpt-accounts"],
-      });
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteChatGptWebAccount(id),
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: ["admin", "chatgpt-accounts"],
-      }),
-  });
-
-  const toggleActiveMutation = useMutation({
-    mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
-      updateChatGptWebAccount(id, { is_active }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: ["admin", "chatgpt-accounts"],
-      }),
-  });
-
-  const toggleLockMutation = useMutation({
-    mutationFn: ({ id, is_locked }: { id: string; is_locked: boolean }) =>
-      updateChatGptWebAccount(id, { is_locked }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: ["admin", "chatgpt-accounts"],
-      }),
-  });
-
-  const injectMutation = useMutation({
-    mutationFn: ({
-      id,
-      tokenPart0,
-      tokenPart1,
-      cfClearance,
-      userAgent,
-    }: {
-      id: string;
-      tokenPart0: string;
-      tokenPart1: string;
-      cfClearance: string;
-      userAgent: string;
-    }) => injectChatGptWebToken(id, tokenPart0, tokenPart1, cfClearance, userAgent || null),
-    onSuccess: (_data, { id }) => {
-      setInjectForm((prev) => ({
-        ...prev,
-        [id]: { open: false, tokenPart0: "", tokenPart1: "", cfClearance: "", userAgent: "" },
-      }));
-      queryClient.invalidateQueries({
-        queryKey: ["admin", "chatgpt-accounts"],
-      });
-    },
-  });
-
-  const verifyMutation = useMutation({
-    mutationFn: (id: string) => verifyChatGptWebAccount(id),
-    onSuccess: (data, id) =>
-      setVerifyResult((prev) => ({ ...prev, [id]: data })),
-  });
-
-  const toggleInjectForm = (a: ChatGptWebAccount) => {
-    setInjectForm((prev) => ({
-      ...prev,
-      [a.id]: prev[a.id]?.open
-        ? { open: false, tokenPart0: "", tokenPart1: "", cfClearance: "", userAgent: "" }
-        : { open: true, tokenPart0: a.session_token_part0 || "", tokenPart1: a.session_token_part1 || "", cfClearance: a.cf_clearance || "", userAgent: a.user_agent || navigator.userAgent },
-    }));
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* Existing Accounts */}
-      <div className="space-y-2">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">
-          Cuentas ChatGPT Web ({accounts.length})
-        </p>
-        {isLoading && <LoadingState label="Cargando cuentas..." />}
-        {accounts.map((a) => (
-          <div
-            key={a.id}
-            className={`border-2 ${a.is_active && !a.is_locked ? "border-border/60" : "border-border/30 opacity-60"}`}
-          >
-            <div className="p-4 flex items-center gap-4">
-              <div
-                className={`w-1 self-stretch rounded-sm ${a.is_locked ? "bg-destructive" : a.has_session_token ? "bg-emerald-500" : "bg-amber-500"}`}
-              />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold text-sm">{a.email}</span>
-                  <span className="text-[10px] text-muted-foreground border border-border/60 px-1.5 py-0.5">
-                    Prioridad: {a.priority}
-                  </span>
-                  {a.is_locked && (
-                    <span className="text-[10px] text-destructive border border-destructive/40 px-1.5 py-0.5 flex items-center gap-1">
-                      <Lock className="h-3 w-3" /> Necesita token
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
-                  <span
-                    className={
-                      a.has_session_token
-                        ? "text-emerald-500"
-                        : "text-amber-500"
-                    }
-                  >
-                    {a.has_session_token ? "✓ Sesión activa" : "○ Sin sesión"}
-                  </span>
-                  {a.session_expires_at && (
-                    <span>
-                      Expira:{" "}
-                      {new Date(a.session_expires_at).toLocaleDateString(
-                        "es-PE",
-                      )}
-                    </span>
-                  )}
-                  <span>Errores: {a.error_count}</span>
-                  {a.last_used_at && (
-                    <span>
-                      Último uso:{" "}
-                      {new Date(a.last_used_at).toLocaleDateString("es-PE", {
-                        day: "2-digit",
-                        month: "short",
-                      })}
-                    </span>
-                  )}
-                </div>
-                {verifyResult[a.id] && (
-                  <p
-                    className={`text-[10px] mt-1 flex items-center gap-1 ${verifyResult[a.id]?.ok ? "text-emerald-500" : "text-destructive"}`}
-                  >
-                    {verifyResult[a.id]?.ok ? (
-                      <CheckCircle className="h-3 w-3" />
-                    ) : (
-                      <XCircle className="h-3 w-3" />
-                    )}
-                    {verifyResult[a.id]?.message}
-                  </p>
-                )}
-              </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <Button
-                  variant="ghost"
-                  className={`h-8 px-2 rounded-none text-xs ${injectForm[a.id]?.open ? "text-primary" : "hover:text-primary"}`}
-                  onClick={() => toggleInjectForm(a)}
-                  title="Inyectar session token"
-                >
-                  <KeyRound className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="h-8 px-2 rounded-none text-xs"
-                  onClick={() => verifyMutation.mutate(a.id)}
-                  disabled={verifyMutation.isPending}
-                  title="Verificar conexión"
-                >
-                  <RefreshCw
-                    className={`h-3.5 w-3.5 ${verifyMutation.isPending ? "animate-spin" : ""}`}
-                  />
-                </Button>
-                <Button
-                  variant="ghost"
-                  className={`h-8 px-2 rounded-none text-xs ${a.is_locked ? "hover:text-emerald-500" : "hover:text-destructive"}`}
-                  onClick={() =>
-                    toggleLockMutation.mutate({
-                      id: a.id,
-                      is_locked: !a.is_locked,
-                    })
-                  }
-                  title={a.is_locked ? "Desbloquear" : "Bloquear"}
-                >
-                  {a.is_locked ? (
-                    <Unlock className="h-3.5 w-3.5" />
-                  ) : (
-                    <Lock className="h-3.5 w-3.5" />
-                  )}
-                </Button>
-                <Button
-                  variant="ghost"
-                  className={`h-8 px-2 rounded-none text-xs ${a.is_active ? "hover:text-amber-500" : "hover:text-emerald-500"}`}
-                  onClick={() =>
-                    toggleActiveMutation.mutate({
-                      id: a.id,
-                      is_active: !a.is_active,
-                    })
-                  }
-                  title={a.is_active ? "Desactivar" : "Activar"}
-                >
-                  {a.is_active ? (
-                    <ZapOff className="h-3.5 w-3.5" />
-                  ) : (
-                    <Zap className="h-3.5 w-3.5" />
-                  )}
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="h-8 px-2 rounded-none text-xs hover:text-destructive"
-                  onClick={() => deleteMutation.mutate(a.id)}
-                  title="Eliminar"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Inline inject-token form */}
-            {injectForm[a.id]?.open && (
-              <div className="border-t-2 border-primary/30 bg-primary/5 px-4 py-3 space-y-2">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-primary flex items-center gap-2">
-                  <KeyRound className="h-3 w-3" /> Inyectar Cookies de Sesión
-                </p>
-                <p className="text-[10px] text-muted-foreground">
-                  Abre chatgpt.com → DevTools → Application → Cookies →
-                  chatgpt.com → copia estos valores. (Las cookies están protegidas por HttpOnly, no pueden extraerse con scripts).
-                </p>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-muted-foreground">
-                    __Secure-next-auth.session-token.0 *
-                  </label>
-                  <textarea
-                    placeholder="Parte principal del token JWT"
-                    value={injectForm[a.id]?.tokenPart0 ?? ""}
-                    onChange={(e) =>
-                      setInjectForm((prev) => ({
-                        ...prev,
-                        [a.id]: { ...prev[a.id], tokenPart0: e.target.value },
-                      }))
-                    }
-                    rows={2}
-                    className="w-full rounded-none border-2 border-border bg-background font-mono text-xs p-2 resize-none focus:outline-none focus:border-primary"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-muted-foreground">
-                    __Secure-next-auth.session-token.1
-                  </label>
-                  <textarea
-                    placeholder="Firma HMAC (opcional, solo si aparece en cookies)"
-                    value={injectForm[a.id]?.tokenPart1 ?? ""}
-                    onChange={(e) =>
-                      setInjectForm((prev) => ({
-                        ...prev,
-                        [a.id]: { ...prev[a.id], tokenPart1: e.target.value },
-                      }))
-                    }
-                    rows={1}
-                    className="w-full rounded-none border-2 border-border bg-background font-mono text-xs p-2 resize-none focus:outline-none focus:border-primary"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-muted-foreground">
-                    cf_clearance
-                  </label>
-                  <textarea
-                    placeholder="Cookie de Cloudflare (opcional, ayuda a pasar el challenge)"
-                    value={injectForm[a.id]?.cfClearance ?? ""}
-                    onChange={(e) =>
-                      setInjectForm((prev) => ({
-                        ...prev,
-                        [a.id]: { ...prev[a.id], cfClearance: e.target.value },
-                      }))
-                    }
-                    rows={1}
-                    className="w-full rounded-none border-2 border-border bg-background font-mono text-xs p-2 resize-none focus:outline-none focus:border-primary"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-muted-foreground">
-                    User-Agent (Autocompletado de tu navegador actual)
-                  </label>
-                  <Input
-                    placeholder="User-Agent del navegador"
-                    value={injectForm[a.id]?.userAgent ?? ""}
-                    onChange={(e) =>
-                      setInjectForm((prev) => ({
-                        ...prev,
-                        [a.id]: { ...prev[a.id], userAgent: e.target.value },
-                      }))
-                    }
-                    className="rounded-none border-2 font-mono text-xs h-9"
-                  />
-                </div>
-                {injectMutation.isError &&
-                  injectMutation.variables?.id === a.id && (
-                    <p className="text-xs text-destructive">
-                      {getApiErrorMessage(injectMutation.error)}
-                    </p>
-                  )}
-                <div className="flex gap-2">
-                  <Button
-                    className="flex-1 rounded-none h-8 text-xs"
-                    disabled={
-                      !injectForm[a.id]?.tokenPart0?.trim() ||
-                      injectMutation.isPending
-                    }
-                    onClick={() => {
-                      injectMutation.mutate({
-                        id: a.id,
-                        tokenPart0: injectForm[a.id]?.tokenPart0 || "",
-                        tokenPart1: injectForm[a.id]?.tokenPart1 || "",
-                        cfClearance: injectForm[a.id]?.cfClearance || "",
-                        userAgent: injectForm[a.id]?.userAgent || "",
-                      });
-                    }}
-                  >
-                    {injectMutation.isPending &&
-                    injectMutation.variables?.id === a.id
-                      ? "Guardando..."
-                      : "Guardar Token"}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="rounded-none h-8 text-xs"
-                    onClick={() => toggleInjectForm(a)}
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-        {accounts.length === 0 && !isLoading && (
-          <div className="border-2 border-dashed border-border/40 p-8 text-center text-sm text-muted-foreground">
-            Sin cuentas ChatGPT Web. Agrega una e inyecta su session token.
-          </div>
-        )}
-      </div>
-
-      {/* Add New Account */}
-      <div className="border-2 border-primary/30 bg-primary/5 p-5 space-y-3">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-primary flex items-center gap-2">
-          <Plus className="h-3.5 w-3.5" /> Nueva Cuenta ChatGPT Web
-        </p>
-        <div className="grid grid-cols-[1fr_auto] gap-2">
-          <Input
-            type="email"
-            placeholder="Email de ChatGPT (solo referencial)"
-            value={newAccount.email}
-            onChange={(e) =>
-              setNewAccount({ ...newAccount, email: e.target.value })
-            }
-            className="rounded-none border-2 font-mono text-xs h-9"
-          />
-          <Input
-            type="number"
-            placeholder="Prioridad"
-            value={newAccount.priority}
-            onChange={(e) =>
-              setNewAccount({ ...newAccount, priority: Number(e.target.value) })
-            }
-            className="w-24 rounded-none border-2 font-mono text-xs h-9"
-          />
-        </div>
-        <Input
-          placeholder="User-Agent (opcional — default: Chrome 125)"
-          value={newAccount.user_agent}
-          onChange={(e) =>
-            setNewAccount({ ...newAccount, user_agent: e.target.value })
-          }
-          className="rounded-none border-2 font-mono text-xs h-9"
-        />
-        {addMutation.isError && (
-          <p className="text-xs text-destructive">
-            {getApiErrorMessage(addMutation.error)}
-          </p>
-        )}
-        <Button
-          className="w-full rounded-none h-9"
-          disabled={!newAccount.email || addMutation.isPending}
-          onClick={() => addMutation.mutate()}
-        >
-          {addMutation.isPending ? "Guardando..." : "Crear Cuenta"}
-        </Button>
-      </div>
-    </div>
-  );
-}
 
 // ─── Config Tab ───────────────────────────────────────────────────────────────
 
@@ -1320,7 +905,7 @@ function ConfigTab({
             </p>
           </div>
           <Button
-            variant={isCreditsEnabled ? "destructive" : "default"}
+            variant={isCreditsEnabled ? "danger" : "primary"}
             size="sm"
             className="rounded-none"
             onClick={() =>
@@ -1365,7 +950,7 @@ function ConfigTab({
             </p>
           </div>
           <Button
-            variant={isG4fEnabled ? "destructive" : "default"}
+            variant={isG4fEnabled ? "danger" : "primary"}
             size="sm"
             className="rounded-none"
             onClick={() =>
@@ -1458,7 +1043,7 @@ function ConfigTab({
         )}
         <Button
           className="rounded-none h-9"
-          variant="outline"
+          variant="secondary"
           onClick={() => {
             setBulkResult(null);
             bulkGrantMutation.mutate();

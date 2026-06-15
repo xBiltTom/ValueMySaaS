@@ -24,6 +24,8 @@ python-multipart==0.0.17
 litellm
 openai
 curl-cffi>=0.7.0
+g4f
+brotli
 
 
 # Tests
