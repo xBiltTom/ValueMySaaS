@@ -60,3 +60,43 @@ async def run_migrations() -> None:
     except Exception as exc:
         logger.error("Migration error: %s", exc)
         raise
+
+
+async def seed_admin_user() -> None:
+    """Seeds the default admin user if it does not exist."""
+    import os
+    from sqlalchemy import select
+    from app.db.session import AsyncSessionLocal
+    from app.models.user import User
+    from app.models.enums import UserRole
+    from app.core.security import hash_password_async
+
+    admin_email = os.getenv("ADMIN_EMAIL", "admin@valuemysaas.com")
+    admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
+    
+    try:
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(select(User).where(User.email == admin_email))
+            admin_user = result.scalar_one_or_none()
+            
+            if not admin_user:
+                hashed_password = await hash_password_async(admin_password)
+                admin_user = User(
+                    email=admin_email,
+                    username="admin",
+                    full_name="System Admin",
+                    hashed_password=hashed_password,
+                    role=UserRole.ADMIN,
+                    ai_credits=999999,
+                    is_verified=True,
+                )
+                db.add(admin_user)
+                await db.commit()
+                logger.info(f"Default admin user created with email: {admin_email}")
+            else:
+                if admin_user.role != UserRole.ADMIN:
+                    admin_user.role = UserRole.ADMIN
+                    await db.commit()
+                    logger.info(f"Existing user {admin_email} upgraded to ADMIN role.")
+    except Exception as exc:
+        logger.error("Failed to seed admin user: %s", exc)
