@@ -185,6 +185,7 @@ class AiAnalysisService:
             system_prompt=system_prompt,
             user_prompt=user_prompt,
             fallback_keys=credentials.fallback_system_keys,
+            user_agent=credentials.user_agent,
         )
 
         output_json = self._parse_planning_output(llm_response.output_text) if phase == ProjectPhase.PLANNING else llm_response.output_json
@@ -239,6 +240,7 @@ class AiAnalysisService:
             system_prompt=system_prompt,
             user_prompt=user_prompt,
             fallback_keys=credentials.fallback_system_keys,
+            user_agent=credentials.user_agent,
         )
 
         async def event_generator():

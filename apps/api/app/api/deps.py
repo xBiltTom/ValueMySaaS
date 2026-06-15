@@ -11,6 +11,7 @@ from app.models.user import User
 from app.repositories.ai_analysis_repository import AiAnalysisRepository
 from app.repositories.ai_key_repository import AiProviderKeyRepository
 from app.repositories.chat_message_repository import ChatMessageRepository
+from app.repositories.chatgpt_web_account_repository import ChatGptWebAccountRepository
 from app.repositories.conversation_repository import ConversationRepository
 from app.repositories.credit_transaction_repository import CreditTransactionRepository
 from app.repositories.metric_snapshot_repository import MetricSnapshotRepository
@@ -26,6 +27,7 @@ from app.services.ai_context_service import AiContextService
 from app.services.ai_key_service import AiProviderKeyService
 from app.services.auth_service import AuthService
 from app.services.chat_service import ChatService
+from app.services.chatgpt_web_account_service import ChatGptWebAccountService
 from app.services.conversation_service import ConversationService
 from app.services.credit_service import CreditService
 from app.services.dashboard_service import DashboardService
@@ -66,6 +68,13 @@ def get_credit_service(db: AsyncSession = Depends(get_db)) -> CreditService:
         system_ai_key_repository=SystemAiKeyRepository(db),
         credit_transaction_repository=CreditTransactionRepository(db),
         system_config_repository=SystemConfigRepository(db),
+        chatgpt_web_account_repository=ChatGptWebAccountRepository(db),
+    )
+
+
+def get_chatgpt_web_account_service(db: AsyncSession = Depends(get_db)) -> ChatGptWebAccountService:
+    return ChatGptWebAccountService(
+        account_repository=ChatGptWebAccountRepository(db),
     )
 
 

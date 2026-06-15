@@ -42,7 +42,17 @@ export function ChatMessageBubble({ message }: { message: ConversationMessage })
             <div className="bg-background border-2 border-primary/20 px-4 md:px-5 py-3 md:py-4 rounded-[8px] shadow-[4px_4px_0_rgba(var(--primary),0.1)] relative overflow-hidden w-full break-words">
               <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.02)_50%)] bg-[length:100%_4px] pointer-events-none opacity-30" />
               <div className="prose prose-neutral dark:prose-invert max-w-full overflow-hidden prose-p:leading-relaxed prose-li:leading-relaxed prose-pre:bg-muted/30 prose-pre:border-2 prose-pre:border-primary/20 prose-pre:text-primary prose-pre:font-mono prose-pre:rounded-[4px] prose-pre:overflow-x-auto prose-pre:max-w-full text-[13px] md:text-[14px] text-foreground w-full relative z-10 break-words">
-                <Streamdown>{message.content}</Streamdown>
+                {!message.content ? (
+                  <div className="flex items-center gap-3 font-mono text-foreground/70 py-1">
+                    <span className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/60"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-primary m-0.5"></span>
+                    </span>
+                    <span className="animate-pulse uppercase tracking-wider text-[11px] font-black">INICIALIZANDO IA...</span>
+                  </div>
+                ) : (
+                  <Streamdown>{message.content}</Streamdown>
+                )}
               </div>
             </div>
           )}

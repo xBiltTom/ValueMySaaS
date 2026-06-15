@@ -91,6 +91,8 @@ class AiProvider(str, enum.Enum):
     GROQ = "GROQ"
     # nvidia_nim/org/model-name  (e.g. nvidia_nim/meta/llama-3.1-70b-instruct)
     NVIDIA = "NVIDIA"
+    CHATGPT_WEB = "CHATGPT_WEB"
+    G4F = "G4F"
     OTHER = "OTHER"
 
 

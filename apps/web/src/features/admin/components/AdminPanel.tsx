@@ -3,17 +3,53 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  Users, KeyRound, Settings, BarChart3, Shield, Cpu,
-  Plus, Trash2, RefreshCw, CheckCircle, XCircle, Zap,
-  ZapOff, Search, ChevronDown, ChevronUp, AlertTriangle,
-  Coins, Globe, ToggleLeft, ToggleRight, Activity,
-  FolderOpen, LogIn, Eye, EyeOff,
+  Users,
+  KeyRound,
+  Settings,
+  BarChart3,
+  Shield,
+  Cpu,
+  Plus,
+  Trash2,
+  RefreshCw,
+  CheckCircle,
+  XCircle,
+  Zap,
+  ZapOff,
+  Search,
+  ChevronDown,
+  ChevronUp,
+  AlertTriangle,
+  Coins,
+  Globe,
+  ToggleLeft,
+  ToggleRight,
+  Activity,
+  FolderOpen,
+  LogIn,
+  Eye,
+  EyeOff,
+  Bot,
+  MessageSquare,
+  Lock,
+  Unlock,
 } from "lucide-react";
 import {
-  getAdminStats, getAdminUsers, getSystemKeys, getSystemConfig,
-  createSystemKey, updateSystemKey, deleteSystemKey, verifySystemKey,
-  grantCredits, bulkGrantCredits, toggleUserActive, updateSystemConfig,
-  UserAdminSchema, SystemAiKey, SystemConfigEntry,
+  getAdminStats,
+  getAdminUsers,
+  getSystemKeys,
+  getSystemConfig,
+  createSystemKey,
+  updateSystemKey,
+  deleteSystemKey,
+  verifySystemKey,
+  grantCredits,
+  bulkGrantCredits,
+  toggleUserActive,
+  updateSystemConfig,
+  UserAdminSchema,
+  SystemAiKey,
+  SystemConfigEntry,
 } from "@/features/admin/api";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -25,7 +61,13 @@ import { providerModels, providerHints } from "@/features/ai-keys/constants";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function StatCard({ icon: Icon, label, value, sub, color = "primary" }: {
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  sub,
+  color = "primary",
+}: {
   icon: typeof Users;
   label: string;
   value: string | number;
@@ -39,13 +81,21 @@ function StatCard({ icon: Icon, label, value, sub, color = "primary" }: {
     danger: "border-destructive/30 bg-destructive/5 text-destructive",
   };
   return (
-    <div className={`rounded-none border-2 ${colors[color]} p-5 font-mono shadow-[3px_3px_0_rgba(0,0,0,0.08)] transition-transform hover:-translate-y-0.5`}>
+    <div
+      className={`rounded-none border-2 ${colors[color]} p-5 font-mono shadow-[3px_3px_0_rgba(0,0,0,0.08)] transition-transform hover:-translate-y-0.5`}
+    >
       <div className="flex items-center gap-2 mb-3">
         <Icon className="h-4 w-4" />
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          {label}
+        </span>
       </div>
       <p className="text-3xl font-black tabular-nums">{value}</p>
-      {sub && <p className="mt-1 text-[10px] text-muted-foreground uppercase tracking-wide">{sub}</p>}
+      {sub && (
+        <p className="mt-1 text-[10px] text-muted-foreground uppercase tracking-wide">
+          {sub}
+        </p>
+      )}
     </div>
   );
 }
@@ -57,7 +107,7 @@ const TABS = [
   { id: "config", label: "Configuración", icon: Settings },
 ] as const;
 
-type Tab = typeof TABS[number]["id"];
+type Tab = (typeof TABS)[number]["id"];
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -65,16 +115,30 @@ export function AdminPanel() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
 
-  const statsQuery = useQuery({ queryKey: ["admin", "stats"], queryFn: getAdminStats });
-  const usersQuery = useQuery({ queryKey: ["admin", "users"], queryFn: () => getAdminUsers() });
-  const keysQuery = useQuery({ queryKey: ["admin", "system-keys"], queryFn: getSystemKeys });
-  const configQuery = useQuery({ queryKey: ["admin", "config"], queryFn: getSystemConfig });
+  const statsQuery = useQuery({
+    queryKey: ["admin", "stats"],
+    queryFn: getAdminStats,
+  });
+  const usersQuery = useQuery({
+    queryKey: ["admin", "users"],
+    queryFn: () => getAdminUsers(),
+  });
+  const keysQuery = useQuery({
+    queryKey: ["admin", "system-keys"],
+    queryFn: getSystemKeys,
+  });
+  const configQuery = useQuery({
+    queryKey: ["admin", "config"],
+    queryFn: getSystemConfig,
+  });
 
   const isLoading = statsQuery.isLoading;
   const isError = statsQuery.isError;
 
-  if (isLoading) return <LoadingState label="Inicializando panel de control..." />;
-  if (isError) return <ErrorState message={getApiErrorMessage(statsQuery.error)} />;
+  if (isLoading)
+    return <LoadingState label="Inicializando panel de control..." />;
+  if (isError)
+    return <ErrorState message={getApiErrorMessage(statsQuery.error)} />;
 
   return (
     <div className="space-y-6 font-mono">
@@ -101,14 +165,14 @@ export function AdminPanel() {
       </div>
 
       {/* Tab Content */}
-      {activeTab === "overview" && (
-        <OverviewTab stats={statsQuery.data} />
-      )}
+      {activeTab === "overview" && <OverviewTab stats={statsQuery.data} />}
       {activeTab === "users" && (
         <UsersTab
           users={usersQuery.data?.items ?? []}
           isLoading={usersQuery.isLoading}
-          onRefresh={() => queryClient.invalidateQueries({ queryKey: ["admin", "users"] })}
+          onRefresh={() =>
+            queryClient.invalidateQueries({ queryKey: ["admin", "users"] })
+          }
           queryClient={queryClient}
         />
       )}
@@ -134,24 +198,62 @@ export function AdminPanel() {
 
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
 
-function OverviewTab({ stats }: { stats: ReturnType<typeof useQuery<Awaited<ReturnType<typeof getAdminStats>>>>["data"] }) {
+function OverviewTab({
+  stats,
+}: {
+  stats: ReturnType<
+    typeof useQuery<Awaited<ReturnType<typeof getAdminStats>>>
+  >["data"];
+}) {
   if (!stats) return null;
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <StatCard icon={Users} label="Usuarios Registrados" value={stats.total_users} sub={`${stats.active_users} activos`} color="primary" />
-        <StatCard icon={Activity} label="Análisis Generados" value={stats.total_analyses} color="success" />
-        <StatCard icon={Coins} label="Créditos Consumidos Hoy" value={stats.credits_consumed_today} color="warning" />
-        <StatCard icon={KeyRound} label="System Keys Totales" value={stats.total_system_keys} sub={`${stats.active_system_keys} activas`} color="primary" />
-        <StatCard icon={Shield} label="System Keys Activas" value={stats.active_system_keys} color={stats.active_system_keys === 0 ? "danger" : "success"} />
+        <StatCard
+          icon={Users}
+          label="Usuarios Registrados"
+          value={stats.total_users}
+          sub={`${stats.active_users} activos`}
+          color="primary"
+        />
+        <StatCard
+          icon={Activity}
+          label="Análisis Generados"
+          value={stats.total_analyses}
+          color="success"
+        />
+        <StatCard
+          icon={Coins}
+          label="Créditos Consumidos Hoy"
+          value={stats.credits_consumed_today}
+          color="warning"
+        />
+        <StatCard
+          icon={KeyRound}
+          label="System Keys Totales"
+          value={stats.total_system_keys}
+          sub={`${stats.active_system_keys} activas`}
+          color="primary"
+        />
+        <StatCard
+          icon={Shield}
+          label="System Keys Activas"
+          value={stats.active_system_keys}
+          color={stats.active_system_keys === 0 ? "danger" : "success"}
+        />
       </div>
 
       {stats.active_system_keys === 0 && (
         <div className="border-2 border-destructive/30 bg-destructive/5 p-5 flex items-start gap-3">
           <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
           <div>
-            <p className="font-bold text-destructive text-sm uppercase tracking-wide">Sin System Keys activas</p>
-            <p className="text-xs text-muted-foreground mt-1">Los usuarios no podrán usar créditos del sistema. Ve a la pestaña "System Keys" para agregar una API Key maestra.</p>
+            <p className="font-bold text-destructive text-sm uppercase tracking-wide">
+              Sin System Keys activas
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Los usuarios no podrán usar créditos del sistema. Ve a la pestaña
+              "System Keys" para agregar una API Key maestra.
+            </p>
           </div>
         </div>
       )}
@@ -161,7 +263,12 @@ function OverviewTab({ stats }: { stats: ReturnType<typeof useQuery<Awaited<Retu
 
 // ─── Users Tab ────────────────────────────────────────────────────────────────
 
-function UsersTab({ users, isLoading, onRefresh, queryClient }: {
+function UsersTab({
+  users,
+  isLoading,
+  onRefresh,
+  queryClient,
+}: {
   users: UserAdminSchema[];
   isLoading: boolean;
   onRefresh: () => void;
@@ -173,10 +280,11 @@ function UsersTab({ users, isLoading, onRefresh, queryClient }: {
   const [grantDesc, setGrantDesc] = useState("Bono administrador");
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
 
-  const filtered = users.filter((u) =>
-    u.email.toLowerCase().includes(search.toLowerCase()) ||
-    (u.username ?? "").toLowerCase().includes(search.toLowerCase()) ||
-    (u.full_name ?? "").toLowerCase().includes(search.toLowerCase())
+  const filtered = users.filter(
+    (u) =>
+      u.email.toLowerCase().includes(search.toLowerCase()) ||
+      (u.username ?? "").toLowerCase().includes(search.toLowerCase()) ||
+      (u.full_name ?? "").toLowerCase().includes(search.toLowerCase()),
   );
 
   const [grantMode, setGrantMode] = useState<"ADD" | "SUB" | "SET">("ADD");
@@ -185,7 +293,8 @@ function UsersTab({ users, isLoading, onRefresh, queryClient }: {
     mutationFn: () => {
       let delta = grantAmount;
       if (grantMode === "SUB") delta = -grantAmount;
-      if (grantMode === "SET") delta = grantAmount - (grantTarget?.ai_credits || 0);
+      if (grantMode === "SET")
+        delta = grantAmount - (grantTarget?.ai_credits || 0);
       return grantCredits(grantTarget!.id, delta, grantDesc);
     },
     onSuccess: () => {
@@ -198,8 +307,13 @@ function UsersTab({ users, isLoading, onRefresh, queryClient }: {
   });
 
   const toggleMutation = useMutation({
-    mutationFn: ({ userId, is_active }: { userId: string; is_active: boolean }) =>
-      toggleUserActive(userId, is_active),
+    mutationFn: ({
+      userId,
+      is_active,
+    }: {
+      userId: string;
+      is_active: boolean;
+    }) => toggleUserActive(userId, is_active),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
@@ -219,10 +333,17 @@ function UsersTab({ users, isLoading, onRefresh, queryClient }: {
             className="pl-9 rounded-none border-2 font-mono text-xs h-9"
           />
         </div>
-        <Button variant="outline" size="sm" onClick={onRefresh} className="rounded-none border-2 h-9">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onRefresh}
+          className="rounded-none border-2 h-9"
+        >
           <RefreshCw className="h-3.5 w-3.5" />
         </Button>
-        <span className="text-xs text-muted-foreground">{filtered.length} usuarios</span>
+        <span className="text-xs text-muted-foreground">
+          {filtered.length} usuarios
+        </span>
       </div>
 
       {/* Grant Modal */}
@@ -230,7 +351,10 @@ function UsersTab({ users, isLoading, onRefresh, queryClient }: {
         <div className="border-2 border-primary/40 bg-primary/5 p-5 space-y-4">
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
-              Ajustar Créditos <span className="text-muted-foreground">|</span> {grantTarget.email} <span className="text-muted-foreground">|</span> Actual: <span className="text-foreground">{grantTarget.ai_credits}</span>
+              Ajustar Créditos <span className="text-muted-foreground">|</span>{" "}
+              {grantTarget.email}{" "}
+              <span className="text-muted-foreground">|</span> Actual:{" "}
+              <span className="text-foreground">{grantTarget.ai_credits}</span>
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -259,7 +383,10 @@ function UsersTab({ users, isLoading, onRefresh, queryClient }: {
             />
             <Button
               size="sm"
-              disabled={grantMutation.isPending || (grantMode === "SET" && grantAmount === grantTarget.ai_credits)}
+              disabled={
+                grantMutation.isPending ||
+                (grantMode === "SET" && grantAmount === grantTarget.ai_credits)
+              }
               onClick={() => grantMutation.mutate()}
               className="rounded-none h-9 whitespace-nowrap"
             >
@@ -268,7 +395,10 @@ function UsersTab({ users, isLoading, onRefresh, queryClient }: {
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => { setGrantTarget(null); setGrantMode("ADD"); }}
+              onClick={() => {
+                setGrantTarget(null);
+                setGrantMode("ADD");
+              }}
               className="rounded-none h-9"
             >
               Cancelar
@@ -285,21 +415,39 @@ function UsersTab({ users, isLoading, onRefresh, queryClient }: {
           <table className="w-full text-left">
             <thead className="bg-muted/40 border-b-2 border-border/60">
               <tr>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Usuario</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-center">Proyectos</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-center">Créditos</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Último Login</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Estado</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-right">Acciones</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  Usuario
+                </th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-center">
+                  Proyectos
+                </th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-center">
+                  Créditos
+                </th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  Último Login
+                </th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  Estado
+                </th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-right">
+                  Acciones
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/40">
               {filtered.map((user) => (
-                <tr key={user.id} className="hover:bg-muted/20 transition-colors group">
+                <tr
+                  key={user.id}
+                  className="hover:bg-muted/20 transition-colors group"
+                >
                   <td className="px-4 py-3">
-                    <div className="font-semibold text-sm truncate max-w-[220px]">{user.email}</div>
+                    <div className="font-semibold text-sm truncate max-w-[220px]">
+                      {user.email}
+                    </div>
                     <div className="text-[10px] text-muted-foreground font-mono">
-                      {user.username ? `@${user.username}` : "sin username"} · {user.role}
+                      {user.username ? `@${user.username}` : "sin username"} ·{" "}
+                      {user.role}
                     </div>
                   </td>
                   <td className="px-4 py-3 text-center">
@@ -309,7 +457,9 @@ function UsersTab({ users, isLoading, onRefresh, queryClient }: {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <span className={`font-mono font-bold text-sm ${user.ai_credits === 0 ? "text-destructive" : user.ai_credits <= 2 ? "text-amber-500" : "text-emerald-500"}`}>
+                    <span
+                      className={`font-mono font-bold text-sm ${user.ai_credits === 0 ? "text-destructive" : user.ai_credits <= 2 ? "text-amber-500" : "text-emerald-500"}`}
+                    >
                       {user.ai_credits}
                     </span>
                   </td>
@@ -317,15 +467,27 @@ function UsersTab({ users, isLoading, onRefresh, queryClient }: {
                     {user.last_login_at ? (
                       <span className="flex items-center gap-1">
                         <LogIn className="h-3 w-3" />
-                        {new Date(user.last_login_at).toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "2-digit" })}
+                        {new Date(user.last_login_at).toLocaleDateString(
+                          "es-PE",
+                          { day: "2-digit", month: "short", year: "2-digit" },
+                        )}
                       </span>
-                    ) : "—"}
+                    ) : (
+                      "—"
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     {user.is_active ? (
-                      <Badge className="rounded-none bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[9px] font-bold uppercase tracking-wider">Activo</Badge>
+                      <Badge className="rounded-none bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[9px] font-bold uppercase tracking-wider">
+                        Activo
+                      </Badge>
                     ) : (
-                      <Badge variant="destructive" className="rounded-none text-[9px] font-bold uppercase tracking-wider opacity-70">Inactivo</Badge>
+                      <Badge
+                        variant="destructive"
+                        className="rounded-none text-[9px] font-bold uppercase tracking-wider opacity-70"
+                      >
+                        Inactivo
+                      </Badge>
                     )}
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -343,11 +505,24 @@ function UsersTab({ users, isLoading, onRefresh, queryClient }: {
                         variant="ghost"
                         size="sm"
                         className={`h-7 px-2 text-xs rounded-none ${user.is_active ? "hover:bg-destructive/10 hover:text-destructive" : "hover:bg-emerald-500/10 hover:text-emerald-500"}`}
-                        onClick={() => toggleMutation.mutate({ userId: user.id, is_active: !user.is_active })}
+                        onClick={() =>
+                          toggleMutation.mutate({
+                            userId: user.id,
+                            is_active: !user.is_active,
+                          })
+                        }
                         disabled={toggleMutation.isPending}
-                        title={user.is_active ? "Desactivar usuario" : "Activar usuario"}
+                        title={
+                          user.is_active
+                            ? "Desactivar usuario"
+                            : "Activar usuario"
+                        }
                       >
-                        {user.is_active ? <ToggleRight className="h-3.5 w-3.5" /> : <ToggleLeft className="h-3.5 w-3.5" />}
+                        {user.is_active ? (
+                          <ToggleRight className="h-3.5 w-3.5" />
+                        ) : (
+                          <ToggleLeft className="h-3.5 w-3.5" />
+                        )}
                       </Button>
                     </div>
                   </td>
@@ -355,7 +530,10 @@ function UsersTab({ users, isLoading, onRefresh, queryClient }: {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                  <td
+                    colSpan={6}
+                    className="px-4 py-10 text-center text-sm text-muted-foreground"
+                  >
                     No se encontraron usuarios.
                   </td>
                 </tr>
@@ -380,19 +558,44 @@ const MODEL_PLACEHOLDER: Record<string, string> = {
   OTHER: "prefix/model-name",
 };
 
-function KeysTab({ keys, isLoading, queryClient }: {
+function KeysTab({
+  keys,
+  isLoading,
+  queryClient,
+}: {
   keys: SystemAiKey[];
   isLoading: boolean;
   queryClient: ReturnType<typeof useQueryClient>;
 }) {
-  const [newKey, setNewKey] = useState({ provider: "GEMINI", api_key: "", priority: 1, label: "", default_model: "" });
+  const [newKey, setNewKey] = useState({
+    provider: "GEMINI",
+    api_key: "",
+    priority: 1,
+    label: "",
+    default_model: "",
+  });
   const [showKey, setShowKey] = useState(false);
-  const [verifyResult, setVerifyResult] = useState<Record<string, { ok: boolean; message: string } | null>>({});
+  const [verifyResult, setVerifyResult] = useState<
+    Record<string, { ok: boolean; message: string } | null>
+  >({});
 
   const addKeyMutation = useMutation({
-    mutationFn: () => createSystemKey(newKey.provider, newKey.api_key, newKey.priority, newKey.label || newKey.provider, newKey.default_model || null),
+    mutationFn: () =>
+      createSystemKey(
+        newKey.provider,
+        newKey.api_key,
+        newKey.priority,
+        newKey.label || newKey.provider,
+        newKey.default_model || null,
+      ),
     onSuccess: () => {
-      setNewKey({ provider: "GEMINI", api_key: "", priority: 1, label: "", default_model: "" });
+      setNewKey({
+        provider: "GEMINI",
+        api_key: "",
+        priority: 1,
+        label: "",
+        default_model: "",
+      });
       queryClient.invalidateQueries({ queryKey: ["admin", "system-keys"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
     },
@@ -400,17 +603,21 @@ function KeysTab({ keys, isLoading, queryClient }: {
 
   const deleteKeyMutation = useMutation({
     mutationFn: (id: string) => deleteSystemKey(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "system-keys"] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["admin", "system-keys"] }),
   });
 
   const toggleActiveMutation = useMutation({
-    mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) => updateSystemKey(id, { is_active }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "system-keys"] }),
+    mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
+      updateSystemKey(id, { is_active }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["admin", "system-keys"] }),
   });
 
   const verifyMutation = useMutation({
     mutationFn: (id: string) => verifySystemKey(id),
-    onSuccess: (data, id) => setVerifyResult((prev) => ({ ...prev, [id]: data })),
+    onSuccess: (data, id) =>
+      setVerifyResult((prev) => ({ ...prev, [id]: data })),
   });
 
   return (
@@ -422,22 +629,43 @@ function KeysTab({ keys, isLoading, queryClient }: {
         </p>
         {isLoading && <LoadingState label="Cargando claves..." />}
         {keys.map((k) => (
-          <div key={k.id} className={`border-2 ${k.is_active ? "border-border/60" : "border-border/30 opacity-60"} p-4 flex items-center gap-4`}>
+          <div
+            key={k.id}
+            className={`border-2 ${k.is_active ? "border-border/60" : "border-border/30 opacity-60"} p-4 flex items-center gap-4`}
+          >
             {/* Left stripe */}
-            <div className={`w-1 self-stretch rounded-sm ${k.is_active ? "bg-emerald-500" : "bg-muted-foreground/30"}`} />
+            <div
+              className={`w-1 self-stretch rounded-sm ${k.is_active ? "bg-emerald-500" : "bg-muted-foreground/30"}`}
+            />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-bold text-sm">{k.provider}</span>
-                <span className="text-[10px] text-muted-foreground border border-border/60 px-1.5 py-0.5">Prioridad: {k.priority}</span>
-                <span className="text-xs text-muted-foreground truncate">{k.label}</span>
-                {k.key_last_four && <span className="font-mono text-[10px] text-muted-foreground">••••{k.key_last_four}</span>}
+                <span className="text-[10px] text-muted-foreground border border-border/60 px-1.5 py-0.5">
+                  Prioridad: {k.priority}
+                </span>
+                <span className="text-xs text-muted-foreground truncate">
+                  {k.label}
+                </span>
+                {k.key_last_four && (
+                  <span className="font-mono text-[10px] text-muted-foreground">
+                    ••••{k.key_last_four}
+                  </span>
+                )}
               </div>
               {k.default_model && (
-                <p className="text-[11px] font-mono text-primary mt-0.5 truncate">{k.default_model}</p>
+                <p className="text-[11px] font-mono text-primary mt-0.5 truncate">
+                  {k.default_model}
+                </p>
               )}
               {verifyResult[k.id] && (
-                <p className={`text-[10px] mt-1 flex items-center gap-1 ${verifyResult[k.id]?.ok ? "text-emerald-500" : "text-destructive"}`}>
-                  {verifyResult[k.id]?.ok ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                <p
+                  className={`text-[10px] mt-1 flex items-center gap-1 ${verifyResult[k.id]?.ok ? "text-emerald-500" : "text-destructive"}`}
+                >
+                  {verifyResult[k.id]?.ok ? (
+                    <CheckCircle className="h-3 w-3" />
+                  ) : (
+                    <XCircle className="h-3 w-3" />
+                  )}
                   {verifyResult[k.id]?.message}
                 </p>
               )}
@@ -451,16 +679,27 @@ function KeysTab({ keys, isLoading, queryClient }: {
                 disabled={verifyMutation.isPending}
                 title="Verificar"
               >
-                <RefreshCw className={`h-3.5 w-3.5 ${verifyMutation.isPending ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`h-3.5 w-3.5 ${verifyMutation.isPending ? "animate-spin" : ""}`}
+                />
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 className={`h-8 px-2 rounded-none text-xs ${k.is_active ? "hover:text-amber-500" : "hover:text-emerald-500"}`}
-                onClick={() => toggleActiveMutation.mutate({ id: k.id, is_active: !k.is_active })}
+                onClick={() =>
+                  toggleActiveMutation.mutate({
+                    id: k.id,
+                    is_active: !k.is_active,
+                  })
+                }
                 title={k.is_active ? "Desactivar" : "Activar"}
               >
-                {k.is_active ? <ZapOff className="h-3.5 w-3.5" /> : <Zap className="h-3.5 w-3.5" />}
+                {k.is_active ? (
+                  <ZapOff className="h-3.5 w-3.5" />
+                ) : (
+                  <Zap className="h-3.5 w-3.5" />
+                )}
               </Button>
               <Button
                 variant="ghost"
@@ -476,7 +715,8 @@ function KeysTab({ keys, isLoading, queryClient }: {
         ))}
         {keys.length === 0 && !isLoading && (
           <div className="border-2 border-dashed border-border/40 p-8 text-center text-sm text-muted-foreground">
-            Sin claves maestras. Agrega una para habilitar el sistema de créditos.
+            Sin claves maestras. Agrega una para habilitar el sistema de
+            créditos.
           </div>
         )}
       </div>
@@ -490,15 +730,36 @@ function KeysTab({ keys, isLoading, queryClient }: {
           <select
             className="h-9 border-2 border-input bg-background px-3 text-sm font-mono rounded-none"
             value={newKey.provider}
-            onChange={(e) => setNewKey({ ...newKey, provider: e.target.value, default_model: "" })}
+            onChange={(e) =>
+              setNewKey({
+                ...newKey,
+                provider: e.target.value,
+                default_model: "",
+              })
+            }
           >
             {Object.keys(MODEL_PLACEHOLDER).map((p) => (
-              <option key={p} value={p}>{p}</option>
+              <option key={p} value={p}>
+                {p}
+              </option>
             ))}
           </select>
-          <Input type="number" placeholder="Prioridad" value={newKey.priority} onChange={(e) => setNewKey({ ...newKey, priority: Number(e.target.value) })} className="w-24 rounded-none border-2 font-mono text-sm h-9" />
+          <Input
+            type="number"
+            placeholder="Prioridad"
+            value={newKey.priority}
+            onChange={(e) =>
+              setNewKey({ ...newKey, priority: Number(e.target.value) })
+            }
+            className="w-24 rounded-none border-2 font-mono text-sm h-9"
+          />
         </div>
-        <Input placeholder="Etiqueta (ej: Gemini Free Tier)" value={newKey.label} onChange={(e) => setNewKey({ ...newKey, label: e.target.value })} className="rounded-none border-2 font-mono text-xs h-9" />
+        <Input
+          placeholder="Etiqueta (ej: Gemini Free Tier)"
+          value={newKey.label}
+          onChange={(e) => setNewKey({ ...newKey, label: e.target.value })}
+          className="rounded-none border-2 font-mono text-xs h-9"
+        />
         <div className="relative">
           <Input
             type={showKey ? "text" : "password"}
@@ -512,13 +773,19 @@ function KeysTab({ keys, isLoading, queryClient }: {
             onClick={() => setShowKey(!showKey)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
-            {showKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+            {showKey ? (
+              <EyeOff className="h-3.5 w-3.5" />
+            ) : (
+              <Eye className="h-3.5 w-3.5" />
+            )}
           </button>
         </div>
         {providerModels[newKey.provider as any]?.length > 0 ? (
           <select
             value={newKey.default_model}
-            onChange={(e) => setNewKey({ ...newKey, default_model: e.target.value })}
+            onChange={(e) =>
+              setNewKey({ ...newKey, default_model: e.target.value })
+            }
             className="h-9 w-full border-2 border-input bg-background px-3 text-xs font-mono rounded-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
           >
             <option value="">-- Modelo por defecto (Opcional) --</option>
@@ -530,14 +797,20 @@ function KeysTab({ keys, isLoading, queryClient }: {
           </select>
         ) : (
           <Input
-            placeholder={MODEL_PLACEHOLDER[newKey.provider] ?? "prefix/model-name"}
+            placeholder={
+              MODEL_PLACEHOLDER[newKey.provider] ?? "prefix/model-name"
+            }
             value={newKey.default_model}
-            onChange={(e) => setNewKey({ ...newKey, default_model: e.target.value })}
+            onChange={(e) =>
+              setNewKey({ ...newKey, default_model: e.target.value })
+            }
             className="rounded-none border-2 font-mono text-xs h-9"
           />
         )}
         {addKeyMutation.isError && (
-          <p className="text-xs text-destructive">{getApiErrorMessage(addKeyMutation.error)}</p>
+          <p className="text-xs text-destructive">
+            {getApiErrorMessage(addKeyMutation.error)}
+          </p>
         )}
         <Button
           className="w-full rounded-none h-9"
@@ -551,9 +824,432 @@ function KeysTab({ keys, isLoading, queryClient }: {
   );
 }
 
+// ─── ChatGPT Web Tab ─────────────────────────────────────────────────────────
+
+const DEFAULT_UA =
+  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
+
+function ChatGptWebTab({
+  accounts,
+  isLoading,
+  queryClient,
+}: {
+  accounts: ChatGptWebAccount[];
+  isLoading: boolean;
+  queryClient: ReturnType<typeof useQueryClient>;
+}) {
+  const [newAccount, setNewAccount] = useState({
+    email: "",
+    priority: 1,
+    user_agent: "",
+  });
+  const [injectForm, setInjectForm] = useState<
+    Record<string, { open: boolean; tokenPart0: string; tokenPart1: string; cfClearance: string; userAgent: string }>
+  >({});
+  const [verifyResult, setVerifyResult] = useState<
+    Record<string, { ok: boolean; message: string } | null>
+  >({});
+
+  const addMutation = useMutation({
+    mutationFn: () =>
+      createChatGptWebAccount(
+        newAccount.email,
+        newAccount.priority,
+        newAccount.user_agent || null,
+      ),
+    onSuccess: () => {
+      setNewAccount({ email: "", priority: 1, user_agent: "" });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "chatgpt-accounts"],
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteChatGptWebAccount(id),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "chatgpt-accounts"],
+      }),
+  });
+
+  const toggleActiveMutation = useMutation({
+    mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
+      updateChatGptWebAccount(id, { is_active }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "chatgpt-accounts"],
+      }),
+  });
+
+  const toggleLockMutation = useMutation({
+    mutationFn: ({ id, is_locked }: { id: string; is_locked: boolean }) =>
+      updateChatGptWebAccount(id, { is_locked }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "chatgpt-accounts"],
+      }),
+  });
+
+  const injectMutation = useMutation({
+    mutationFn: ({
+      id,
+      tokenPart0,
+      tokenPart1,
+      cfClearance,
+      userAgent,
+    }: {
+      id: string;
+      tokenPart0: string;
+      tokenPart1: string;
+      cfClearance: string;
+      userAgent: string;
+    }) => injectChatGptWebToken(id, tokenPart0, tokenPart1, cfClearance, userAgent || null),
+    onSuccess: (_data, { id }) => {
+      setInjectForm((prev) => ({
+        ...prev,
+        [id]: { open: false, tokenPart0: "", tokenPart1: "", cfClearance: "", userAgent: "" },
+      }));
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "chatgpt-accounts"],
+      });
+    },
+  });
+
+  const verifyMutation = useMutation({
+    mutationFn: (id: string) => verifyChatGptWebAccount(id),
+    onSuccess: (data, id) =>
+      setVerifyResult((prev) => ({ ...prev, [id]: data })),
+  });
+
+  const toggleInjectForm = (a: ChatGptWebAccount) => {
+    setInjectForm((prev) => ({
+      ...prev,
+      [a.id]: prev[a.id]?.open
+        ? { open: false, tokenPart0: "", tokenPart1: "", cfClearance: "", userAgent: "" }
+        : { open: true, tokenPart0: a.session_token_part0 || "", tokenPart1: a.session_token_part1 || "", cfClearance: a.cf_clearance || "", userAgent: a.user_agent || navigator.userAgent },
+    }));
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Existing Accounts */}
+      <div className="space-y-2">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">
+          Cuentas ChatGPT Web ({accounts.length})
+        </p>
+        {isLoading && <LoadingState label="Cargando cuentas..." />}
+        {accounts.map((a) => (
+          <div
+            key={a.id}
+            className={`border-2 ${a.is_active && !a.is_locked ? "border-border/60" : "border-border/30 opacity-60"}`}
+          >
+            <div className="p-4 flex items-center gap-4">
+              <div
+                className={`w-1 self-stretch rounded-sm ${a.is_locked ? "bg-destructive" : a.has_session_token ? "bg-emerald-500" : "bg-amber-500"}`}
+              />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-bold text-sm">{a.email}</span>
+                  <span className="text-[10px] text-muted-foreground border border-border/60 px-1.5 py-0.5">
+                    Prioridad: {a.priority}
+                  </span>
+                  {a.is_locked && (
+                    <span className="text-[10px] text-destructive border border-destructive/40 px-1.5 py-0.5 flex items-center gap-1">
+                      <Lock className="h-3 w-3" /> Necesita token
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
+                  <span
+                    className={
+                      a.has_session_token
+                        ? "text-emerald-500"
+                        : "text-amber-500"
+                    }
+                  >
+                    {a.has_session_token ? "✓ Sesión activa" : "○ Sin sesión"}
+                  </span>
+                  {a.session_expires_at && (
+                    <span>
+                      Expira:{" "}
+                      {new Date(a.session_expires_at).toLocaleDateString(
+                        "es-PE",
+                      )}
+                    </span>
+                  )}
+                  <span>Errores: {a.error_count}</span>
+                  {a.last_used_at && (
+                    <span>
+                      Último uso:{" "}
+                      {new Date(a.last_used_at).toLocaleDateString("es-PE", {
+                        day: "2-digit",
+                        month: "short",
+                      })}
+                    </span>
+                  )}
+                </div>
+                {verifyResult[a.id] && (
+                  <p
+                    className={`text-[10px] mt-1 flex items-center gap-1 ${verifyResult[a.id]?.ok ? "text-emerald-500" : "text-destructive"}`}
+                  >
+                    {verifyResult[a.id]?.ok ? (
+                      <CheckCircle className="h-3 w-3" />
+                    ) : (
+                      <XCircle className="h-3 w-3" />
+                    )}
+                    {verifyResult[a.id]?.message}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <Button
+                  variant="ghost"
+                  className={`h-8 px-2 rounded-none text-xs ${injectForm[a.id]?.open ? "text-primary" : "hover:text-primary"}`}
+                  onClick={() => toggleInjectForm(a)}
+                  title="Inyectar session token"
+                >
+                  <KeyRound className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="h-8 px-2 rounded-none text-xs"
+                  onClick={() => verifyMutation.mutate(a.id)}
+                  disabled={verifyMutation.isPending}
+                  title="Verificar conexión"
+                >
+                  <RefreshCw
+                    className={`h-3.5 w-3.5 ${verifyMutation.isPending ? "animate-spin" : ""}`}
+                  />
+                </Button>
+                <Button
+                  variant="ghost"
+                  className={`h-8 px-2 rounded-none text-xs ${a.is_locked ? "hover:text-emerald-500" : "hover:text-destructive"}`}
+                  onClick={() =>
+                    toggleLockMutation.mutate({
+                      id: a.id,
+                      is_locked: !a.is_locked,
+                    })
+                  }
+                  title={a.is_locked ? "Desbloquear" : "Bloquear"}
+                >
+                  {a.is_locked ? (
+                    <Unlock className="h-3.5 w-3.5" />
+                  ) : (
+                    <Lock className="h-3.5 w-3.5" />
+                  )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  className={`h-8 px-2 rounded-none text-xs ${a.is_active ? "hover:text-amber-500" : "hover:text-emerald-500"}`}
+                  onClick={() =>
+                    toggleActiveMutation.mutate({
+                      id: a.id,
+                      is_active: !a.is_active,
+                    })
+                  }
+                  title={a.is_active ? "Desactivar" : "Activar"}
+                >
+                  {a.is_active ? (
+                    <ZapOff className="h-3.5 w-3.5" />
+                  ) : (
+                    <Zap className="h-3.5 w-3.5" />
+                  )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="h-8 px-2 rounded-none text-xs hover:text-destructive"
+                  onClick={() => deleteMutation.mutate(a.id)}
+                  title="Eliminar"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Inline inject-token form */}
+            {injectForm[a.id]?.open && (
+              <div className="border-t-2 border-primary/30 bg-primary/5 px-4 py-3 space-y-2">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-primary flex items-center gap-2">
+                  <KeyRound className="h-3 w-3" /> Inyectar Cookies de Sesión
+                </p>
+                <p className="text-[10px] text-muted-foreground">
+                  Abre chatgpt.com → DevTools → Application → Cookies →
+                  chatgpt.com → copia estos valores. (Las cookies están protegidas por HttpOnly, no pueden extraerse con scripts).
+                </p>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-muted-foreground">
+                    __Secure-next-auth.session-token.0 *
+                  </label>
+                  <textarea
+                    placeholder="Parte principal del token JWT"
+                    value={injectForm[a.id]?.tokenPart0 ?? ""}
+                    onChange={(e) =>
+                      setInjectForm((prev) => ({
+                        ...prev,
+                        [a.id]: { ...prev[a.id], tokenPart0: e.target.value },
+                      }))
+                    }
+                    rows={2}
+                    className="w-full rounded-none border-2 border-border bg-background font-mono text-xs p-2 resize-none focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-muted-foreground">
+                    __Secure-next-auth.session-token.1
+                  </label>
+                  <textarea
+                    placeholder="Firma HMAC (opcional, solo si aparece en cookies)"
+                    value={injectForm[a.id]?.tokenPart1 ?? ""}
+                    onChange={(e) =>
+                      setInjectForm((prev) => ({
+                        ...prev,
+                        [a.id]: { ...prev[a.id], tokenPart1: e.target.value },
+                      }))
+                    }
+                    rows={1}
+                    className="w-full rounded-none border-2 border-border bg-background font-mono text-xs p-2 resize-none focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-muted-foreground">
+                    cf_clearance
+                  </label>
+                  <textarea
+                    placeholder="Cookie de Cloudflare (opcional, ayuda a pasar el challenge)"
+                    value={injectForm[a.id]?.cfClearance ?? ""}
+                    onChange={(e) =>
+                      setInjectForm((prev) => ({
+                        ...prev,
+                        [a.id]: { ...prev[a.id], cfClearance: e.target.value },
+                      }))
+                    }
+                    rows={1}
+                    className="w-full rounded-none border-2 border-border bg-background font-mono text-xs p-2 resize-none focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-muted-foreground">
+                    User-Agent (Autocompletado de tu navegador actual)
+                  </label>
+                  <Input
+                    placeholder="User-Agent del navegador"
+                    value={injectForm[a.id]?.userAgent ?? ""}
+                    onChange={(e) =>
+                      setInjectForm((prev) => ({
+                        ...prev,
+                        [a.id]: { ...prev[a.id], userAgent: e.target.value },
+                      }))
+                    }
+                    className="rounded-none border-2 font-mono text-xs h-9"
+                  />
+                </div>
+                {injectMutation.isError &&
+                  injectMutation.variables?.id === a.id && (
+                    <p className="text-xs text-destructive">
+                      {getApiErrorMessage(injectMutation.error)}
+                    </p>
+                  )}
+                <div className="flex gap-2">
+                  <Button
+                    className="flex-1 rounded-none h-8 text-xs"
+                    disabled={
+                      !injectForm[a.id]?.tokenPart0?.trim() ||
+                      injectMutation.isPending
+                    }
+                    onClick={() => {
+                      injectMutation.mutate({
+                        id: a.id,
+                        tokenPart0: injectForm[a.id]?.tokenPart0 || "",
+                        tokenPart1: injectForm[a.id]?.tokenPart1 || "",
+                        cfClearance: injectForm[a.id]?.cfClearance || "",
+                        userAgent: injectForm[a.id]?.userAgent || "",
+                      });
+                    }}
+                  >
+                    {injectMutation.isPending &&
+                    injectMutation.variables?.id === a.id
+                      ? "Guardando..."
+                      : "Guardar Token"}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="rounded-none h-8 text-xs"
+                    onClick={() => toggleInjectForm(a)}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+        {accounts.length === 0 && !isLoading && (
+          <div className="border-2 border-dashed border-border/40 p-8 text-center text-sm text-muted-foreground">
+            Sin cuentas ChatGPT Web. Agrega una e inyecta su session token.
+          </div>
+        )}
+      </div>
+
+      {/* Add New Account */}
+      <div className="border-2 border-primary/30 bg-primary/5 p-5 space-y-3">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-primary flex items-center gap-2">
+          <Plus className="h-3.5 w-3.5" /> Nueva Cuenta ChatGPT Web
+        </p>
+        <div className="grid grid-cols-[1fr_auto] gap-2">
+          <Input
+            type="email"
+            placeholder="Email de ChatGPT (solo referencial)"
+            value={newAccount.email}
+            onChange={(e) =>
+              setNewAccount({ ...newAccount, email: e.target.value })
+            }
+            className="rounded-none border-2 font-mono text-xs h-9"
+          />
+          <Input
+            type="number"
+            placeholder="Prioridad"
+            value={newAccount.priority}
+            onChange={(e) =>
+              setNewAccount({ ...newAccount, priority: Number(e.target.value) })
+            }
+            className="w-24 rounded-none border-2 font-mono text-xs h-9"
+          />
+        </div>
+        <Input
+          placeholder="User-Agent (opcional — default: Chrome 125)"
+          value={newAccount.user_agent}
+          onChange={(e) =>
+            setNewAccount({ ...newAccount, user_agent: e.target.value })
+          }
+          className="rounded-none border-2 font-mono text-xs h-9"
+        />
+        {addMutation.isError && (
+          <p className="text-xs text-destructive">
+            {getApiErrorMessage(addMutation.error)}
+          </p>
+        )}
+        <Button
+          className="w-full rounded-none h-9"
+          disabled={!newAccount.email || addMutation.isPending}
+          onClick={() => addMutation.mutate()}
+        >
+          {addMutation.isPending ? "Guardando..." : "Crear Cuenta"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Config Tab ───────────────────────────────────────────────────────────────
 
-function ConfigTab({ config, isLoading, queryClient, totalActiveUsers, queryClientAdmin }: {
+function ConfigTab({
+  config,
+  isLoading,
+  queryClient,
+  totalActiveUsers,
+  queryClientAdmin,
+}: {
   config: SystemConfigEntry[];
   isLoading: boolean;
   queryClient: ReturnType<typeof useQueryClient>;
@@ -561,23 +1257,35 @@ function ConfigTab({ config, isLoading, queryClient, totalActiveUsers, queryClie
   queryClientAdmin: ReturnType<typeof useQueryClient>;
 }) {
   // Announcement
-  const announcement = config.find((c) => c.key === "login_announcement")?.value ?? "";
-  const initialCredits = config.find((c) => c.key === "default_initial_credits")?.value ?? "5";
-  const creditsEnabled = config.find((c) => c.key === "system_credits_enabled")?.value ?? "true";
+  const announcement =
+    config.find((c) => c.key === "login_announcement")?.value ?? "";
+  const initialCredits =
+    config.find((c) => c.key === "default_initial_credits")?.value ?? "5";
+  const creditsEnabled =
+    config.find((c) => c.key === "system_credits_enabled")?.value ?? "true";
+  const g4fEnabled =
+    config.find((c) => c.key === "use_g4f_for_system_credits")?.value ?? "true";
 
   const [announcementDraft, setAnnouncementDraft] = useState(announcement);
-  const [initialCreditsDraft, setInitialCreditsDraft] = useState(initialCredits);
+  const [initialCreditsDraft, setInitialCreditsDraft] =
+    useState(initialCredits);
   const [bulkAmount, setBulkAmount] = useState(10);
   const [bulkDesc, setBulkDesc] = useState("Bono global del administrador");
-  const [bulkResult, setBulkResult] = useState<{ affected_users: number } | null>(null);
+  const [bulkResult, setBulkResult] = useState<{
+    affected_users: number;
+  } | null>(null);
 
   // sync drafts when config loads
-  const announcementFromConfig = config.find((c) => c.key === "login_announcement")?.value ?? "";
-  const initialCreditsFromConfig = config.find((c) => c.key === "default_initial_credits")?.value ?? "5";
+  const announcementFromConfig =
+    config.find((c) => c.key === "login_announcement")?.value ?? "";
+  const initialCreditsFromConfig =
+    config.find((c) => c.key === "default_initial_credits")?.value ?? "5";
 
   const updateConfigMutation = useMutation({
-    mutationFn: ({ key, value }: { key: string; value: string }) => updateSystemConfig(key, value),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "config"] }),
+    mutationFn: ({ key, value }: { key: string; value: string }) =>
+      updateSystemConfig(key, value),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["admin", "config"] }),
   });
 
   const bulkGrantMutation = useMutation({
@@ -592,6 +1300,7 @@ function ConfigTab({ config, isLoading, queryClient, totalActiveUsers, queryClie
   if (isLoading) return <LoadingState label="Cargando configuración..." />;
 
   const isCreditsEnabled = creditsEnabled === "true";
+  const isG4fEnabled = g4fEnabled === "true";
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -599,28 +1308,97 @@ function ConfigTab({ config, isLoading, queryClient, totalActiveUsers, queryClie
       <div className="border-2 border-border/60 p-5 space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Sistema de Créditos</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Sistema de Créditos
+            </p>
             <p className="text-sm font-semibold mt-0.5">
               {isCreditsEnabled ? "Activo" : "Desactivado"}
             </p>
-            <p className="text-xs text-muted-foreground mt-1">Si se desactiva, los usuarios no podrán usar créditos del sistema para IA.</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Si se desactiva, los usuarios no podrán usar créditos del sistema
+              para IA.
+            </p>
           </div>
           <Button
             variant={isCreditsEnabled ? "destructive" : "default"}
             size="sm"
             className="rounded-none"
-            onClick={() => updateConfigMutation.mutate({ key: "system_credits_enabled", value: isCreditsEnabled ? "false" : "true" })}
+            onClick={() =>
+              updateConfigMutation.mutate({
+                key: "system_credits_enabled",
+                value: isCreditsEnabled ? "false" : "true",
+              })
+            }
             disabled={updateConfigMutation.isPending}
           >
-            {isCreditsEnabled ? <><ZapOff className="h-4 w-4 mr-2" />Desactivar</> : <><Zap className="h-4 w-4 mr-2" />Activar</>}
+            {isCreditsEnabled ? (
+              <>
+                <ZapOff className="h-4 w-4 mr-2" />
+                Desactivar
+              </>
+            ) : (
+              <>
+                <Zap className="h-4 w-4 mr-2" />
+                Activar
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {/* G4F Toggle */}
+      <div className="border-2 border-border/60 p-5 space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+              <Bot className="h-3.5 w-3.5" /> IA Gratuita (G4F)
+            </p>
+            <p className="text-sm font-semibold mt-0.5">
+              {isG4fEnabled
+                ? "Usando GPT4Free"
+                : "Usando System Keys"}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1 max-w-sm">
+              {isG4fEnabled
+                ? "El sistema buscará automáticamente servidores gratuitos en internet. (No requiere configuración, pero puede ser inestable)."
+                : "Los créditos consumirán las System Keys (API tradicional) configuradas en la otra pestaña."}
+            </p>
+          </div>
+          <Button
+            variant={isG4fEnabled ? "destructive" : "default"}
+            size="sm"
+            className="rounded-none"
+            onClick={() =>
+              updateConfigMutation.mutate({
+                key: "use_g4f_for_system_credits",
+                value: isG4fEnabled ? "false" : "true",
+              })
+            }
+            disabled={updateConfigMutation.isPending}
+          >
+            {isG4fEnabled ? (
+              <>
+                <ZapOff className="h-4 w-4 mr-2" />
+                Desactivar
+              </>
+            ) : (
+              <>
+                <Bot className="h-4 w-4 mr-2" />
+                Activar
+              </>
+            )}
           </Button>
         </div>
       </div>
 
       {/* Default Initial Credits */}
       <div className="border-2 border-border/60 p-5 space-y-3">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Créditos Iniciales por Defecto</p>
-        <p className="text-xs text-muted-foreground">Créditos que recibe cada nuevo usuario al registrarse.</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          Créditos Iniciales por Defecto
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Créditos que recibe cada nuevo usuario al registrarse.
+        </p>
         <div className="flex gap-2">
           <Input
             type="number"
@@ -632,8 +1410,16 @@ function ConfigTab({ config, isLoading, queryClient, totalActiveUsers, queryClie
           <Button
             size="sm"
             className="rounded-none h-9"
-            onClick={() => updateConfigMutation.mutate({ key: "default_initial_credits", value: initialCreditsDraft })}
-            disabled={updateConfigMutation.isPending || initialCreditsDraft === initialCreditsFromConfig}
+            onClick={() =>
+              updateConfigMutation.mutate({
+                key: "default_initial_credits",
+                value: initialCreditsDraft,
+              })
+            }
+            disabled={
+              updateConfigMutation.isPending ||
+              initialCreditsDraft === initialCreditsFromConfig
+            }
           >
             Guardar
           </Button>
@@ -644,7 +1430,8 @@ function ConfigTab({ config, isLoading, queryClient, totalActiveUsers, queryClie
       <div className="border-2 border-amber-500/30 bg-amber-500/5 p-5 space-y-3">
         <p className="text-[10px] font-bold uppercase tracking-widest text-amber-500 flex items-center gap-2">
           <Coins className="h-3.5 w-3.5" />
-          Otorgar Créditos a Todos los Usuarios Activos ({totalActiveUsers} usuarios)
+          Otorgar Créditos a Todos los Usuarios Activos ({totalActiveUsers}{" "}
+          usuarios)
         </p>
         <div className="flex gap-2">
           <Input
@@ -665,16 +1452,22 @@ function ConfigTab({ config, isLoading, queryClient, totalActiveUsers, queryClie
         {bulkResult && (
           <p className="text-xs text-emerald-600 flex items-center gap-1">
             <CheckCircle className="h-3.5 w-3.5" />
-            {bulkResult.affected_users} usuarios recibieron {bulkAmount} créditos cada uno.
+            {bulkResult.affected_users} usuarios recibieron {bulkAmount}{" "}
+            créditos cada uno.
           </p>
         )}
         <Button
           className="rounded-none h-9"
           variant="outline"
-          onClick={() => { setBulkResult(null); bulkGrantMutation.mutate(); }}
+          onClick={() => {
+            setBulkResult(null);
+            bulkGrantMutation.mutate();
+          }}
           disabled={bulkGrantMutation.isPending || bulkAmount <= 0}
         >
-          {bulkGrantMutation.isPending ? "Procesando..." : `Otorgar ${bulkAmount} créditos a todos`}
+          {bulkGrantMutation.isPending
+            ? "Procesando..."
+            : `Otorgar ${bulkAmount} créditos a todos`}
         </Button>
       </div>
 
@@ -685,7 +1478,8 @@ function ConfigTab({ config, isLoading, queryClient, totalActiveUsers, queryClie
           Anuncio del Sistema
         </p>
         <p className="text-xs text-muted-foreground">
-          Mensaje que los usuarios verán al iniciar sesión. Déjalo vacío para no mostrar ningún anuncio.
+          Mensaje que los usuarios verán al iniciar sesión. Déjalo vacío para no
+          mostrar ningún anuncio.
         </p>
         <textarea
           value={announcementDraft}
@@ -698,8 +1492,16 @@ function ConfigTab({ config, isLoading, queryClient, totalActiveUsers, queryClie
           <Button
             size="sm"
             className="rounded-none h-9"
-            onClick={() => updateConfigMutation.mutate({ key: "login_announcement", value: announcementDraft })}
-            disabled={updateConfigMutation.isPending || announcementDraft === announcementFromConfig}
+            onClick={() =>
+              updateConfigMutation.mutate({
+                key: "login_announcement",
+                value: announcementDraft,
+              })
+            }
+            disabled={
+              updateConfigMutation.isPending ||
+              announcementDraft === announcementFromConfig
+            }
           >
             {announcementDraft.trim() ? "Publicar Anuncio" : "Limpiar Anuncio"}
           </Button>

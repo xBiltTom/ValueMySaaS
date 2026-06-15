@@ -5,6 +5,7 @@ from decimal import Decimal
 from fastapi import HTTPException, status
 
 from app.models.enums import AiProvider
+from app.services.chatgpt_web_client import ChatGptWebClient, ChatGptWebClientError
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +73,33 @@ class LlmClientService:
         system_prompt: str,
         user_prompt: str,
         fallback_keys: list[tuple[AiProvider, str, str | None]] | None = None,
+        user_agent: str | None = None,
     ) -> LlmResponse:
+        if provider in (AiProvider.CHATGPT_WEB, AiProvider.G4F):
+            client = ChatGptWebClient()
+            try:
+                output_text = await client.send_message(
+                    session_token=api_key,
+                    system_prompt=system_prompt,
+                    user_prompt=user_prompt,
+                    user_agent=user_agent,
+                )
+                return LlmResponse(
+                    output_text=output_text,
+                    output_json=None,
+                    tokens_input=None,
+                    tokens_output=None,
+                    estimated_cost=None,
+                    model_name="chatgpt-web",
+                )
+            except ChatGptWebClientError as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail=str(exc),
+                )
+            finally:
+                await client.close()
+
         candidates: list[tuple[AiProvider, str, str | None]] = [
             (provider, api_key, model_name)
         ]
@@ -136,7 +163,33 @@ class LlmClientService:
         system_prompt: str,
         user_prompt: str,
         fallback_keys: list[tuple[AiProvider, str, str | None]] | None = None,
+        user_agent: str | None = None,
     ):
+        if provider in (AiProvider.CHATGPT_WEB, AiProvider.G4F):
+            client = ChatGptWebClient()
+            try:
+                async def _chatgpt_web_stream():
+                    try:
+                        async for chunk in client.stream_message(
+                            session_token=api_key,
+                            system_prompt=system_prompt,
+                            user_prompt=user_prompt,
+                            user_agent=user_agent,
+                        ):
+                            if chunk == "[[SESSION_EXPIRED]]":
+                                yield "\n\n⚠️ **Sesión de ChatGPT expirada**\nEl administrador necesita renovar la sesión en el panel de administración."
+                                return
+                            yield chunk
+                    finally:
+                        await client.close()
+                return "chatgpt-web", _chatgpt_web_stream()
+            except Exception as exc:
+                await client.close()
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail=f"ChatGPT Web error: {exc}",
+                )
+
         from litellm import acompletion
         from litellm.exceptions import AuthenticationError, RateLimitError
 

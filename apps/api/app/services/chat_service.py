@@ -181,6 +181,7 @@ class ChatService:
             system_prompt=CHAT_SYSTEM_PROMPT,
             user_prompt=user_prompt,
             fallback_keys=credentials.fallback_system_keys,
+            user_agent=credentials.user_agent,
         )
 
         # Guardar la respuesta del asistente
@@ -297,6 +298,7 @@ class ChatService:
             system_prompt=CHAT_SYSTEM_PROMPT,
             user_prompt=user_prompt,
             fallback_keys=credentials.fallback_system_keys,
+            user_agent=credentials.user_agent,
         )
 
         async def event_generator():
@@ -450,6 +452,7 @@ class ChatService:
                 system_prompt=SUMMARY_SYSTEM_PROMPT,
                 user_prompt=conversation_text,
                 fallback_keys=credentials.fallback_system_keys,
+                user_agent=credentials.user_agent,
             )
             return response.output_text.strip() or None
         except Exception as exc:

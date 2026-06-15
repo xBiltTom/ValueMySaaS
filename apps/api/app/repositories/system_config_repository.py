@@ -5,9 +5,26 @@ from app.models.system_config import SystemConfig
 
 # Default values for system config keys
 DEFAULT_CONFIG: dict[str, tuple[str, str]] = {
-    "default_initial_credits": ("5", "Créditos que recibe cada nuevo usuario al registrarse."),
-    "login_announcement": ("", "Mensaje de anuncio visible al iniciar sesión. Vacío = sin anuncio."),
-    "system_credits_enabled": ("true", "Si 'true', el sistema de créditos está activo."),
+    "default_initial_credits": (
+        "5",
+        "Créditos que recibe cada nuevo usuario al registrarse.",
+    ),
+    "login_announcement": (
+        "",
+        "Mensaje de anuncio visible al iniciar sesión. Vacío = sin anuncio.",
+    ),
+    "system_credits_enabled": (
+        "true",
+        "Si 'true', el sistema de créditos está activo.",
+    ),
+    "use_g4f_for_system_credits": (
+        "true",
+        "Si 'true', se prioriza el uso de modelos gratuitos (G4F) por encima de las System API Keys.",
+    ),
+    "chatgpt_web_enabled": (
+        "false",
+        "Si 'true', el sistema de créditos usa ChatGPT Web en lugar de API keys.",
+    ),
 }
 
 
@@ -42,5 +59,20 @@ class SystemConfigRepository:
         return record
 
     async def list_all(self) -> list[SystemConfig]:
+        from datetime import datetime, timezone
+
         result = await self.db.execute(select(SystemConfig).order_by(SystemConfig.key))
-        return list(result.scalars().all())
+        records: list[SystemConfig] = list(result.scalars().all())
+        existing_keys = {r.key for r in records}
+        now = datetime.now(timezone.utc)
+        for key, (default_val, default_desc) in DEFAULT_CONFIG.items():
+            if key not in existing_keys:
+                records.append(
+                    SystemConfig(
+                        key=key,
+                        value=default_val,
+                        description=default_desc,
+                        updated_at=now,
+                    )
+                )
+        return sorted(records, key=lambda x: x.key)

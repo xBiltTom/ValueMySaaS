@@ -23,6 +23,8 @@ email-validator==2.2.0
 python-multipart==0.0.17
 litellm
 openai
+curl-cffi>=0.7.0
+
 
 # Tests
 pytest==8.3.4
