@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { MessageSquare, X, Maximize2, Minimize2, TerminalSquare, Loader2, PlusCircle, History, Edit2, Trash2, Check } from "lucide-react";
+import { Bot, X, Maximize2, Minimize2, TerminalSquare, Loader2, PlusCircle, History, Edit2, Trash2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { listConversations, createConversation, listConversationMessages, updateConversation, deleteConversation } from "@/features/conversations/api";
 import { listAiKeys } from "@/features/ai-keys/api";
@@ -68,7 +68,7 @@ export function FloatingChatbot({ projectId }: { projectId: string }) {
   const conversationId = activeConversationId || latestConversation?.id;
 
   const createMutation = useMutation({
-    mutationFn: () => createConversation(projectId, { title: "Tutor IA Global" }),
+    mutationFn: () => createConversation(projectId, { title: "Nexus Core" }),
     onSuccess: (newConv) => {
       queryClient.setQueryData(["conversations", projectId], (old: any) => ({
         ...old,
@@ -197,7 +197,7 @@ export function FloatingChatbot({ projectId }: { projectId: string }) {
         )}
       >
         <div className="absolute inset-0 rounded-full bg-white/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
-        <MessageSquare className="h-7 w-7 relative z-10" />
+        <Bot className="h-7 w-7 relative z-10" />
         {/* Pulsing ring */}
         <div className="absolute inset-0 rounded-full border-2 border-indigo-400 animate-ping opacity-20" />
       </button>
@@ -219,16 +219,16 @@ export function FloatingChatbot({ projectId }: { projectId: string }) {
         <header className="h-16 border-b border-white/10 flex items-center px-5 justify-between shrink-0 relative bg-white/5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-[0_0_15px_rgba(139,92,246,0.5)]">
-              <TerminalSquare className="h-4 w-4 text-white" />
+              <Bot className="h-5 w-5 text-white" />
             </div>
             <div className="flex flex-col">
-              <h3 className="font-display font-black text-[13px] uppercase tracking-wider text-foreground">Tutor IA</h3>
+              <h3 className="font-display font-black text-[13px] uppercase tracking-wider text-foreground">NEXUS</h3>
               <span className="text-[9px] font-mono uppercase tracking-widest text-indigo-500 dark:text-indigo-400 flex items-center gap-1.5">
                 <span className="relative flex h-1.5 w-1.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-indigo-500"></span>
                 </span>
-                SISTEMA ACTIVO
+                INTELIGENCIA ESTRATÉGICA
               </span>
             </div>
           </div>
