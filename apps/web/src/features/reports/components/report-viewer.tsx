@@ -155,7 +155,7 @@ export function ReportViewer({ content }: ReportViewerProps) {
                 {Object.entries(content.metrics).map(([key, val]) => (
                   <div key={key} className="rounded-[12px] border border-border/40 bg-background/50 p-4 text-center hover:border-primary/50 transition-colors">
                     <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-2 truncate">{key.replace(/_/g, " ")}</p>
-                    <p className="font-mono text-xl md:text-2xl font-bold text-foreground break-all">{String(val)}</p>
+                    <p className="font-mono text-base sm:text-lg md:text-2xl font-bold text-foreground break-all">{String(val)}</p>
                   </div>
                 ))}
               </div>

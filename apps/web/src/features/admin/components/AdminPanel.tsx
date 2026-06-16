@@ -412,7 +412,7 @@ function UsersTab({
       {isLoading ? (
         <LoadingState label="Cargando usuarios..." />
       ) : (
-        <div className="border-2 border-border/60 overflow-hidden">
+        <div className="border-2 border-border/60 overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-muted/40 border-b-2 border-border/60">
               <tr>

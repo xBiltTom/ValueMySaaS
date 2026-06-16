@@ -243,7 +243,7 @@ export function ProjectForm() {
                   FASE DE DISEÑO
                 </div>
                 <h3 className="text-xl font-display font-black uppercase text-foreground">EN PLANEACIÓN</h3>
-                <p className="mt-2 text-[12px] font-mono text-muted-foreground uppercase leading-relaxed h-16">
+                <p className="mt-2 text-[12px] font-mono text-muted-foreground uppercase leading-relaxed h-auto sm:h-16">
                   &gt; Idea en validación. Buscando product-market fit. Sin lanzamiento oficial.
                 </p>
                 <div className="mt-4 space-y-2 w-full border-t border-dashed border-border/60 pt-4">
@@ -275,7 +275,7 @@ export function ProjectForm() {
                   FASE OPERATIVA
                 </div>
                 <h3 className="text-xl font-display font-black uppercase text-foreground">EN MARCHA</h3>
-                <p className="mt-2 text-[12px] font-mono text-muted-foreground uppercase leading-relaxed h-16">
+                <p className="mt-2 text-[12px] font-mono text-muted-foreground uppercase leading-relaxed h-auto sm:h-16">
                   &gt; MVP funcional o producto maduro. Generando tracción o ingresos.
                 </p>
                 <div className="mt-4 space-y-2 w-full border-t border-dashed border-border/60 pt-4">

@@ -89,7 +89,7 @@ export function ReportList({ projectId, reports }: { projectId: string; reports:
                 setReportToDelete(report.id);
               }}
               disabled={deleteMutation.isPending && reportToDelete === report.id}
-              className="absolute top-3 right-3 z-20 p-2 rounded-lg bg-background/80 border border-border/40 text-muted-foreground hover:text-status-danger-fg hover:border-status-danger-border hover:bg-status-danger-bg/20 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 backdrop-blur-md"
+              className="absolute top-3 right-3 z-20 p-2 rounded-lg bg-background/80 border border-border/40 text-muted-foreground hover:text-status-danger-fg hover:border-status-danger-border hover:bg-status-danger-bg/20 transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100 lg:focus:opacity-100 backdrop-blur-md"
               title="Eliminar reporte"
             >
               <Trash2 className="h-4 w-4" />

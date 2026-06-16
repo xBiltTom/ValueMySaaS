@@ -192,7 +192,7 @@ export function FloatingChatbot({ projectId }: { projectId: string }) {
       <button
         onClick={() => setIsOpen(true)}
         className={cn(
-          "fixed bottom-6 right-6 md:bottom-8 md:right-8 z-40 p-4 rounded-full shadow-[0_8px_32px_rgba(139,92,246,0.4)] bg-gradient-to-tr from-violet-600 to-indigo-500 text-white hover:scale-110 active:scale-95 transition-all duration-300 animate-in fade-in zoom-in group",
+          "fixed bottom-24 right-6 lg:bottom-8 lg:right-8 z-40 p-4 rounded-full shadow-[0_8px_32px_rgba(139,92,246,0.4)] bg-gradient-to-tr from-violet-600 to-indigo-500 text-white hover:scale-110 active:scale-95 transition-all duration-300 animate-in fade-in zoom-in group",
           isOpen ? "scale-0 opacity-0 pointer-events-none" : "scale-100 opacity-100"
         )}
       >
@@ -208,7 +208,7 @@ export function FloatingChatbot({ projectId }: { projectId: string }) {
           "fixed z-50 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden flex flex-col shadow-[0_32px_64px_rgba(0,0,0,0.3),_0_0_0_1px_rgba(255,255,255,0.1)]",
           !isOpen && "translate-y-[100%] scale-95 opacity-0 pointer-events-none",
           isOpen && "translate-y-0 scale-100 opacity-100",
-          size === "compact" && "bottom-6 right-6 md:bottom-8 md:right-8 w-[calc(100%-3rem)] max-w-[420px] h-[650px] max-h-[calc(100vh-6rem)] rounded-[24px] bg-background/70 backdrop-blur-[40px] border border-white/20 dark:border-white/10",
+          size === "compact" && "bottom-24 right-6 lg:bottom-8 lg:right-8 w-[calc(100%-3rem)] max-w-[420px] h-[650px] max-h-[calc(100vh-6rem)] rounded-[24px] bg-background/70 backdrop-blur-[40px] border border-white/20 dark:border-white/10",
           size === "expanded" && "bottom-0 right-0 w-full md:w-[480px] lg:w-[540px] h-full rounded-none md:rounded-l-[32px] bg-background/80 backdrop-blur-[40px] border-l border-white/20 dark:border-white/10",
           size === "fullscreen" && "inset-0 w-full h-full rounded-none bg-background/95 backdrop-blur-[40px]"
         )}

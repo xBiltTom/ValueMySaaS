@@ -4,7 +4,7 @@ import { SaasScore } from "@/features/scoring/types";
 
 export function ScoreBreakdown({ score }: { score: SaasScore }) {
   return (
-    <div className="grid gap-4 md:grid-cols-5">
+    <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
       <MetricCard icon={Banknote} label="Financiero" value={score.financial_score ?? "N/A"} />
       <MetricCard icon={TrendingUp} label="Crecimiento" value={score.growth_score ?? "N/A"} />
       <MetricCard icon={RefreshCcw} label="Retención" value={score.retention_score ?? "N/A"} />
