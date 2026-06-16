@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { MessageSquare, X, Maximize2, Minimize2, TerminalSquare, Loader2, PlusCircle, History } from "lucide-react";
+import { MessageSquare, X, Maximize2, Minimize2, TerminalSquare, Loader2, PlusCircle, History, Edit2, Trash2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { listConversations, createConversation, listConversationMessages } from "@/features/conversations/api";
+import { listConversations, createConversation, listConversationMessages, updateConversation, deleteConversation } from "@/features/conversations/api";
 import { listAiKeys } from "@/features/ai-keys/api";
 import { ChatInputForm } from "@/features/conversations/components/chat-input-form";
 import { ChatMessageList } from "@/features/conversations/components/chat-message-list";
@@ -21,6 +21,8 @@ export function FloatingChatbot({ projectId }: { projectId: string }) {
   const [size, setSize] = useState<Size>("compact");
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [editingConvId, setEditingConvId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
   const [selectedKeyId, setSelectedKeyId] = useState("CREDITS");
   const [selectedModel, setSelectedModel] = useState("");
   
@@ -74,6 +76,24 @@ export function FloatingChatbot({ projectId }: { projectId: string }) {
       }));
       setActiveConversationId(newConv.id);
       setShowHistory(false);
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, title }: { id: string; title: string }) => updateConversation(projectId, id, { title }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["conversations", projectId] });
+      setEditingConvId(null);
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteConversation(projectId, id),
+    onSuccess: (_, deletedId) => {
+      queryClient.invalidateQueries({ queryKey: ["conversations", projectId] });
+      if (activeConversationId === deletedId || conversationId === deletedId) {
+        setActiveConversationId(null);
+      }
     }
   });
 
@@ -268,24 +288,87 @@ export function FloatingChatbot({ projectId }: { projectId: string }) {
               </div>
               <div className="flex flex-col gap-2">
                 {conversationsQuery.data?.items?.map(conv => (
-                  <button
+                  <div
                     key={conv.id}
-                    onClick={() => {
-                      setActiveConversationId(conv.id);
-                      setShowHistory(false);
-                    }}
                     className={cn(
-                      "text-left p-4 rounded-[16px] border transition-all text-[13px] font-medium flex flex-col gap-1.5",
+                      "flex items-center justify-between p-3 rounded-[16px] border transition-all text-[13px] font-medium gap-2 group",
                       conversationId === conv.id 
                         ? "bg-primary/20 border-primary/50 text-primary shadow-[0_0_15px_rgba(var(--primary),0.1)]"
                         : "bg-card/40 border-border/40 text-foreground hover:bg-card hover:border-primary/40 hover:-translate-y-0.5"
                     )}
                   >
-                    <span className="font-black truncate w-full">{conv.title || "Sesión sin título"}</span>
-                    <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-widest">
-                      {new Date(conv.created_at).toLocaleString()}
-                    </span>
-                  </button>
+                    {editingConvId === conv.id ? (
+                      <div className="flex-1 flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={editTitle}
+                          onChange={(e) => setEditTitle(e.target.value)}
+                          className="flex-1 bg-background/50 border border-primary/50 rounded-[8px] px-3 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary text-foreground"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              updateMutation.mutate({ id: conv.id, title: editTitle });
+                            } else if (e.key === "Escape") {
+                              setEditingConvId(null);
+                            }
+                          }}
+                        />
+                        <button
+                          onClick={() => updateMutation.mutate({ id: conv.id, title: editTitle })}
+                          disabled={updateMutation.isPending}
+                          className="p-1.5 rounded-[8px] bg-primary text-primary-foreground hover:bg-primary/80 transition-colors"
+                        >
+                          <Check className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setEditingConvId(null)}
+                          className="p-1.5 rounded-[8px] bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <button
+                          className="flex-1 flex flex-col gap-1.5 text-left min-w-0"
+                          onClick={() => {
+                            setActiveConversationId(conv.id);
+                            setShowHistory(false);
+                          }}
+                        >
+                          <span className="font-black truncate w-full">{conv.title || "Sesión sin título"}</span>
+                          <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-widest">
+                            {new Date(conv.created_at).toLocaleString()}
+                          </span>
+                        </button>
+                        <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingConvId(conv.id);
+                              setEditTitle(conv.title || "");
+                            }}
+                            className="p-1.5 rounded-md hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
+                            title="Renombrar"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if(confirm("¿Estás seguro de eliminar esta sesión? Se perderá todo su historial.")) {
+                                deleteMutation.mutate(conv.id);
+                              }
+                            }}
+                            className="p-1.5 rounded-md hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 ))}
                 {conversationsQuery.data?.items?.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center mt-8">No hay sesiones anteriores.</p>

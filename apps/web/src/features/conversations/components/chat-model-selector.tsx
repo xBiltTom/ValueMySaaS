@@ -63,7 +63,7 @@ function CustomDropdown({
 
       {isOpen && (
         <div className={cn(
-          "absolute top-full mt-2 w-[240px] max-h-[300px] overflow-y-auto bg-card/95 backdrop-blur-xl border-2 border-border/60 shadow-[4px_4px_0_rgba(0,0,0,0.3)] rounded-[8px] z-50 animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200 py-1.5 flex flex-col gap-0.5 custom-scrollbar",
+          "absolute bottom-full mb-2 w-[240px] max-h-[300px] overflow-y-auto bg-card/95 backdrop-blur-xl border-2 border-border/60 shadow-[4px_4px_0_rgba(0,0,0,0.3)] rounded-[8px] z-50 animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-200 py-1.5 flex flex-col gap-0.5 custom-scrollbar",
           alignRight ? "right-0" : "left-0"
         )}>
           {options.map((opt) => (
