@@ -3,7 +3,7 @@
 Incluye el historial completo de snapshots de métricas y scores, de modo que
 el modelo tenga acceso a toda la evolución temporal del proyecto.
 """
-from decimal import Decimal
+
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -36,13 +36,15 @@ class AiContextService:
             owner_id=owner_id,
         )
         if project is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SaaS project not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="SaaS project not found"
+            )
 
         dashboard = await self.dashboard_service.get_project_dashboard(
             project_id=project_id,
             owner_id=owner_id,
         )
-        
+
         user = await self.user_repository.get_by_id(owner_id)
 
         # Fetch FULL history: all snapshots and all scores (up to 50 each to provide maximum context to powerful models)
@@ -67,13 +69,45 @@ class AiContextService:
         if not all_scores:
             limitations.append("No hay scores de sostenibilidad persistidos.")
 
+        def _project_to_dict(p) -> dict:
+            def _enum_val(v):
+                return (
+                    v.value
+                    if v is not None and hasattr(v, "value")
+                    else (str(v) if v is not None else None)
+                )
+
+            return {
+                "id": str(p.id),
+                "name": p.name,
+                "slug": p.slug,
+                "description": p.description,
+                "stage": _enum_val(p.stage),
+                "category": _enum_val(p.category),
+                "business_model": _enum_val(p.business_model),
+                "target_market": p.target_market,
+                "target_audience": p.target_audience,
+                "country_focus": p.country_focus,
+                "main_problem": p.main_problem,
+                "value_proposition": p.value_proposition,
+                "competitors": p.competitors,
+                "acquisition_strategy": p.acquisition_strategy,
+                "pricing_notes": p.pricing_notes,
+                "current_price": float(p.current_price)
+                if p.current_price is not None
+                else None,
+                "currency": p.currency,
+            }
+
         def _snapshot_to_dict(s) -> dict:
             return {
                 "id": str(s.id),
                 "period_label": s.period_label,
                 "captured_at": s.captured_at.isoformat() if s.captured_at else None,
                 "mrr": float(s.mrr) if s.mrr is not None else None,
-                "monthly_costs": float(s.monthly_costs) if s.monthly_costs is not None else None,
+                "monthly_costs": float(s.monthly_costs)
+                if s.monthly_costs is not None
+                else None,
                 "total_users": s.total_users,
                 "paying_customers": s.paying_customers,
                 "cac": float(s.cac) if s.cac is not None else None,
@@ -85,16 +119,32 @@ class AiContextService:
         def _score_to_dict(s) -> dict:
             return {
                 "id": str(s.id),
-                "metric_snapshot_id": str(s.metric_snapshot_id) if s.metric_snapshot_id else None,
+                "metric_snapshot_id": str(s.metric_snapshot_id)
+                if s.metric_snapshot_id
+                else None,
                 "created_at": s.created_at.isoformat() if s.created_at else None,
-                "overall_score": float(s.overall_score) if s.overall_score is not None else None,
-                "financial_score": float(s.financial_score) if s.financial_score is not None else None,
-                "growth_score": float(s.growth_score) if s.growth_score is not None else None,
-                "retention_score": float(s.retention_score) if s.retention_score is not None else None,
-                "product_score": float(s.product_score) if s.product_score is not None else None,
+                "overall_score": float(s.overall_score)
+                if s.overall_score is not None
+                else None,
+                "financial_score": float(s.financial_score)
+                if s.financial_score is not None
+                else None,
+                "growth_score": float(s.growth_score)
+                if s.growth_score is not None
+                else None,
+                "retention_score": float(s.retention_score)
+                if s.retention_score is not None
+                else None,
+                "product_score": float(s.product_score)
+                if s.product_score is not None
+                else None,
                 "risk_score": float(s.risk_score) if s.risk_score is not None else None,
-                "sustainability_level": s.sustainability_level.value if s.sustainability_level else None,
-                "decision_recommendation": s.decision_recommendation.value if s.decision_recommendation else None,
+                "sustainability_level": s.sustainability_level.value
+                if s.sustainability_level
+                else None,
+                "decision_recommendation": s.decision_recommendation.value
+                if s.decision_recommendation
+                else None,
                 "strengths": s.strengths or [],
                 "weaknesses": s.weaknesses or [],
                 "alerts": s.alerts or [],
@@ -107,11 +157,17 @@ class AiContextService:
         return {
             "user": {
                 "name": user.full_name or user.email.split("@")[0],
-            } if user else None,
-            "project": dashboard.project.model_dump(mode="json"),
+            }
+            if user
+            else None,
+            "project": _project_to_dict(project),
             # Latest summary for quick reference
-            "latest_snapshot": dashboard.latest_snapshot.model_dump(mode="json") if dashboard.latest_snapshot else None,
-            "latest_score": dashboard.latest_score.model_dump(mode="json") if dashboard.latest_score else None,
+            "latest_snapshot": dashboard.latest_snapshot.model_dump(mode="json")
+            if dashboard.latest_snapshot
+            else None,
+            "latest_score": dashboard.latest_score.model_dump(mode="json")
+            if dashboard.latest_score
+            else None,
             # Full historical data — all snapshots ordered chronologically
             "snapshot_history": [_snapshot_to_dict(s) for s in all_snapshots_sorted],
             # Full historical scores ordered chronologically
