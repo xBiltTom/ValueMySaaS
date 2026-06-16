@@ -23,6 +23,7 @@ export function FloatingChatbot({ projectId }: { projectId: string }) {
   const [showHistory, setShowHistory] = useState(false);
   const [editingConvId, setEditingConvId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
+  const [convToDelete, setConvToDelete] = useState<string | null>(null);
   const [selectedKeyId, setSelectedKeyId] = useState("CREDITS");
   const [selectedModel, setSelectedModel] = useState("");
   
@@ -356,9 +357,7 @@ export function FloatingChatbot({ projectId }: { projectId: string }) {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              if(confirm("¿Estás seguro de eliminar esta sesión? Se perderá todo su historial.")) {
-                                deleteMutation.mutate(conv.id);
-                              }
+                              setConvToDelete(conv.id);
                             }}
                             className="p-1.5 rounded-md hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
                             title="Eliminar"
@@ -402,30 +401,55 @@ export function FloatingChatbot({ projectId }: { projectId: string }) {
 
               {/* Input Area */}
               <div className="p-4 bg-gradient-to-t from-background/95 to-background/50 backdrop-blur-md border-t border-white/10 relative z-10 shrink-0">
-                <div className="mb-3 flex justify-end">
+                <div className="w-full max-w-4xl mx-auto mb-3 flex justify-end">
                   <ChatModelSelector
                     activeKeys={activeKeys}
-                    selectedKeyId={selectedKeyId} 
-                    setSelectedKeyId={handleKeyChange} 
+                    selectedKeyId={selectedKeyId}
+                    setSelectedKeyId={setSelectedKeyId}
                     selectedModel={selectedModel}
-                    setSelectedModel={handleModelChange}
+                    setSelectedModel={setSelectedModel}
                   />
                 </div>
-                {conversationId && (
-                  <ChatInputForm 
-                    projectId={projectId} 
-                    conversationId={conversationId} 
-                    append={appendMessage} 
-                    isChatLoading={isChatLoading}
-                    selectedKeyId={selectedKeyId}
-                    selectedModel={selectedModel}
-                    isEmptyChat={messages.length === 0}
-                  />
-                )}
+                <ChatInputForm
+                  projectId={projectId}
+                  conversationId={conversationId!}
+                  append={appendMessage}
+                  isChatLoading={isChatLoading}
+                  selectedKeyId={selectedKeyId}
+                  selectedModel={selectedModel}
+                  isEmptyChat={messages.length === 0}
+                />
               </div>
             </>
           )}
         </main>
+        
+        {/* Delete Confirmation Modal */}
+        {convToDelete && (
+          <div className="absolute inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-card border border-border/50 rounded-[16px] shadow-[0_20px_40px_rgba(0,0,0,0.4)] p-6 max-w-[300px] w-full animate-in zoom-in-95">
+              <h4 className="font-display font-black text-[14px] uppercase tracking-wider mb-2 text-foreground">¿Eliminar Sesión?</h4>
+              <p className="text-xs text-muted-foreground mb-6">Esta acción no se puede deshacer. Todo el historial se perderá para siempre.</p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setConvToDelete(null)}
+                  className="px-4 py-2 rounded-[8px] text-[11px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    deleteMutation.mutate(convToDelete);
+                    setConvToDelete(null);
+                  }}
+                  className="px-4 py-2 rounded-[8px] bg-destructive text-destructive-foreground text-[11px] font-black uppercase tracking-widest hover:bg-destructive/90 transition-colors shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

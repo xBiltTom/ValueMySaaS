@@ -168,7 +168,7 @@ export function ChatModelSelector({
         options={keyOptions}
         icon={Zap}
         placeholder="PROVEEDOR"
-        alignRight={selectedKeyId === "CREDITS"}
+        alignRight={true}
       />
 
       {selectedKeyId !== "CREDITS" ? (
