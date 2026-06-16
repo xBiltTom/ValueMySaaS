@@ -251,7 +251,7 @@ export function ProjectHeader({
       {/* Action navigation grid */}
       <div className={cn(
         "grid gap-3 md:gap-4",
-        isPlanning ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-2 sm:grid-cols-3 md:grid-cols-5"
+        isPlanning ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2 sm:grid-cols-4"
       )}>
         {actions.map((action, i) => {
           const actionClass = "group flex flex-col items-start gap-2 rounded-[16px] border border-border/40 bg-card/40 backdrop-blur-md p-4 transition-all duration-300 hover:bg-card hover:border-primary/40 hover:shadow-[0_5px_15px_rgba(0,0,0,0.05)] hover:-translate-y-1";
