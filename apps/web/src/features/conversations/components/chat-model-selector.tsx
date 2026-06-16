@@ -51,11 +51,11 @@ function CustomDropdown({
         disabled={isLoading}
         className={cn(
           "flex items-center gap-1.5 h-8 sm:h-9 px-2 sm:px-3 rounded-[6px] bg-card/60 backdrop-blur-md border border-border hover:border-primary/50 transition-all text-[9px] sm:text-[12px] font-black uppercase tracking-widest text-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-[2px_2px_0_rgba(0,0,0,0.15)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none",
-          "max-w-[100px] sm:max-w-[200px]"
+          "max-w-[110px] xs:max-w-[130px] sm:max-w-[180px]"
         )}
       >
         <Icon className={cn("h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0", isOpen ? "text-primary" : "text-muted-foreground")} />
-        <span className="truncate flex-1 text-left">
+        <span className="truncate flex-1 text-left min-w-0">
           {isLoading ? "CARGANDO..." : selectedOption?.label || placeholder}
         </span>
         <ChevronDown className={cn("h-3 w-3 shrink-0 text-muted-foreground transition-transform duration-200", isOpen && "rotate-180 text-primary")} />
@@ -63,7 +63,7 @@ function CustomDropdown({
 
       {isOpen && (
         <div className={cn(
-          "absolute top-full mt-2 w-[240px] max-h-[300px] overflow-y-auto bg-card/95 backdrop-blur-xl border-2 border-border/60 shadow-[4px_4px_0_rgba(0,0,0,0.3)] rounded-[8px] z-50 animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200 py-1.5 flex flex-col gap-0.5 custom-scrollbar",
+          "absolute bottom-full mb-2 w-[240px] max-h-[300px] overflow-y-auto bg-card/95 backdrop-blur-xl border-2 border-border/60 shadow-[4px_4px_0_rgba(0,0,0,0.3)] rounded-[8px] z-50 animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-200 py-1.5 flex flex-col gap-0.5 custom-scrollbar",
           alignRight ? "right-0" : "left-0"
         )}>
           {options.map((opt) => (
@@ -130,7 +130,7 @@ export function ChatModelSelector({
 
   const keyOptions = [
     ...(hasCredits ? [{
-      label: systemCreditsEnabled ? `USAR CRÉDITOS (${currentUser?.ai_credits ?? 0})` : "CRÉDITOS DESACTIVADOS",
+      label: systemCreditsEnabled ? "CRÉDITOS DEL SISTEMA" : "CRÉDITOS DESACTIVADOS",
       value: "CREDITS",
       desc: systemCreditsEnabled ? "BALANCE INTERNO DE SISTEMA" : "TEMPORALMENTE DESACTIVADO",
       disabled: !systemCreditsEnabled,
@@ -158,7 +158,7 @@ export function ChatModelSelector({
   ];
 
   return (
-    <div className="flex items-center gap-2 md:gap-3 relative z-50">
+    <div className="flex flex-nowrap items-center justify-end gap-1.5 relative z-50 w-full min-w-0">
       <CustomDropdown
         value={selectedKeyId}
         onChange={(val) => {
@@ -168,7 +168,7 @@ export function ChatModelSelector({
         options={keyOptions}
         icon={Zap}
         placeholder="PROVEEDOR"
-        alignRight={selectedKeyId === "CREDITS"}
+        alignRight={true}
       />
 
       {selectedKeyId !== "CREDITS" ? (
@@ -185,10 +185,7 @@ export function ChatModelSelector({
           />
         </>
       ) : (
-        <>
-          <div className="w-px h-6 bg-border/60 mx-0.5"></div>
-          <CreditIndicator className="h-8 sm:h-9" />
-        </>
+        <CreditIndicator className="h-8 sm:h-9 shrink-0 ml-1" />
       )}
     </div>
   );

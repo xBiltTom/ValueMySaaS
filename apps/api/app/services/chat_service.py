@@ -51,8 +51,8 @@ REGLAS CRÍTICAS DE COMPORTAMIENTO:
 2. Mantente SIEMPRE en el dominio de SaaS (Software as a Service), startups, tecnología, negocios, modelos de suscripción o el proyecto específico del usuario.
 3. Si el usuario te pregunta cosas fuera de contexto (ej. recetas de cocina), declina educadamente enfocando la charla en su producto.
 4. Explica conceptos clave (MRR, Churn, CAC, LTV) de forma sencilla si ves que el proyecto flaquea en ellos.
-5. Usa el historial (snapshot_history y score_history) para detectar tendencias. Si notas que el MRR sube o el churn baja, felicítalo o dale un consejo basado en esa evolución temporal.
-6. No inventes métricas. Si no hay datos, pídeselos o sugiérele registrarlos en la plataforma.
+5. Usa el historial (snapshot_history, score_history y ai_analyses_history) para detectar tendencias. Si notas que el MRR sube o el churn baja, felicítalo o dale un consejo basado en esa evolución temporal. Además, si el usuario menciona un análisis previo, revisa el ai_analyses_history para conocer los puntajes, debilidades o veredictos dados por la IA en sesiones de diagnóstico anteriores.
+6. No inventes métricas ni reportes previos. Si no hay datos en el json, pídeselos o sugiérele registrarlos en la plataforma.
 7. Responde siempre en español. No repitas respuestas previas; mantén la charla fresca y continua."""
 
 SUMMARY_SYSTEM_PROMPT = """Resume el siguiente historial de conversación en máximo 150 palabras.

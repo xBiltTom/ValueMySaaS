@@ -8,7 +8,7 @@ export default function NewProjectPage() {
       <div className="mx-auto max-w-4xl py-6 md:py-12 relative">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:30px_30px] pointer-events-none -z-10" />
         
-        <div className="mb-12 text-center md:text-left border-2 border-border/60 bg-card/40 backdrop-blur-md p-8 rounded-2xl shadow-[8px_8px_0_rgba(0,0,0,0.2)] relative overflow-hidden">
+        <div className="mb-8 md:mb-12 text-center md:text-left border-2 border-border/60 bg-card/40 backdrop-blur-md p-5 md:p-8 rounded-2xl shadow-[8px_8px_0_rgba(0,0,0,0.2)] relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
           <div className="absolute top-4 right-4 text-muted-foreground/30 font-mono text-[10px] hidden md:block">
             <p>SYS_VER: 1.0.4</p>
@@ -24,7 +24,7 @@ export default function NewProjectPage() {
             </p>
           </div>
           
-          <h1 className="font-display text-4xl md:text-5xl font-black uppercase tracking-tight text-foreground mb-4">
+          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight text-foreground mb-4">
             REGISTRO DE NÚCLEO <span className="text-primary">SAAS</span>
           </h1>
           

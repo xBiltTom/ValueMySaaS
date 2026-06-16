@@ -150,7 +150,7 @@ export default function ProjectsPage() {
                     e.stopPropagation();
                     setDeleteConfirm({ id: project.id, name: project.name });
                   }}
-                  className="absolute -top-3 -right-3 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-border/40 bg-card/80 backdrop-blur-md text-muted-foreground transition-all hover:bg-destructive hover:border-destructive/50 hover:text-destructive-foreground hover:scale-110 shadow-lg opacity-0 group-hover:opacity-100"
+                  className="absolute -top-3 -right-3 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-border/40 bg-card/80 backdrop-blur-md text-muted-foreground transition-all hover:bg-destructive hover:border-destructive/50 hover:text-destructive-foreground hover:scale-110 shadow-lg opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
                   title="Eliminar instancia"
                 >
                   <Trash2 className="h-4 w-4" />

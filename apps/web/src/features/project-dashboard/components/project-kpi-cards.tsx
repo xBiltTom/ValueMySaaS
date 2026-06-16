@@ -58,7 +58,7 @@ function KpiCard({
         
         <div className="flex items-end gap-2">
           <p className={cn(
-            "text-3xl font-mono font-bold tracking-tight leading-none",
+            "text-xl sm:text-2xl lg:text-3xl font-mono font-bold tracking-tight leading-none",
             noData ? "text-muted-foreground/30" : accent ?? "text-foreground"
           )}>
             {noData ? "NULL" : value}

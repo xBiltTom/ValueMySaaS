@@ -15,7 +15,7 @@ export function ScoreOverview({ score }: { score: SaasScore }) {
     <Card className="p-6">
       <div className="grid gap-6 md:grid-cols-[auto_1fr] md:items-center">
         <div
-          className="grid h-40 w-40 place-items-center rounded-full"
+          className="grid h-40 w-40 place-items-center rounded-full mx-auto md:mx-0"
           style={{ background: `conic-gradient(var(--primary) ${value * 3.6}deg, var(--border) 0deg)` }}
         >
           <div className="grid h-28 w-28 place-items-center rounded-full bg-card">

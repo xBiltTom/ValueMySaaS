@@ -53,7 +53,7 @@ export default function RegisterPage() {
       {/* Form area */}
       <div className="relative z-10 flex flex-1 items-center justify-center px-5 py-12">
         <div className="w-full max-w-lg animate-in fade-in slide-in-from-bottom-8 duration-700">
-          <div className="relative overflow-hidden rounded-[32px] border border-border/40 bg-card/60 backdrop-blur-2xl p-8 sm:p-10 shadow-[0_0_40px_rgba(0,0,0,0.05)]">
+          <div className="relative overflow-hidden rounded-[32px] border border-border/40 bg-card/60 backdrop-blur-2xl p-5 sm:p-10 shadow-[0_0_40px_rgba(0,0,0,0.05)]">
             
             <div className="absolute -top-10 -right-10 p-8 opacity-5">
               <Cpu className="h-64 w-64 text-foreground" />

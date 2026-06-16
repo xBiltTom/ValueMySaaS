@@ -8,9 +8,12 @@ import { ErrorState } from "@/components/shared/error-state";
 import { LoadingState } from "@/components/shared/loading-state";
 import { getApiErrorMessage } from "@/lib/api-client";
 import { useCurrentUser } from "@/features/auth/use-auth";
+import { useParams } from "next/navigation";
+import { FloatingChatbot } from "@/features/conversations/components/floating-chatbot";
 
 export function DashboardShell({ children }: { children: ReactNode }) {
   const userQuery = useCurrentUser({ redirectToLogin: true });
+  const params = useParams<{ id: string }>();
 
   if (userQuery.isCheckingToken || !userQuery.hasToken || userQuery.isLoading) {
     return (
@@ -38,6 +41,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         </main>
       </div>
       <BottomNav user={userQuery.data} />
+      {params?.id && <FloatingChatbot projectId={params.id} />}
     </div>
   );
 }
