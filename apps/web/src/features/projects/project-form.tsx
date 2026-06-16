@@ -301,7 +301,7 @@ export function ProjectForm() {
               </p>
             </div>
 
-            <div className="rounded-[12px] border-2 border-border/60 bg-card p-6 md:p-8 space-y-6 shadow-[4px_4px_0_rgba(0,0,0,0.1)]">
+            <div className="rounded-[12px] border-2 border-border/60 bg-card p-4 sm:p-6 md:p-8 space-y-6 shadow-[4px_4px_0_rgba(0,0,0,0.1)]">
               <div className="flex items-center gap-3 mb-6 border-b-2 border-border/60 pb-4">
                 <div className="h-8 w-8 bg-primary/20 border-2 border-primary/50 text-primary flex items-center justify-center rounded-[4px]">
                   <Package className="h-4 w-4" />
@@ -351,7 +351,7 @@ export function ProjectForm() {
               </p>
             </div>
 
-            <div className="rounded-[12px] border-2 border-border/60 bg-card p-6 md:p-8 space-y-6 shadow-[4px_4px_0_rgba(0,0,0,0.1)]">
+            <div className="rounded-[12px] border-2 border-border/60 bg-card p-4 sm:p-6 md:p-8 space-y-6 shadow-[4px_4px_0_rgba(0,0,0,0.1)]">
               <div className="flex items-center gap-3 mb-2 border-b-2 border-border/60 pb-4">
                 <div className="h-8 w-8 bg-primary/20 border-2 border-primary/50 text-primary flex items-center justify-center rounded-[4px]">
                   <Users className="h-4 w-4" />
@@ -379,7 +379,7 @@ export function ProjectForm() {
               </div>
             </div>
 
-            <div className="rounded-[12px] border-2 border-border/60 bg-card p-6 md:p-8 space-y-6 shadow-[4px_4px_0_rgba(0,0,0,0.1)]">
+            <div className="rounded-[12px] border-2 border-border/60 bg-card p-4 sm:p-6 md:p-8 space-y-6 shadow-[4px_4px_0_rgba(0,0,0,0.1)]">
               <div className="flex items-center gap-3 mb-2 border-b-2 border-border/60 pb-4">
                 <div className="h-8 w-8 bg-primary/20 border-2 border-primary/50 text-primary flex items-center justify-center rounded-[4px]">
                   <Brain className="h-4 w-4" />
@@ -488,7 +488,7 @@ export function ProjectForm() {
               </p>
             </div>
 
-            <div className="rounded-[12px] border-2 border-border/60 bg-card p-6 md:p-8 space-y-6 shadow-[4px_4px_0_rgba(0,0,0,0.1)]">
+            <div className="rounded-[12px] border-2 border-border/60 bg-card p-4 sm:p-6 md:p-8 space-y-6 shadow-[4px_4px_0_rgba(0,0,0,0.1)]">
               <div className="flex items-center gap-3 mb-2 border-b-2 border-border/60 pb-4">
                 <div className="h-8 w-8 bg-primary/20 border-2 border-primary/50 text-primary flex items-center justify-center rounded-[4px]">
                   <DollarSign className="h-4 w-4" />
