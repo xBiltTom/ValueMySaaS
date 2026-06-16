@@ -193,6 +193,7 @@ def get_ai_context_service(db: AsyncSession = Depends(get_db)) -> AiContextServi
         saas_score_repository,
         dashboard_service,
         UserRepository(db),
+        AiAnalysisRepository(db),
     )
 
 
@@ -220,6 +221,7 @@ def get_ai_analysis_service(
         saas_score_repository,
         dashboard_service,
         UserRepository(db),
+        AiAnalysisRepository(db),
     )
     return AiAnalysisService(
         ai_analysis_repository=AiAnalysisRepository(db),
@@ -264,6 +266,7 @@ def get_chat_service(
         saas_score_repository,
         dashboard_service,
         UserRepository(db),
+        AiAnalysisRepository(db),
     )
     return ChatService(
         saas_project_repository=saas_project_repository,

@@ -12,6 +12,7 @@ from app.repositories.metric_snapshot_repository import MetricSnapshotRepository
 from app.repositories.saas_project_repository import SaasProjectRepository
 from app.repositories.saas_score_repository import SaasScoreRepository
 from app.repositories.user_repository import UserRepository
+from app.repositories.ai_analysis_repository import AiAnalysisRepository
 from app.services.dashboard_service import DashboardService
 
 
@@ -23,12 +24,14 @@ class AiContextService:
         saas_score_repository: SaasScoreRepository,
         dashboard_service: DashboardService,
         user_repository: UserRepository,
+        ai_analysis_repository: AiAnalysisRepository,
     ) -> None:
         self.saas_project_repository = saas_project_repository
         self.metric_snapshot_repository = metric_snapshot_repository
         self.saas_score_repository = saas_score_repository
         self.dashboard_service = dashboard_service
         self.user_repository = user_repository
+        self.ai_analysis_repository = ai_analysis_repository
 
     async def build_context(self, *, project_id: UUID, owner_id: UUID) -> dict:
         project = await self.saas_project_repository.get_by_id_for_owner(
@@ -62,6 +65,12 @@ class AiContextService:
             offset=0,
         )
         all_scores_sorted = sorted(all_scores, key=lambda s: s.created_at)
+
+        all_analyses = await self.ai_analysis_repository.list_by_project(
+            saas_project_id=project_id,
+            limit=10,
+            offset=0,
+        )
 
         limitations: list[str] = []
         if not all_snapshots:
@@ -151,6 +160,14 @@ class AiContextService:
                 "recommendations": s.recommendations or [],
             }
 
+        def _analysis_to_dict(a) -> dict:
+            return {
+                "id": str(a.id),
+                "type": a.analysis_type.value if a.analysis_type else None,
+                "created_at": a.created_at.isoformat() if a.created_at else None,
+                "output_json": a.output_json,
+            }
+
         latest_snapshot = all_snapshots_sorted[-1] if all_snapshots_sorted else None
         latest_score = all_scores_sorted[-1] if all_scores_sorted else None
 
@@ -172,6 +189,8 @@ class AiContextService:
             "snapshot_history": [_snapshot_to_dict(s) for s in all_snapshots_sorted],
             # Full historical scores ordered chronologically
             "score_history": [_score_to_dict(s) for s in all_scores_sorted],
+            # Recent AI analyses (including JSON results)
+            "ai_analyses_history": [_analysis_to_dict(a) for a in all_analyses],
             # Dashboard computed metrics and recommendations
             "metric_cards": dashboard.metric_cards.model_dump(mode="json"),
             "alerts": dashboard.alerts,
