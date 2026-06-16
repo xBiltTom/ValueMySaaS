@@ -327,13 +327,6 @@ export default function ProjectDashboardPage() {
                     <BrainCircuit className="h-4 w-4" />
                     {latestAnalysisId ? "Ver Análisis IA" : "Análisis IA"}
                   </button>
-                  <Link
-                    href={`/projects/${projectId}/chat`}
-                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-[12px] border border-border/40 bg-background/50 px-5 py-3 text-[11px] font-black uppercase tracking-widest text-foreground hover:bg-card transition-colors"
-                  >
-                    <MessageSquareText className="h-4 w-4" />
-                    Tutor IA
-                  </Link>
                 </>
               ) : (
                 <>
@@ -343,13 +336,6 @@ export default function ProjectDashboardPage() {
                   >
                     <TrendingUp className="h-4 w-4" />
                     Ver diagnóstico
-                  </Link>
-                  <Link
-                    href={`/projects/${projectId}/chat`}
-                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-[12px] border border-border/40 bg-background/50 px-5 py-3 text-[11px] font-black uppercase tracking-widest text-foreground hover:bg-card transition-colors"
-                  >
-                    <MessageSquareText className="h-4 w-4" />
-                    Chat con el SaaS
                   </Link>
                 </>
               )}

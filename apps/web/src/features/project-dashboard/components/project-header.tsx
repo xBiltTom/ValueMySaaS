@@ -84,7 +84,6 @@ export function ProjectHeader({
   const planningActions = [
     { type: 'link', href: `/projects/${project.id}/metrics`, icon: PlusCircle, title: "Estimaciones", desc: "Ingresa proyecciones", color: "text-primary" },
     { type: 'button', onClick: handleAiAnalysisClick, icon: BrainCircuit, title: "Diagnóstico IA", desc: "Evalúa viabilidad", color: "text-accent" },
-    { type: 'link', href: `/projects/${project.id}/chat`, icon: MessageSquareText, title: "Tutor IA", desc: "Asesoría experta", color: "text-muted-foreground" },
     { type: 'link', href: `/projects/${project.id}/reports`, icon: FileText, title: "Reportes", desc: "Exporta datos", color: "text-status-success-fg" },
   ];
 
@@ -93,7 +92,6 @@ export function ProjectHeader({
     { type: 'link', href: `/projects/${project.id}/score`, icon: BarChart3, title: "Heurística", desc: "Score del sistema", color: "text-primary" },
     { type: 'button', onClick: handleAiAnalysisClick, icon: BrainCircuit, title: "Análisis IA", desc: "Revisión profunda", color: "text-accent" },
     { type: 'link', href: `/projects/${project.id}/reports`, icon: FileText, title: "Reportes", desc: "Informes listos", color: "text-status-success-fg" },
-    { type: 'link', href: `/projects/${project.id}/chat`, icon: MessageSquareText, title: "Chat", desc: "Habla con tu SaaS", color: "text-muted-foreground" },
   ];
 
   const actions = isPlanning ? planningActions : launchedActions;

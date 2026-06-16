@@ -67,18 +67,18 @@ export function ChatInputForm({
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col gap-4">
       {isEmptyChat && (
-        <div className="flex flex-wrap gap-2 justify-start md:justify-center mb-4">
+        <div className="flex flex-nowrap overflow-x-auto gap-2 justify-start mb-2 pb-2 custom-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
           {suggestedQuestions.map((question) => (
             <button
               key={question}
               type="button"
-              className="group border border-primary/30 bg-card/60 backdrop-blur-md px-3 py-2 text-[11px] font-mono text-primary/80 uppercase shadow-[2px_2px_0_rgba(var(--primary),0.2)] hover:border-primary hover:bg-primary/10 hover:text-primary transition-all flex items-center gap-2 rounded-[6px]"
+              className="group border border-primary/30 bg-card/60 backdrop-blur-md px-3 py-2 text-[11px] font-mono text-primary/80 uppercase shadow-[2px_2px_0_rgba(var(--primary),0.2)] hover:border-primary hover:bg-primary/10 hover:text-primary transition-all flex items-center gap-2 rounded-[6px] shrink-0 whitespace-nowrap"
               onClick={() => {
                 form.setValue("message", question);
                 if (textareaRef.current) textareaRef.current.focus();
               }}
             >
-              <Sparkles className="h-3 w-3 group-hover:animate-pulse" />
+              <Sparkles className="h-3 w-3 shrink-0 group-hover:animate-pulse" />
               {question}
             </button>
           ))}
