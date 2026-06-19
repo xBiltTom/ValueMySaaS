@@ -11,6 +11,7 @@ import { AiKeyList } from "@/features/ai-keys/components/ai-key-list";
 import { useCurrentUser } from "@/features/auth/use-auth";
 import { KeyRound, ShieldAlert, Cpu } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { TutorialTrigger } from "@/features/tutorial/components/tutorial-trigger";
 
 export default function AiKeysPage() {
   const { data: user } = useCurrentUser();
@@ -21,6 +22,7 @@ export default function AiKeysPage() {
 
   return (
     <DashboardShell>
+      <TutorialTrigger modules={["aiKeys"]} />
       <div className="relative animate-in fade-in slide-in-from-bottom-8 duration-700 max-w-5xl mx-auto">
         
         {/* Background ambient effect */}
@@ -42,7 +44,7 @@ export default function AiKeysPage() {
 
         <div className="grid gap-8 lg:grid-cols-[1fr_1.5fr] relative z-10">
           <div className="space-y-6">
-            <div className="rounded-[24px] border border-border/40 bg-card/60 backdrop-blur-xl p-6 shadow-lg relative overflow-hidden group">
+            <div id="tour-ai-keys-form" className="rounded-[24px] border border-border/40 bg-card/60 backdrop-blur-xl p-6 shadow-lg relative overflow-hidden group">
               <div className="absolute -right-10 -top-10 opacity-[0.03] pointer-events-none">
                 <ShieldAlert className="w-48 h-48" />
               </div>

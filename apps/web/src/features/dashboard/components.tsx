@@ -17,7 +17,7 @@ export function PortfolioDashboard({ data }: { data: PortfolioDashboardResponse 
 
   return (
     <div className="space-y-8 font-mono">
-      <div className="grid gap-6 sm:grid-cols-3">
+      <div id="tour-dashboard-kpis" className="grid gap-6 sm:grid-cols-3">
         <MetricCard
           icon={FolderKanban}
           label="Total Deploys"
@@ -41,7 +41,7 @@ export function PortfolioDashboard({ data }: { data: PortfolioDashboardResponse 
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="relative overflow-hidden rounded-none border-2 border-border/80 bg-card/40 backdrop-blur-xl shadow-[4px_4px_0_rgba(0,0,0,0.1)] dark:shadow-[4px_4px_0_rgba(255,255,255,0.05)] group">
+        <div id="tour-dashboard-distribution" className="relative overflow-hidden rounded-none border-2 border-border/80 bg-card/40 backdrop-blur-xl shadow-[4px_4px_0_rgba(0,0,0,0.1)] dark:shadow-[4px_4px_0_rgba(255,255,255,0.05)] group">
           <CardHeader className="border-b-2 border-border/80 bg-muted/30 px-6 py-4">
             <CardTitle className="font-mono flex items-center gap-3 text-sm tracking-widest uppercase text-foreground">
               <Terminal className="h-4 w-4" />
@@ -99,7 +99,7 @@ export function PortfolioDashboard({ data }: { data: PortfolioDashboardResponse 
           </CardContent>
         </div>
 
-        <div className="relative overflow-hidden rounded-none border-2 border-border/80 bg-card/40 backdrop-blur-xl shadow-[4px_4px_0_rgba(0,0,0,0.1)] dark:shadow-[4px_4px_0_rgba(255,255,255,0.05)]">
+        <div id="tour-dashboard-logs" className="relative overflow-hidden rounded-none border-2 border-border/80 bg-card/40 backdrop-blur-xl shadow-[4px_4px_0_rgba(0,0,0,0.1)] dark:shadow-[4px_4px_0_rgba(255,255,255,0.05)]">
           <CardHeader className="border-b-2 border-border/80 bg-muted/30 px-6 py-4">
             <CardTitle className="font-mono flex items-center gap-3 text-sm tracking-widest uppercase text-foreground">
               <Lightbulb className="h-4 w-4 text-primary" />

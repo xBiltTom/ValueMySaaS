@@ -213,7 +213,7 @@ export function ProjectForm() {
       <form onSubmit={onSubmit} onKeyDown={handleKeyDown}>
         {/* Step 0: Tipo de proyecto */}
         {step === 0 && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div id="tour-new-project-stage" className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="space-y-2 border-l-4 border-primary pl-4">
               <p className="text-[10px] font-black uppercase tracking-widest text-primary font-mono">STEP 01/04</p>
               <h2 className="text-2xl md:text-3xl font-display font-black uppercase tracking-tight text-foreground">ESTADO DE OPERACIÓN</h2>
@@ -292,7 +292,7 @@ export function ProjectForm() {
 
         {/* Step 1: Identidad */}
         {step === 1 && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div id="tour-new-project-form" className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="space-y-2 border-l-4 border-primary pl-4 mb-8">
               <p className="text-[10px] font-black uppercase tracking-widest text-primary font-mono">STEP 02/04</p>
               <h2 className="text-2xl md:text-3xl font-display font-black uppercase tracking-tight text-foreground">REGISTRO DE ENTIDAD</h2>

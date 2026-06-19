@@ -1,10 +1,12 @@
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ProjectForm } from "@/features/projects/project-form";
 import { TerminalSquare } from "lucide-react";
+import { TutorialTrigger } from "@/features/tutorial/components/tutorial-trigger";
 
 export default function NewProjectPage() {
   return (
     <DashboardShell>
+      <TutorialTrigger modules={["newProject"]} />
       <div className="mx-auto max-w-4xl py-6 md:py-12 relative">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:30px_30px] pointer-events-none -z-10" />
         

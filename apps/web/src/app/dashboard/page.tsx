@@ -9,6 +9,7 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { getApiErrorMessage } from "@/lib/api-client";
 import { getPortfolioDashboard } from "@/features/dashboard/api";
 import { PortfolioDashboard } from "@/features/dashboard/components";
+import { TutorialTrigger } from "@/features/tutorial/components/tutorial-trigger";
 
 export default function DashboardPage() {
   const dashboardQuery = useQuery({
@@ -18,6 +19,7 @@ export default function DashboardPage() {
 
   return (
     <DashboardShell>
+      <TutorialTrigger modules={["global", "dashboard"]} />
       <div className="relative animate-in fade-in slide-in-from-bottom-8 duration-700">
         
         {/* Background ambient effect */}

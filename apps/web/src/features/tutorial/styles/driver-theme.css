@@ -1,0 +1,100 @@
+/* Custom Driver.js Theme for ValueMySaaS (Brutalist / Vibecoder) */
+@import "driver.js/dist/driver.css";
+
+.driver-popover {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--foreground)) !important;
+  border: 2px solid hsl(var(--primary)) !important;
+  border-radius: 12px !important;
+  box-shadow: 6px 6px 0px rgba(var(--primary), 0.3) !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  padding: 20px !important;
+  min-width: 320px !important;
+}
+
+.driver-popover-title {
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  color: hsl(var(--primary)) !important;
+  margin-bottom: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.driver-popover-title::before {
+  content: ">";
+  color: hsl(var(--accent));
+}
+
+.driver-popover-description {
+  font-size: 12px !important;
+  line-height: 1.6 !important;
+  color: hsl(var(--muted-foreground)) !important;
+  font-weight: 500 !important;
+  margin-bottom: 20px !important;
+}
+
+.driver-popover-footer {
+  margin-top: 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.driver-popover-progress-text {
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  color: hsl(var(--muted-foreground)) !important;
+  letter-spacing: 0.2em !important;
+}
+
+.driver-popover-navigation-btns {
+  display: flex !important;
+  gap: 8px !important;
+}
+
+.driver-popover-btn {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+  border: 2px solid hsl(var(--border)) !important;
+  border-radius: 6px !important;
+  font-family: inherit !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  padding: 6px 12px !important;
+  text-shadow: none !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+}
+
+.driver-popover-btn:hover {
+  background-color: hsl(var(--muted)) !important;
+  border-color: hsl(var(--primary)) !important;
+}
+
+.driver-popover-next-btn {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border-color: hsl(var(--primary)) !important;
+}
+
+.driver-popover-next-btn:hover {
+  background-color: hsl(var(--primary) / 0.9) !important;
+  box-shadow: 2px 2px 0px rgba(var(--primary), 0.5) !important;
+  transform: translate(-1px, -1px) !important;
+}
+
+.driver-popover-arrow {
+  border-color: hsl(var(--primary)) !important;
+}
+
+/* Override Driver Overlay */
+#driver-page-overlay {
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(4px) !important;
+}

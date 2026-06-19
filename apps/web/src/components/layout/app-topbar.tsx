@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { LogOut, Plus, Terminal } from "lucide-react";
+import { LogOut, Plus, Terminal, HelpCircle } from "lucide-react";
 import { User } from "@/types/api";
 import { Button } from "@/components/ui/button";
 import { useLogout } from "@/features/auth/use-auth";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { startTour } from "@/features/tutorial/config";
 
 export function AppTopbar({ user }: { user?: User }) {
   const logout = useLogout();
@@ -31,8 +32,18 @@ export function AppTopbar({ user }: { user?: User }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div id="tour-topbar-controls" className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            onClick={() => startTour("global")}
+            aria-label="Iniciar Tour"
+            className="hidden h-10 w-10 p-0 rounded-[12px] bg-card/50 text-muted-foreground transition-all hover:bg-primary/20 hover:text-primary hover:shadow-[0_0_15px_rgba(var(--primary),0.3)] border border-border/80 dark:border-border/40 lg:flex"
+          >
+            <HelpCircle className="h-4 w-4" />
+          </Button>
+
           <Link
+            id="tour-deploy-btn"
             href="/projects/new"
             className="hidden h-10 items-center justify-center gap-2 rounded-[14px] bg-foreground px-5 text-[13px] font-bold text-background shadow-[0_0_15px_rgba(var(--foreground),0.15)] transition-all hover:scale-105 active:scale-95 sm:inline-flex"
           >

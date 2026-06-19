@@ -23,7 +23,7 @@ export function AppSidebar({ user }: { user?: User | null }) {
     : [...items];
 
   return (
-    <aside className="hidden h-screen w-72 border-r border-border/80 dark:border-border/40 bg-background/90 dark:bg-background/80 backdrop-blur-xl px-5 py-6 lg:fixed lg:left-0 lg:top-0 lg:flex lg:flex-col relative z-30">
+    <aside id="tour-sidebar" className="hidden h-screen w-72 border-r border-border/80 dark:border-border/40 bg-background/90 dark:bg-background/80 backdrop-blur-xl px-5 py-6 lg:fixed lg:left-0 lg:top-0 lg:flex lg:flex-col relative z-30">
       <Link href="/dashboard" className="mb-10 flex items-center gap-3 px-2 group">
         <span className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-foreground text-background shadow-[0_0_20px_rgba(var(--foreground),0.1)] transition-transform group-hover:scale-105 group-hover:-rotate-3">
           <Terminal className="h-5 w-5" />
@@ -34,7 +34,7 @@ export function AppSidebar({ user }: { user?: User | null }) {
         </span>
       </Link>
 
-      <nav className="flex-1 space-y-2">
+      <nav id="tour-nav" className="flex-1 space-y-2">
         {navItems.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
