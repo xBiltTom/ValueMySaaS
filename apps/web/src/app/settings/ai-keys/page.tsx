@@ -9,9 +9,11 @@ import { listAiKeys } from "@/features/ai-keys/api";
 import { AiKeyForm } from "@/features/ai-keys/components/ai-key-form";
 import { AiKeyList } from "@/features/ai-keys/components/ai-key-list";
 import { useCurrentUser } from "@/features/auth/use-auth";
-import { KeyRound, ShieldAlert, Cpu } from "lucide-react";
+import { KeyRound, ShieldAlert, Cpu, HelpCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { TutorialTrigger } from "@/features/tutorial/components/tutorial-trigger";
+import { startTour } from "@/features/tutorial/config";
 
 export default function AiKeysPage() {
   const { data: user } = useCurrentUser();
@@ -33,10 +35,21 @@ export default function AiKeysPage() {
             <KeyRound className="h-3 w-3 text-accent" />
             Configuración de Nodos IA
           </div>
-          <h1 className="font-display text-4xl font-black tracking-tight text-foreground sm:text-5xl md:text-6xl flex items-center gap-4">
-            <Cpu className="hidden sm:block h-10 w-10 text-primary opacity-80" />
-            API Keys <span className="text-muted-foreground/50">BYOK</span>
-          </h1>
+          <div className="flex items-start justify-between">
+            <h1 className="font-display text-4xl font-black tracking-tight text-foreground sm:text-5xl md:text-6xl flex items-center gap-4">
+              <Cpu className="hidden sm:block h-10 w-10 text-primary opacity-80" />
+              API Keys <span className="text-muted-foreground/50">BYOK</span>
+            </h1>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => startTour("aiKeys")}
+              className="hidden sm:flex border-primary/50 text-primary hover:bg-primary/10 gap-2 font-mono uppercase text-[10px] font-black tracking-widest mt-2"
+            >
+              <HelpCircle className="h-3.5 w-3.5" />
+              Guía
+            </Button>
+          </div>
           <p className="mt-4 text-sm font-bold text-muted-foreground max-w-2xl uppercase tracking-wider">
             Créditos del sistema: <span className="text-primary">{user?.ai_credits || 0} DISPONIBLES</span>. Conecta tus propias API Keys para acceso ilimitado.
           </p>

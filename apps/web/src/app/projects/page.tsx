@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { DollarSign, FolderPlus, Plus, Globe, Trash2, TerminalSquare, Cpu, Activity, Database } from "lucide-react";
+import { DollarSign, FolderPlus, Plus, Globe, Trash2, TerminalSquare, Cpu, Activity, Database, HelpCircle } from "lucide-react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { getApiErrorMessage } from "@/lib/api-client";
 import { formatCurrency, formatEnum } from "@/lib/utils";
 import { listProjects, deleteProject } from "@/features/projects/api";
+import { TutorialTrigger } from "@/features/tutorial/components/tutorial-trigger";
+import { startTour } from "@/features/tutorial/config";
 
 export default function ProjectsPage() {
   const queryClient = useQueryClient();
@@ -34,23 +36,36 @@ export default function ProjectsPage() {
 
   return (
     <DashboardShell>
+      <TutorialTrigger modules={["projectsList"]} />
       <div className="relative animate-in fade-in slide-in-from-bottom-8 duration-700">
         
         {/* Background ambient effect */}
         <div className="absolute top-0 left-0 w-full h-[300px] bg-[linear-gradient(to_right,rgba(150,150,150,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(150,150,150,0.05)_1px,transparent_1px)] bg-[size:3rem_3rem] [mask-image:radial-gradient(ellipse_60%_100%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none -z-10" />
 
         <div className="mb-10 flex flex-col justify-between gap-6 sm:flex-row sm:items-end relative">
-          <div>
+          <div id="tour-projects-list-header">
             <div className="mb-4 inline-flex items-center gap-2.5 rounded-xl border border-border/60 bg-card/40 backdrop-blur-md px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest text-muted-foreground shadow-sm">
               <Database className="h-3 w-3 text-accent" />
               Inventario Activo
             </div>
-            <h1 className="font-display text-4xl font-black tracking-tight text-foreground sm:text-5xl md:text-6xl flex items-center gap-4">
-              <FolderPlus className="hidden sm:block h-10 w-10 text-primary opacity-80" />
-              SaaS Instances
-            </h1>
+            <div className="flex items-start gap-4">
+              <h1 className="font-display text-4xl font-black tracking-tight text-foreground sm:text-5xl md:text-6xl flex items-center gap-4">
+                <FolderPlus className="hidden sm:block h-10 w-10 text-primary opacity-80" />
+                SaaS Instances
+              </h1>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => startTour("projectsList")}
+                className="hidden sm:flex border-primary/50 text-primary hover:bg-primary/10 gap-2 font-mono uppercase text-[10px] font-black tracking-widest mt-2"
+              >
+                <HelpCircle className="h-3.5 w-3.5" />
+                Guía
+              </Button>
+            </div>
           </div>
           <Link
+            id="tour-deploy-new-btn"
             href="/projects/new"
             className="inline-flex h-12 lg:h-14 items-center justify-center gap-2 rounded-[16px] bg-foreground px-6 text-sm font-black uppercase tracking-wider text-background shadow-[0_10px_30px_rgba(var(--foreground),0.2)] transition-all hover:scale-105 hover:-rotate-2 active:scale-95"
           >

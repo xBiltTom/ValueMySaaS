@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-export type TutorialModule = "global" | "dashboard" | "newProject" | "aiKeys";
+export type TutorialModule = "global" | "dashboard" | "newProject" | "aiKeys" | "projectsList";
 
 interface TutorialState {
   hasSeen: Record<TutorialModule, boolean>;
@@ -16,6 +16,7 @@ const DEFAULT_STATE: TutorialState = {
     dashboard: false,
     newProject: false,
     aiKeys: false,
+    projectsList: false,
   },
 };
 

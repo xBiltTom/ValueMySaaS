@@ -1,8 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { TerminalSquare, Cpu } from "lucide-react";
+import { TerminalSquare, Cpu, HelpCircle } from "lucide-react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingState } from "@/components/shared/loading-state";
@@ -10,6 +11,7 @@ import { getApiErrorMessage } from "@/lib/api-client";
 import { getPortfolioDashboard } from "@/features/dashboard/api";
 import { PortfolioDashboard } from "@/features/dashboard/components";
 import { TutorialTrigger } from "@/features/tutorial/components/tutorial-trigger";
+import { startTour } from "@/features/tutorial/config";
 
 export default function DashboardPage() {
   const dashboardQuery = useQuery({
@@ -33,10 +35,21 @@ export default function DashboardPage() {
             </div>
             SYS_OPERATIONAL // GLOBAL
           </div>
-          <h1 className="font-display text-4xl font-black tracking-tight text-foreground sm:text-5xl md:text-6xl flex items-center gap-4 uppercase">
-            <Cpu className="h-10 w-10 sm:h-12 sm:w-12 text-primary opacity-80" />
-            Command Center
-          </h1>
+          <div className="flex items-start justify-between">
+            <h1 className="font-display text-4xl font-black tracking-tight text-foreground sm:text-5xl md:text-6xl flex items-center gap-4 uppercase">
+              <Cpu className="h-10 w-10 sm:h-12 sm:w-12 text-primary opacity-80" />
+              Command Center
+            </h1>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => startTour("dashboard")}
+              className="hidden sm:flex border-primary/50 text-primary hover:bg-primary/10 gap-2 font-mono uppercase text-[10px] font-black tracking-widest"
+            >
+              <HelpCircle className="h-3.5 w-3.5" />
+              Guía
+            </Button>
+          </div>
           <p className="mt-4 text-sm font-mono font-medium text-muted-foreground max-w-2xl border-l-2 border-primary/30 pl-4">
             &gt; INICIALIZANDO REPORTE GLOBAL...<br/>
             &gt; MONITOREANDO MÉTRICAS DE PORTAFOLIO EN TIEMPO REAL.

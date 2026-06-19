@@ -8,7 +8,8 @@ const defaultDriverOptions = {
   animate: true,
   smoothScroll: true,
   allowClose: true,
-  overlayColor: "rgba(0,0,0,0.6)",
+  overlayColor: "#000000",
+  overlayOpacity: 0.85,
   nextBtnText: "Siguiente >",
   prevBtnText: "< Atrás",
   doneBtnText: "Finalizar",
@@ -25,10 +26,28 @@ export const globalSteps: DriveStep[] = [
     }
   },
   {
-    element: "#tour-sidebar",
+    element: "nav#tour-nav a[href='/dashboard']",
     popover: {
-      title: "Navegación del Sistema",
-      description: "Desde aquí accedes a tus cuadros de mando, proyectos desplegados y configuración de IA (BYOK).",
+      title: "Módulo: Dashboard",
+      description: "Tu centro de control principal. Aquí verás métricas agregadas de todos tus proyectos, puntajes globales y alertas de mejoras priorizadas por IA.",
+      side: "right",
+      align: "start"
+    }
+  },
+  {
+    element: "nav#tour-nav a[href='/projects']",
+    popover: {
+      title: "Módulo: Proyectos",
+      description: "Tu biblioteca de despliegues. Accede al detalle individual de cada SaaS, revisa sus métricas específicas y consulta reportes detallados generados por la IA.",
+      side: "right",
+      align: "start"
+    }
+  },
+  {
+    element: "nav#tour-nav a[href='/settings/ai-keys']",
+    popover: {
+      title: "Módulo: AI Keys (BYOK)",
+      description: "Conecta tus propias claves de API (OpenAI, Anthropic) para correr análisis ilimitados. Esto reduce tus costos y mantiene tus datos bajo tu control.",
       side: "right",
       align: "start"
     }
@@ -108,21 +127,63 @@ export const aiKeysSteps: DriveStep[] = [
   {
     element: "#tour-ai-keys-form",
     popover: {
-      title: "Nodos IA (BYOK)",
-      description: "ValueMySaaS funciona con un sistema 'Bring Your Own Key'. Registra tu propia API Key de OpenAI, Anthropic o Gemini para realizar análisis ilimitados.",
+      title: "Configuración BYOK",
+      description: "Bring Your Own Key. En lugar de cobrarte suscripciones caras, tú conectas tus propias llaves y pagas solo lo que consumes directo a OpenAI/Anthropic.",
       side: "right",
+      align: "start"
+    }
+  },
+  {
+    element: "select[name='provider']",
+    popover: {
+      title: "1. Selecciona el Motor",
+      description: "Elige el modelo que deseas usar. Diferentes modelos tienen diferentes fortalezas (ej. Claude 3.5 Sonnet para análisis profundo, GPT-4o para reportes estructurados).",
+      side: "top",
+      align: "start"
+    }
+  },
+  {
+    element: "input[name='api_key']",
+    popover: {
+      title: "2. Tu Llave Segura",
+      description: "Pega aquí tu API Key. Solo se usará localmente para ejecutar tus peticiones a través de nuestra pasarela, no se almacena en texto plano.",
+      side: "top",
       align: "start"
     }
   }
 ];
 
+const projectsListSteps: DriveStep[] = [
+  {
+    element: "#tour-projects-list-header",
+    popover: {
+      title: "Inventario Activo",
+      description: "Aquí se listan todos los proyectos SaaS que has perfilado. Puedes buscar, filtrar y monitorear el estado de cada uno.",
+      side: "bottom",
+      align: "start"
+    }
+  },
+  {
+    element: "#tour-deploy-new-btn",
+    popover: {
+      title: "Desplegar un Nuevo Proyecto",
+      description: "Al dar clic aquí iniciarás el flujo de registro. La IA requiere datos precisos sobre tu mercado y finanzas para generar el primer diagnóstico.",
+      side: "left",
+      align: "start"
+    }
+  }
+];
+
+const moduleMap: Record<TutorialModule, DriveStep[]> = {
+  global: globalSteps,
+  dashboard: dashboardSteps,
+  newProject: newProjectSteps,
+  aiKeys: aiKeysSteps,
+  projectsList: projectsListSteps,
+};
+
 export function startTour(module: TutorialModule, onComplete?: () => void) {
-  let steps: DriveStep[] = [];
-  
-  if (module === "global") steps = globalSteps;
-  if (module === "dashboard") steps = dashboardSteps;
-  if (module === "newProject") steps = newProjectSteps;
-  if (module === "aiKeys") steps = aiKeysSteps;
+  const steps: DriveStep[] = moduleMap[module] || [];
 
   // Filter out steps where elements don't exist in the DOM (for mobile/responsive safety)
   const validSteps = steps.filter(step => {

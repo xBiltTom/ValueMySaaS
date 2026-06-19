@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useLogout } from "@/features/auth/use-auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { startTour } from "@/features/tutorial/config";
+import { usePathname } from "next/navigation";
 
 export function AppTopbar({ user }: { user?: User }) {
   const logout = useLogout();
@@ -32,15 +33,7 @@ export function AppTopbar({ user }: { user?: User }) {
           </div>
         </div>
 
-        <div id="tour-topbar-controls" className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            onClick={() => startTour("global")}
-            aria-label="Iniciar Tour"
-            className="hidden h-10 w-10 p-0 rounded-[12px] bg-card/50 text-muted-foreground transition-all hover:bg-primary/20 hover:text-primary hover:shadow-[0_0_15px_rgba(var(--primary),0.3)] border border-border/80 dark:border-border/40 lg:flex"
-          >
-            <HelpCircle className="h-4 w-4" />
-          </Button>
+        <div className="flex items-center gap-3">
 
           <Link
             id="tour-deploy-btn"

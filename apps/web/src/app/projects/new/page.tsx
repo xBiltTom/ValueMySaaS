@@ -1,7 +1,9 @@
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ProjectForm } from "@/features/projects/project-form";
-import { TerminalSquare } from "lucide-react";
+import { TerminalSquare, HelpCircle } from "lucide-react";
 import { TutorialTrigger } from "@/features/tutorial/components/tutorial-trigger";
+import { startTour } from "@/features/tutorial/config";
+import { Button } from "@/components/ui/button";
 
 export default function NewProjectPage() {
   return (
@@ -26,11 +28,22 @@ export default function NewProjectPage() {
             </p>
           </div>
           
-          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight text-foreground mb-4">
-            REGISTRO DE NÚCLEO <span className="text-primary">SAAS</span>
-          </h1>
-          
-          <p className="text-[13px] md:text-[14px] font-mono leading-relaxed text-muted-foreground max-w-2xl uppercase">
+          <div className="flex items-start justify-between">
+            <h1 className="font-display text-4xl font-black tracking-tight text-foreground sm:text-5xl md:text-6xl flex items-center gap-4">
+              <TerminalSquare className="hidden sm:block h-10 w-10 text-primary opacity-80" />
+              NUEVO NODO
+            </h1>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => startTour("newProject")}
+              className="hidden sm:flex border-primary/50 text-primary hover:bg-primary/10 gap-2 font-mono uppercase text-[10px] font-black tracking-widest mt-2"
+            >
+              <HelpCircle className="h-3.5 w-3.5" />
+              Guía
+            </Button>
+          </div>
+          <p className="mt-4 text-[13px] font-mono text-muted-foreground uppercase max-w-2xl">
             &gt; Ingresa los parámetros base de tu plataforma. Nuestro motor de IA procesará el modelo de datos para generar un análisis de viabilidad, arquitectura de negocio y métricas clave.
           </p>
         </div>
