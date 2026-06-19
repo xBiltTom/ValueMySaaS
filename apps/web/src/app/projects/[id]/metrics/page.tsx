@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Lightbulb, BarChart3, Info, Database, X } from "lucide-react";
+import { ArrowLeft, Lightbulb, BarChart3, Info, Database, X, HelpCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { MetricSnapshot } from "@/features/metrics/types";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
@@ -14,6 +14,9 @@ import { getProject } from "@/features/project-dashboard/api";
 import { listMetricSnapshots } from "@/features/metrics/api";
 import { MetricSnapshotForm } from "@/features/metrics/components/metric-snapshot-form";
 import { MetricSnapshotList } from "@/features/metrics/components/metric-snapshot-list";
+import { TutorialTrigger } from "@/features/tutorial/components/tutorial-trigger";
+import { startTour } from "@/features/tutorial/config";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export default function ProjectMetricsPage() {
@@ -45,6 +48,7 @@ export default function ProjectMetricsPage() {
 
   return (
     <DashboardShell>
+      <TutorialTrigger modules={["projectMetrics"]} />
       {/* Back nav */}
       <div className="mb-6">
         <Link
@@ -80,9 +84,20 @@ export default function ProjectMetricsPage() {
               <span className={cn("h-2 w-2 rounded-full animate-pulse", isPlanning ? "bg-status-warning-fg" : "bg-primary")}></span>
               {isPlanning ? "SYS_MODE: PLANNING_ESTIMATES" : "SYS_MODE: LIVE_METRICS"}
             </p>
-            <h1 className="mt-3 font-display text-4xl font-black uppercase tracking-tight text-foreground">
-              {project?.name || "CARGANDO_DATOS..."}
-            </h1>
+            <div className="flex items-start justify-between">
+              <h1 className="mt-3 font-display text-4xl font-black uppercase tracking-tight text-foreground">
+                {project?.name || "CARGANDO_DATOS..."}
+              </h1>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => startTour("projectMetrics")}
+                className="hidden sm:flex border-primary/50 text-primary hover:bg-primary/10 gap-2 font-mono uppercase text-[10px] font-black tracking-widest mt-2"
+              >
+                <HelpCircle className="h-3.5 w-3.5" />
+                Guía
+              </Button>
+            </div>
             <p className="mt-2 text-[12px] font-mono text-muted-foreground uppercase leading-relaxed max-w-2xl">
               {isPlanning
                 ? "> Registra tus costos estimados. La evaluación de viabilidad la hace la IA en base a tu propuesta de valor, no en base a números reales."

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, LayoutDashboard } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, HelpCircle } from "lucide-react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingState } from "@/components/shared/loading-state";
@@ -11,6 +11,9 @@ import { getApiErrorMessage } from "@/lib/api-client";
 import { getProject } from "@/features/project-dashboard/api";
 import { getReport } from "@/features/reports/api";
 import { ReportDetail } from "@/features/reports/components/report-detail";
+import { TutorialTrigger } from "@/features/tutorial/components/tutorial-trigger";
+import { startTour } from "@/features/tutorial/config";
+import { Button } from "@/components/ui/button";
 
 export default function ReportDetailPage() {
   const params = useParams<{ id: string; reportId: string }>();
@@ -25,6 +28,7 @@ export default function ReportDetailPage() {
 
   return (
     <DashboardShell>
+      <TutorialTrigger modules={["projectReportDetail"]} />
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <Link
@@ -38,14 +42,23 @@ export default function ReportDetailPage() {
             SYS_PROJ: {projectQuery.data?.name || "UNKNOWN"}
           </p>
         </div>
-        <Link
-          href={`/projects/${projectId}`}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-[8px] border border-border/60 bg-card/40 backdrop-blur-sm px-4 text-[10px] font-black uppercase tracking-widest transition hover:bg-card hover:border-primary/40 active:scale-95 shadow-sm"
-        >
-          <LayoutDashboard className="h-3 w-3 text-primary" />
-          GO_TO_DASHBOARD
-        </Link>
-      </div>
+          <Link
+            href={`/projects/${projectId}`}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-[8px] border border-border/60 bg-card/40 backdrop-blur-sm px-4 text-[10px] font-black uppercase tracking-widest transition hover:bg-card hover:border-primary/40 active:scale-95 shadow-sm"
+          >
+            <LayoutDashboard className="h-3 w-3 text-primary" />
+            GO_TO_DASHBOARD
+          </Link>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => startTour("projectReportDetail")}
+            className="hidden sm:flex border-primary/50 text-primary hover:bg-primary/10 gap-2 font-mono uppercase text-[10px] font-black tracking-widest"
+          >
+            <HelpCircle className="h-3.5 w-3.5" />
+            Guía
+          </Button>
+        </div>
 
       {projectQuery.isLoading || reportQuery.isLoading ? <LoadingState /> : null}
       {projectQuery.isError || reportQuery.isError ? (

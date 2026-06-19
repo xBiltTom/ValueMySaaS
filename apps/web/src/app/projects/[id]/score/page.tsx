@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Gauge } from "lucide-react";
+import { ArrowLeft, Gauge, HelpCircle } from "lucide-react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -12,6 +12,8 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { getApiErrorMessage } from "@/lib/api-client";
 import { getProject } from "@/features/project-dashboard/api";
 import { DiagnosticList } from "@/features/project-dashboard/components/diagnostic-lists";
+import { TutorialTrigger } from "@/features/tutorial/components/tutorial-trigger";
+import { startTour } from "@/features/tutorial/config";
 import { generateLatestScore, getLatestScore, listScores } from "@/features/scoring/api";
 import { ScoreOverview } from "@/features/scoring/components/score-overview";
 import { ScoreBreakdown } from "@/features/scoring/components/score-breakdown";
@@ -45,6 +47,7 @@ export default function ProjectScorePage() {
 
   return (
     <DashboardShell>
+      <TutorialTrigger modules={["projectScore"]} />
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <Link href={`/projects/${projectId}`} className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
@@ -52,9 +55,20 @@ export default function ProjectScorePage() {
             Volver al dashboard
           </Link>
           <p className="mt-4 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Score</p>
-          <h1 className="mt-1 font-display text-4xl font-semibold">
-            {projectQuery.data?.name || "Diagnóstico"}
-          </h1>
+          <div className="flex items-start gap-4">
+            <h1 className="mt-1 font-display text-4xl font-semibold">
+              {projectQuery.data?.name || "Diagnóstico"}
+            </h1>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => startTour("projectScore")}
+              className="hidden sm:flex border-primary/50 text-primary hover:bg-primary/10 gap-2 font-mono uppercase text-[10px] font-black tracking-widest mt-2"
+            >
+              <HelpCircle className="h-3.5 w-3.5" />
+              Guía
+            </Button>
+          </div>
         </div>
         <Button onClick={() => scoreMutation.mutate()} disabled={scoreMutation.isPending}>
           <Gauge className="h-4 w-4" />

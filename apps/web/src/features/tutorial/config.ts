@@ -174,12 +174,94 @@ const projectsListSteps: DriveStep[] = [
   }
 ];
 
+export const projectDetailSteps: DriveStep[] = [
+  {
+    element: "#tour-project-header",
+    popover: {
+      title: "Consola del Proyecto",
+      description: "Bienvenido a la sala de control de tu proyecto. Aquí puedes ver la información clave, estado del sistema y acceder a los submódulos de análisis.",
+      side: "bottom",
+      align: "start"
+    }
+  },
+  {
+    element: "#tour-project-actions",
+    popover: {
+      title: "Submódulos de Acción",
+      description: "Estos botones te llevarán a las herramientas clave: ingreso de datos financieros (Estimaciones/Data Input), Diagnóstico IA y el Hub de Reportes.",
+      side: "top",
+      align: "start"
+    }
+  }
+];
+
+export const projectMetricsSteps: DriveStep[] = [
+  {
+    popover: {
+      title: "Data Input (Métricas)",
+      description: "Aquí registras el latido de tu SaaS. Puedes ingresar costos, ingresos, CAC, Churn y otras métricas clave según la fase del proyecto.",
+      side: "bottom",
+      align: "start"
+    }
+  }
+];
+
+export const projectScoreSteps: DriveStep[] = [
+  {
+    popover: {
+      title: "Heurística y Score",
+      description: "Nuestro motor calcula un puntaje basado en las reglas del negocio SaaS, mostrándote exactamente dónde estás fallando y cómo corregirlo.",
+      side: "bottom",
+      align: "start"
+    }
+  }
+];
+
+export const projectReportsSteps: DriveStep[] = [
+  {
+    popover: {
+      title: "Hub de Reportes",
+      description: "Genera documentos profesionales para inversionistas o para tu equipo. La IA extraerá los datos y redactará análisis detallados en PDF/Markdown.",
+      side: "bottom",
+      align: "start"
+    }
+  }
+];
+
+export const projectReportDetailSteps: DriveStep[] = [
+  {
+    popover: {
+      title: "Detalle del Reporte",
+      description: "Aquí puedes visualizar el reporte generado, revisar la metodología utilizada por la IA, o exportarlo a un archivo final.",
+      side: "bottom",
+      align: "start"
+    }
+  }
+];
+
+export const projectAiAnalysisSteps: DriveStep[] = [
+  {
+    popover: {
+      title: "Tutor / Analista IA",
+      description: "Un espacio interactivo donde la IA actúa como tu CFO o Product Manager, analizando en crudo los datos del proyecto y dándote feedback implacable.",
+      side: "bottom",
+      align: "start"
+    }
+  }
+];
+
 const moduleMap: Record<TutorialModule, DriveStep[]> = {
   global: globalSteps,
   dashboard: dashboardSteps,
   newProject: newProjectSteps,
   aiKeys: aiKeysSteps,
   projectsList: projectsListSteps,
+  projectDetail: projectDetailSteps,
+  projectMetrics: projectMetricsSteps,
+  projectScore: projectScoreSteps,
+  projectReports: projectReportsSteps,
+  projectReportDetail: projectReportDetailSteps,
+  projectAiAnalysis: projectAiAnalysisSteps,
 };
 
 export function startTour(module: TutorialModule, onComplete?: () => void) {

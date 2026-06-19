@@ -8,10 +8,12 @@ import { listAiAnalyses } from "@/features/ai-analyses/api";
 import {
   Rocket, BarChart3, BrainCircuit, MessageSquareText,
   FileText, PlusCircle, Sparkles, ArrowRight, ChevronRight,
-  Zap, TrendingUp, Shield, Target, CheckCircle2, Clock, Trash2, Terminal, Edit2
+  Zap, TrendingUp, Shield, Target, CheckCircle2, Clock, Trash2, Terminal, Edit2, HelpCircle
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { startTour } from "@/features/tutorial/config";
+import { TutorialTrigger } from "@/features/tutorial/components/tutorial-trigger";
 import {
   Dialog,
   DialogContent,
@@ -98,8 +100,10 @@ export function ProjectHeader({
 
   return (
     <div className="space-y-4 md:space-y-6">
+      <TutorialTrigger modules={["projectDetail"]} />
+      
       {/* Hero header card */}
-      <div className={cn(
+      <div id="tour-project-header" className={cn(
         "relative overflow-hidden rounded-[24px] border border-border/60 bg-card/40 backdrop-blur-xl p-5 md:p-8 shadow-2xl transition-all",
         isPlanning ? "border-t-4 border-t-status-warning-fg" : "border-t-4 border-t-primary"
       )}>
@@ -139,6 +143,15 @@ export function ProjectHeader({
                 {project.name}
               </h1>
               <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => startTour("projectDetail")}
+                  className="hidden sm:flex border-primary/50 text-primary hover:bg-primary/10 gap-2 font-mono uppercase text-[10px] font-black tracking-widest h-9 md:h-10 px-3"
+                >
+                  <HelpCircle className="h-3.5 w-3.5" />
+                  Guía
+                </Button>
                 <button
                   onClick={() => setShowEditModal(true)}
                   className="flex shrink-0 h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-[12px] bg-card/50 text-muted-foreground hover:bg-primary hover:text-primary-foreground hover:shadow-[0_0_15px_rgba(var(--primary),0.3)] border border-border/40 transition-all hover:scale-110"
@@ -249,7 +262,7 @@ export function ProjectHeader({
       </div>
 
       {/* Action navigation grid */}
-      <div className={cn(
+      <div id="tour-project-actions" className={cn(
         "grid gap-3 md:gap-4",
         isPlanning ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2 sm:grid-cols-4"
       )}>

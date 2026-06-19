@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Terminal } from "lucide-react";
+import { ArrowLeft, Terminal, HelpCircle } from "lucide-react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingState } from "@/components/shared/loading-state";
@@ -12,6 +12,9 @@ import { getProject } from "@/features/project-dashboard/api";
 import { generateReport, listReports } from "@/features/reports/api";
 import { ReportActions } from "@/features/reports/components/report-actions";
 import { ReportList } from "@/features/reports/components/report-list";
+import { TutorialTrigger } from "@/features/tutorial/components/tutorial-trigger";
+import { startTour } from "@/features/tutorial/config";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export default function ProjectReportsPage() {
@@ -31,6 +34,7 @@ export default function ProjectReportsPage() {
 
   return (
     <DashboardShell>
+      <TutorialTrigger modules={["projectReports"]} />
       {/* Back nav */}
       <div className="mb-6">
         <Link
@@ -56,9 +60,20 @@ export default function ProjectReportsPage() {
               <span className="h-2 w-2 rounded-full animate-pulse bg-accent"></span>
               GENERADOR DE REPORTES
             </p>
-            <h1 className="mt-3 font-display text-3xl md:text-4xl font-black uppercase tracking-tight text-foreground">
-              Análisis del Proyecto
-            </h1>
+            <div className="flex items-start justify-between">
+              <h1 className="mt-3 font-display text-3xl md:text-4xl font-black uppercase tracking-tight text-foreground">
+                Análisis del Proyecto
+              </h1>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => startTour("projectReports")}
+                className="hidden sm:flex border-primary/50 text-primary hover:bg-primary/10 gap-2 font-mono uppercase text-[10px] font-black tracking-widest mt-2"
+              >
+                <HelpCircle className="h-3.5 w-3.5" />
+                Guía
+              </Button>
+            </div>
             <p className="mt-2 text-[12px] md:text-[13px] font-mono text-muted-foreground uppercase leading-relaxed max-w-2xl">
               &gt; Compila métricas y diagnóstico de <span className="text-foreground font-bold">{projectQuery.data?.name || "tu proyecto"}</span> en un formato claro para su análisis.
             </p>

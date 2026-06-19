@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, BrainCircuit, LayoutDashboard, Activity, Clock } from "lucide-react";
+import { ArrowLeft, BrainCircuit, LayoutDashboard, Activity, Clock, HelpCircle } from "lucide-react";
 import { useCompletion } from "@ai-sdk/react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ErrorState } from "@/components/shared/error-state";
@@ -16,7 +16,10 @@ import { getAiAnalysis } from "@/features/ai-analyses/api";
 import { AiAnalysisDetail } from "@/features/ai-analyses/components/ai-analysis-detail";
 import { AiAnalysisHistorySidebar } from "@/features/ai-analyses/components/ai-analysis-history-sidebar";
 import { AiAnalysisModal } from "@/features/ai-analyses/components/ai-analysis-modal";
+import { TutorialTrigger } from "@/features/tutorial/components/tutorial-trigger";
+import { startTour } from "@/features/tutorial/config";
 import { AiAnalysis, AiAnalysisType } from "@/features/ai-analyses/types";
+import { Button } from "@/components/ui/button";
 
 export default function AiAnalysisDetailPage() {
   const params = useParams<{ id: string; analysisId: string }>();
@@ -109,6 +112,7 @@ export default function AiAnalysisDetailPage() {
 
   return (
     <DashboardShell>
+      <TutorialTrigger modules={["projectAiAnalysis"]} />
       <div className="mb-6 flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
@@ -140,6 +144,15 @@ export default function AiAnalysisDetailPage() {
             <LayoutDashboard aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
             Dashboard
           </Link>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => startTour("projectAiAnalysis")}
+            className="hidden sm:flex border-primary/50 text-primary hover:bg-primary/10 gap-2 font-mono uppercase text-[10px] font-black tracking-widest h-12 px-6 rounded-[12px]"
+          >
+            <HelpCircle className="h-3.5 w-3.5" />
+            Guía
+          </Button>
         </div>
       </div>
 
